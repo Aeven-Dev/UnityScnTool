@@ -1,0 +1,36 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement style="flex-grow: 1; flex-shrink: 0; flex-basis: auto;">
+        <ui:VisualElement style="flex-direction: row; justify-content: flex-start; width: auto; height: auto; flex-grow: 1; flex-basis: auto; min-height: auto; min-width: auto; left: auto; top: auto; right: auto; bottom: auto; position: relative; flex-shrink: 0; border-left-color: rgb(42, 42, 42); border-right-color: rgb(42, 42, 42); border-top-color: rgb(42, 42, 42); border-bottom-color: rgb(42, 42, 42); border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; align-items: stretch; opacity: 1; display: flex; visibility: visible; overflow: visible; flex-wrap: nowrap; max-height: none;">
+            <ui:VisualElement style="width: 350px; flex-grow: 0; height: auto; border-right-color: rgb(110, 110, 110); border-right-width: 2px;">
+                <ui:VisualElement style="flex-direction: row;">
+                    <ui:Button text="Attach Object" display-tooltip-when-elided="true" name="AttachInd" style="flex-grow: 1;" />
+                    <ui:Button text="Attach Armature" display-tooltip-when-elided="true" name="AttachArm" style="flex-grow: 1;" />
+                    <ui:Button text="Attach ScnData" display-tooltip-when-elided="true" name="AttachScene" style="flex-grow: 1;" />
+                    <ui:Button text="Detach" display-tooltip-when-elided="true" name="Detach" style="flex-grow: 1; display: none; visibility: visible; overflow: hidden;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row;">
+                    <ui:Button text="Import!" display-tooltip-when-elided="true" name="ImportBtn" style="flex-grow: 1;" />
+                    <ui:Button text="Export!" display-tooltip-when-elided="true" name="ExportBtn" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; border-bottom-width: 2px; border-bottom-color: rgb(110, 110, 110); flex-grow: 0;">
+                    <ui:TextField picking-mode="Ignore" name="AnimName" is-delayed="true" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-grow: 0; width: auto; flex-direction: row; height: 100%;">
+                    <ui:VisualElement style="height: 100%; flex-grow: initial; flex-shrink: initial; flex-basis: auto; flex-direction: column; max-height: none; border-bottom-width: 0; border-bottom-color: rgb(0, 0, 0); justify-content: flex-start; flex-wrap: wrap-reverse; border-left-width: 0; border-right-width: 0; border-top-width: 0;">
+                        <ui:ListView focusable="true" show-border="true" horizontal-scrolling="false" name="AnimList" binding-path="animationNames" show-bound-collection-size="false" show-alternating-row-backgrounds="All" virtualization-method="DynamicHeight" show-foldout-header="false" show-add-remove-footer="false" reorderable="false" style="width: 100px; height: 95px; max-height: none; flex-grow: 1; flex-direction: column; flex-shrink: 0; flex-basis: auto;" />
+                        <ui:VisualElement style="flex-direction: row;">
+                            <ui:Button text="+" display-tooltip-when-elided="true" />
+                            <ui:Button text="-" display-tooltip-when-elided="true" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-grow: 1;">
+                        <ui:ScrollView horizontal-scroller-visibility="Hidden" vertical-scroller-visibility="AlwaysVisible" name="Scrollview" vertical-page-size="-1" style="flex-grow: 1; flex-shrink: initial; height: 95px; margin-left: 0; border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; border-left-color: rgb(32, 32, 32); border-right-color: rgb(32, 32, 32); border-top-color: rgb(32, 32, 32); border-bottom-color: rgb(32, 32, 32); border-top-left-radius: 3px; border-bottom-left-radius: 3px; border-top-right-radius: 3px; border-bottom-right-radius: 3px; flex-wrap: wrap; max-height: none; bottom: auto; flex-basis: initial;" />
+                        <ui:VisualElement style="height: 20px;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <KeyframeEditor name="Editor" style="width: 452px; flex-grow: 1;" />
+            <MorphEditor name="MorphEditor" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
