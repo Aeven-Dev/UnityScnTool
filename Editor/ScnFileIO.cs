@@ -85,13 +85,14 @@ namespace AevenScnTool.IO
 		public static void BuildFromContainer(SceneContainer container, GameObject sceneObj)
 		{
 			List < TreeItem < SceneChunk >> rootItems = GetRootItems(container);
-			
+
 			createdObjects.Clear();
 			foreach (var item in rootItems)
 			{
 				BuildTreeItem(item, container, sceneObj);
 			}
 		}
+
 
 		static List<TreeItem<SceneChunk>> GetRootItems(SceneContainer container)
 		{
@@ -102,35 +103,44 @@ namespace AevenScnTool.IO
 			}
 
 			List<TreeItem<SceneChunk>> items = GetChildItems(chunks, null, container.Header.Name);
-			//This comment should disapear TT.TT, oh no, a change! Oh no another one!
+			
 			return items;
 		}
 
 		static List<TreeItem<SceneChunk>> GetChildItems(List<SceneChunk> chunks, TreeItem<SceneChunk> parentItem, string parentName)
 		{
 			var items = new List<TreeItem<SceneChunk>>();
-			for(int i = 0; i < chunks.Count; i++)
+			for (int i = 0; i < chunks.Count; i++)
 			{
 				SceneChunk chunk = chunks[i];
 				if (parentItem == null)
-					if (!(chunk.SubName == parentName || chunk.SubName == string.Empty))
+				{
+					if (chunk.SubName != parentName && chunk.SubName != string.Empty)
 						continue;
+				}
 				else
+				{
 					if (chunk.SubName != parentName)
 						continue;
-					
-
+				}
+				
 				var treeItem = new TreeItem<SceneChunk>
 				{
 					item = chunk,
 					parent = parentItem
 				};
-				var children = GetChildItems(chunks, treeItem, chunk.Name);
-
-				treeItem.childs = children;
-
 				items.Add(treeItem);
+			}
+			foreach (var item in items)
+			{
+				chunks.Remove(item.item);
+			}
 
+			foreach (var item in items)
+			{
+				var children = GetChildItems(chunks, item, item.item.Name);
+
+				item.childs = children;
 			}
 			return items;
 		}
@@ -201,7 +211,10 @@ namespace AevenScnTool.IO
 		{
 			GameObject go = CreateGameObject(box);
 			go.transform.SetParent(parent.transform);
-
+			go.transform.localPosition = box.Matrix.GetPosition();
+			go.transform.localRotation = box.Matrix.rotation;
+			go.transform.localScale = box.Matrix.lossyScale;
+			
 			go.AddComponent<BoxCollider>().size = box.Size;
 			if (go.name.Contains("jump_dir") || go.name.Contains("jump_char"))
 			{

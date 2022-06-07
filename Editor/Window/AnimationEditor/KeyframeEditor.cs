@@ -26,8 +26,6 @@ public class KeyframeEditor : VisualElement
     public static float scaleScale = 100f;
     public static float alphaScale = 100f;
 
-    public static float zoom;
-
     FrameController frameController;
 
     VisualElement keyframeContent;
@@ -100,7 +98,7 @@ public class KeyframeEditor : VisualElement
 
     void SetCallbacks()
     {
-        frameController.onFrameChange += SetTransformToFrame;
+        frameController.onFrameChange += OnFrameSet;
         zoomViewport.onViewportSet.AddListener(OnViewportSet);
 
         prev.clicked += frameController.PreviousFrame;
@@ -202,15 +200,15 @@ public class KeyframeEditor : VisualElement
         keyframeContent.style.width = zp;
         keyframeContent.style.height = zp;
 
-        StyleLength hOffset = new StyleLength(new Length(-hMin * zoom, LengthUnit.Percent));
+        StyleLength hOffset = new StyleLength(new Length(-hMin * zoomViewport.zoom, LengthUnit.Percent));
         keyframeContent.style.left = hOffset;
 
         keyframeContent.style.top = new StyleLength(new Length(vPos * zoomInfluence, LengthUnit.Percent));
 
-        frameSlider.style.width = new StyleLength(new Length(zoom * frameController.totalFrames / 10f + 14f, LengthUnit.Pixel));
+        frameSlider.style.width = new StyleLength(new Length(zoomViewport.zoom * frameController.totalFrames / 10f + 14f, LengthUnit.Pixel));
         frameSlider.style.left = hOffset;
 
-        var length = new StyleLength(new Length(frameController.currentFrame * zoom / horizonalScale, LengthUnit.Pixel));
+        var length = new StyleLength(new Length(frameController.currentFrame * zoomViewport.zoom / horizonalScale, LengthUnit.Pixel));
         keyLine.style.left = length;
         rulerHolder.style.left = hOffset;
         DrawRuler(frameController.totalFrames);
@@ -228,7 +226,7 @@ public class KeyframeEditor : VisualElement
         {
             for (int i = 0; i < totalRulers; i++)
             {
-                rulerHolder[i].style.left = new StyleLength(new Length((i * 500f * zoom / horizonalScale) + 6, LengthUnit.Pixel));
+                rulerHolder[i].style.left = new StyleLength(new Length((i * 500f * zoomViewport.zoom / horizonalScale) + 6, LengthUnit.Pixel));
             }
         }
 		else
@@ -243,7 +241,7 @@ public class KeyframeEditor : VisualElement
                 ruler.style.height = new StyleLength(new Length(100, LengthUnit.Percent));
                 ruler.style.width = new StyleLength(new Length(1, LengthUnit.Pixel));
 
-                ruler.style.left = new StyleLength(new Length(i * 500f * zoom / horizonalScale + 6, LengthUnit.Pixel));
+                ruler.style.left = new StyleLength(new Length(i * 500f * zoomViewport.zoom / horizonalScale + 6, LengthUnit.Pixel));
                 ruler.style.backgroundColor = new StyleColor(Color.gray * 0.5f);
 
                 rulerHolder.Add(ruler);
@@ -362,9 +360,9 @@ public class KeyframeEditor : VisualElement
         frameController.SetFrame(0);
 
         frameController.totalFrames = duration;
-        frameSlider.style.width = new StyleLength(new Length(zoom * frameController.totalFrames / 10f + 14f, LengthUnit.Pixel));
+        frameSlider.style.width = new StyleLength(new Length(zoomViewport.zoom * frameController.totalFrames / 10f + 14f, LengthUnit.Pixel));
 
-        StyleLength zp = new StyleLength(new Length(zoom * 100f, LengthUnit.Percent));
+        StyleLength zp = new StyleLength(new Length(zoomViewport.zoom * 100f, LengthUnit.Percent));
         keyframeContent.style.width = zp;
         keyframeContent.style.height = zp;
 
@@ -389,9 +387,9 @@ public class KeyframeEditor : VisualElement
         Disable();
     }
 
-    public void SetFrame(int newFrame)
+    public void OnFrameSet(int newFrame)
     {
-        var length = new StyleLength(new Length(frameController.currentFrame * zoom / horizonalScale, LengthUnit.Pixel));
+        var length = new StyleLength(new Length(frameController.currentFrame * zoomViewport.zoom / horizonalScale, LengthUnit.Pixel));
         keyLine.style.left = length;
         frameSlider.SetValueWithoutNotify(frameController.currentFrame);
         frameField.SetValueWithoutNotify(frameController.currentFrame);
@@ -749,7 +747,7 @@ public class TransformChannel
     void PosCallback(MouseMoveEvent evnt)
     {
         KeyElement keyElem = evnt.target as KeyElement;
-        float newX = MoveParent(keyElem.parent, evnt.mouseDelta.x);
+        float newX = MoveParent(keyElem.parent, evnt.mouseDelta.x, editor.zoomViewport.zoom);
 
         float newValue = keyElem.style.top.value.value + evnt.mouseDelta.y;
 
@@ -795,7 +793,7 @@ public class TransformChannel
     void RotCallback(MouseMoveEvent evnt)
     {
         KeyElement keyElem = evnt.target as KeyElement;
-        float newX = MoveParent(keyElem.parent, evnt.mouseDelta.x);
+        float newX = MoveParent(keyElem.parent, evnt.mouseDelta.x, editor.zoomViewport.zoom);
 
         float newValue = keyElem.style.top.value.value + evnt.mouseDelta.y;
         keyElem.style.top = new StyleLength(new Length(newValue));
@@ -847,7 +845,7 @@ public class TransformChannel
     void ScaCallback(MouseMoveEvent evnt)
     {
         KeyElement keyElem = evnt.target as KeyElement;
-        float newX = MoveParent(keyElem.parent, evnt.mouseDelta.x);
+        float newX = MoveParent(keyElem.parent, evnt.mouseDelta.x, editor.zoomViewport.zoom);
 
         float newValue = keyElem.style.top.value.value + evnt.mouseDelta.y;
         keyElem.style.top = new StyleLength(new Length(newValue));
@@ -887,7 +885,7 @@ public class TransformChannel
     void AlpCallback(MouseMoveEvent evnt)
     {
         KeyElement keyElem = evnt.target as KeyElement;
-        float newX = MoveParent(keyElem.parent, evnt.mouseDelta.x);
+        float newX = MoveParent(keyElem.parent, evnt.mouseDelta.x, editor.zoomViewport.zoom);
 
         float newValue = keyElem.style.top.value.value + evnt.mouseDelta.y;
         keyElem.style.top = new StyleLength(new Length(newValue));
@@ -900,10 +898,10 @@ public class TransformChannel
 
     }
 
-    float MoveParent(VisualElement parent, float deltaX)
+    float MoveParent(VisualElement parent, float deltaX, float zoom)
     {
         float value = (parent.style.left.value.value + deltaX);
-        float newX = value * KeyframeEditor.horizonalScale / KeyframeEditor.zoom;
+        float newX = value * KeyframeEditor.horizonalScale / zoom;
         if (newX < 0) {
             newX = 0;
             value = 0;
@@ -911,7 +909,7 @@ public class TransformChannel
         if (newX > part.duration)
         {
             newX = part.duration;
-            value = part.duration * KeyframeEditor.zoom / KeyframeEditor.horizonalScale;
+            value = part.duration * zoom / KeyframeEditor.horizonalScale;
         }
 
         parent.style.left = new StyleLength(new Length(value));

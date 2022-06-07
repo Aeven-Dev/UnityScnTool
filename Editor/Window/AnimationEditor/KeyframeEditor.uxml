@@ -22,7 +22,6 @@
                         <ui:VisualElement style="background-color: rgb(156, 156, 156); position: absolute; left: 0; right: 0; height: 1px; top: 50%; bottom: 0; flex-shrink: 0;" />
                     </ui:VisualElement>
                     <ui:VisualElement name="RulerHolder" style="flex-grow: 1; position: absolute; background-color: rgb(255, 255, 255); top: auto; left: auto; right: auto; bottom: auto; height: 100%;" />
-                    <ui:SliderInt picking-mode="Ignore" value="0" high-value="100" low-value="0" name="FrameSlider" binding-path="frame" style="border-bottom-color: rgb(110, 110, 110); border-bottom-width: 2px; position: absolute; top: 0; left: 0; right: auto; bottom: 298px; background-color: rgb(56, 56, 56); margin-left: 0; border-left-width: 2px; border-right-width: 2px; margin-right: 0; padding-left: 0; border-left-color: rgb(110, 110, 110); border-right-color: rgb(110, 110, 110); margin-top: 0; min-width: auto; width: 112px; transform-origin: left top; padding-right: 0; height: 18px;" />
                     <ui:VisualElement name="Keyframes" style="height: 100%; width: 100%; position: absolute; top: 0; left: -1px; max-height: none; max-width: none; min-height: auto; min-width: 100%; scale: 1 1; visibility: visible; overflow: visible; display: flex; translate: 0 0; transform-origin: left top; margin-left: 6px; align-items: stretch; justify-content: space-between;">
                         <ui:VisualElement style="background-color: rgb(156, 156, 156); position: absolute; left: 0; right: 0; height: 1px; top: 50%; bottom: 0; flex-shrink: 0;" />
                         <ui:VisualElement name="KeyLine" style="height: 100%; width: 1px; left: 50px; min-width: 1px; margin-left: 0; visibility: visible;">
@@ -32,6 +31,7 @@
                             </ui:VisualElement>
                         </ui:VisualElement>
                     </ui:VisualElement>
+                    <ui:SliderInt picking-mode="Ignore" value="0" high-value="100" low-value="0" name="FrameSlider" binding-path="frame" style="border-bottom-color: rgb(110, 110, 110); border-bottom-width: 2px; position: absolute; top: 0; left: 0; right: auto; bottom: 298px; background-color: rgb(56, 56, 56); margin-left: 0; border-left-width: 2px; border-right-width: 2px; margin-right: 0; padding-left: 0; border-left-color: rgb(110, 110, 110); border-right-color: rgb(110, 110, 110); margin-top: 0; min-width: auto; width: 245px; transform-origin: left top; padding-right: 0; height: 18px;" />
                 </ui:VisualElement>
             </ZoomViewport>
         </ui:VisualElement>
