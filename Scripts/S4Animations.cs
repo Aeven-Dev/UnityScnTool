@@ -93,7 +93,7 @@ public class S4Animation
         for (int i = 0; i < TransformKeyData.FloatKeys.Count; i++)
         {
             FloatKey key = new FloatKey();
-            key.duration = TransformKeyData.FloatKeys[i].duration;
+            key.frame = TransformKeyData.FloatKeys[i].frame;
             key.Alpha = TransformKeyData.FloatKeys[i].Alpha;
             anim.TransformKeyData2.FloatKeys.Add(key);
         }
@@ -103,24 +103,24 @@ public class S4Animation
         anim.TransformKeyData2.TransformKey.Scale = TransformKeyData.TransformKey.Scale;
         for (int i = 0; i < TransformKeyData.TransformKey.TKey.Count; i++)
         {
-            TKey key = new TKey(TransformKeyData.TransformKey.TKey[i].duration, TransformKeyData.TransformKey.TKey[i].Translation);
+            TKey key = new TKey(TransformKeyData.TransformKey.TKey[i].frame, TransformKeyData.TransformKey.TKey[i].Translation);
             anim.TransformKeyData2.TransformKey.TKey.Add(key);
         }
         for (int i = 0; i < TransformKeyData.TransformKey.RKey.Count; i++)
         {
-            RKey key = new RKey(TransformKeyData.TransformKey.RKey[i].duration, TransformKeyData.TransformKey.RKey[i].Rotation);
+            RKey key = new RKey(TransformKeyData.TransformKey.RKey[i].frame, TransformKeyData.TransformKey.RKey[i].Rotation);
             anim.TransformKeyData2.TransformKey.RKey.Add(key);
         }
         for (int i = 0; i < TransformKeyData.TransformKey.SKey.Count; i++)
         {
-            SKey key = new SKey(TransformKeyData.TransformKey.SKey[i].duration, TransformKeyData.TransformKey.SKey[i].Scale);
+            SKey key = new SKey(TransformKeyData.TransformKey.SKey[i].frame, TransformKeyData.TransformKey.SKey[i].Scale);
             anim.TransformKeyData2.TransformKey.SKey.Add(key);
         }
         anim.TransformKeyData2.MorphKeys = new List<MorphKey>(); 
         for (int i = 0; i < MorphKeys.Count; i++)
         {
             MorphKey key = new MorphKey();
-            key.duration = MorphKeys[i].duration;
+            key.frame = MorphKeys[i].frame;
             key.Vertices = new List<MorphKey.VertexMorph>();
             for (int j = 0; j < MorphKeys[i].Vertices.Count; j++)
             {
@@ -148,7 +148,7 @@ public class S4Animation
         for (int i = 0; i < TransformKeyData.FloatKeys.Count; i++)
         {
             FloatKey key = new FloatKey();
-            key.duration = TransformKeyData.FloatKeys[i].duration;
+            key.frame = TransformKeyData.FloatKeys[i].frame;
             key.Alpha = TransformKeyData.FloatKeys[i].Alpha;
             anim.TransformKeyData.FloatKeys.Add(key);
         }
@@ -158,19 +158,43 @@ public class S4Animation
         anim.TransformKeyData.TransformKey.Scale = TransformKeyData.TransformKey.Scale;
         for (int i = 0; i < TransformKeyData.TransformKey.TKey.Count; i++)
         {
-            TKey key = new TKey(TransformKeyData.TransformKey.TKey[i].duration, TransformKeyData.TransformKey.TKey[i].Translation);
+            TKey key = new TKey(TransformKeyData.TransformKey.TKey[i].frame, TransformKeyData.TransformKey.TKey[i].Translation);
             anim.TransformKeyData.TransformKey.TKey.Add(key);
         }
         for (int i = 0; i < TransformKeyData.TransformKey.RKey.Count; i++)
         {
-            RKey key = new RKey(TransformKeyData.TransformKey.RKey[i].duration, TransformKeyData.TransformKey.RKey[i].Rotation);
+            RKey key = new RKey(TransformKeyData.TransformKey.RKey[i].frame, TransformKeyData.TransformKey.RKey[i].Rotation);
             anim.TransformKeyData.TransformKey.RKey.Add(key);
         }
         for (int i = 0; i < TransformKeyData.TransformKey.SKey.Count; i++)
         {
-            SKey key = new SKey(TransformKeyData.TransformKey.SKey[i].duration, TransformKeyData.TransformKey.SKey[i].Scale);
+            SKey key = new SKey(TransformKeyData.TransformKey.SKey[i].frame, TransformKeyData.TransformKey.SKey[i].Scale);
             anim.TransformKeyData.TransformKey.SKey.Add(key);
         }
         return anim;
+    }
+
+    public Vector2[] SampleUVs(int frame)
+    {
+        for (int i = 0; i < MorphKeys.Count - 1; i++)
+        {
+            MorphKey prev = MorphKeys[i];
+            MorphKey next = MorphKeys[i + 1];
+
+            if (frame >= prev.frame && frame < next.frame)
+            {
+                Vector2[] uvs = new Vector2[MorphKeys[i].UVs.Count];
+                for (int u = 0; u < uvs.Length; u++)
+                {
+                    Vector2 pos1 = prev.UVs[u].position;
+                    Vector2 pos2 = next.UVs[u].position;
+                    float range = next.frame - prev.frame;
+                    float t = frame - prev.frame;
+                    uvs[u] = Vector2.Lerp(pos1, pos2, t / range);
+                }
+                return uvs;
+            }
+        }
+        return null;
     }
 }

@@ -148,7 +148,7 @@ public class CharacterLoader : EditorWindow
         {
             if (File.Exists(rootFolder + @"\resources\image\costume\" + icon_name))
             {
-                Texture2D tex = ScnFileImporter.LoadTextureDXT(File.ReadAllBytes(
+                Texture2D tex = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(
                 rootFolder + @"\resources\image\costume\" + icon_name));
                 item.style.backgroundImage = tex;
             }

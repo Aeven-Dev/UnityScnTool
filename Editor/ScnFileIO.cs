@@ -10,6 +10,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.ProBuilder;
+using System.Linq;
 
 namespace AevenScnTool.IO
 {
@@ -18,10 +19,11 @@ namespace AevenScnTool.IO
 		public static Dictionary<string, Material> MainMaterials = new Dictionary<string, Material>();
 		public static Dictionary<string, Material> SideMaterials = new Dictionary<string, Material>();
 		static Dictionary<SceneChunk, GameObject> createdObjects = new Dictionary<SceneChunk, GameObject>();
-
-		public static void BuildFromContainer(SceneContainer container, GameObject sceneObj)
+/*
+		public static void BuildFromContainer2(SceneContainer container, GameObject sceneObj)
 		{
 			createdObjects.Clear();
+
 
 			foreach (BoneSystemChunk boneSys in container.boneSystems)
 			{
@@ -79,17 +81,97 @@ namespace AevenScnTool.IO
 				child.transform.SetParent(parent.transform, false);
 			}
 		}
+		*/
+		public static void BuildFromContainer(SceneContainer container, GameObject sceneObj)
+		{
+			List < TreeItem < SceneChunk >> rootItems = GetRootItems(container);
+			
+			createdObjects.Clear();
+			foreach (var item in rootItems)
+			{
+				BuildTreeItem(item, container, sceneObj);
+			}
+		}
 
-		static GameObject CreateModel(ModelChunk model, DirectoryInfo di)
+		static List<TreeItem<SceneChunk>> GetRootItems(SceneContainer container)
+		{
+			List<SceneChunk> chunks = new();
+			foreach (var item in container)
+			{
+				chunks.Add(item);
+			}
+
+			List<TreeItem<SceneChunk>> items = GetChildItems(chunks, null, container.Header.Name);
+
+			return items;
+		}
+
+		static List<TreeItem<SceneChunk>> GetChildItems(List<SceneChunk> chunks, TreeItem<SceneChunk> parentItem, string parentName)
+		{
+			var items = new List<TreeItem<SceneChunk>>();
+			for(int i = 0; i < chunks.Count; i++)
+			{
+				SceneChunk chunk = chunks[i];
+				if (parentItem == null)
+					if (!(chunk.SubName == parentName || chunk.SubName == string.Empty))
+						continue;
+				else
+					if (chunk.SubName != parentName)
+						continue;
+					
+
+				var treeItem = new TreeItem<SceneChunk>
+				{
+					item = chunk,
+					parent = parentItem
+				};
+				var children = GetChildItems(chunks, treeItem, chunk.Name);
+
+				treeItem.childs = children;
+
+				items.Add(treeItem);
+
+			}
+			return items;
+		}
+
+		static void BuildTreeItem(TreeItem<SceneChunk> treeItem, SceneContainer container, GameObject parent)
+		{
+			GameObject go = BuildFromChunk(treeItem, container.fileInfo.Directory, parent);
+			createdObjects.Add(treeItem.item, go);
+			foreach (var child in treeItem.childs)
+			{
+				BuildTreeItem(child, container, go);
+			}
+		}
+
+		static GameObject BuildFromChunk(TreeItem<SceneChunk> treeItem, DirectoryInfo di, GameObject parent)
+		{
+			return treeItem.item.ChunkType switch
+			{
+				ChunkType.Box => CreateBox(treeItem.item as BoxChunk, parent),
+				ChunkType.ModelData => CreateModel(treeItem.item as ModelChunk, di, parent),
+				ChunkType.Bone => CreateBone(treeItem.item as BoneChunk, parent),
+				ChunkType.SkyDirect1 => CreateSkyDirect1(treeItem.item as SkyDirect1Chunk, parent),
+				ChunkType.BoneSystem => CreateBoneSystem(treeItem.item as BoneSystemChunk, parent),
+				ChunkType.Shape => CreateShape(treeItem.item as ShapeChunk, parent),
+				_ => null,
+			};
+		}
+
+
+		static GameObject CreateModel(ModelChunk model, DirectoryInfo di, GameObject parent)
 		{
 			GameObject go = CreateGameObject(model);
+			go.transform.SetParent(parent.transform);
+
 
 			Mesh mesh = CreateMesh(model);
 
 			Material mat = GetMatFromShader(model.Shader);
 
 			TextureReference tr = go.AddComponent<TextureReference>();
-			tr.renderFlags = (RenderFlag)model.Shader;
+			tr.renderFlags = model.Shader;
 
 			Material[] mats = SetFaceData(mesh, model, di, tr);
 
@@ -115,9 +197,10 @@ namespace AevenScnTool.IO
 			return go;
 		}
 
-		static GameObject CreateBox(BoxChunk box)
+		static GameObject CreateBox(BoxChunk box, GameObject parent)
 		{
 			GameObject go = CreateGameObject(box);
+			go.transform.SetParent(parent.transform);
 
 			go.AddComponent<BoxCollider>().size = box.Size;
 			if (go.name.Contains("jump_dir") || go.name.Contains("jump_char"))
@@ -147,9 +230,10 @@ namespace AevenScnTool.IO
 			return go;
 		}
 
-		static GameObject CreateBone(BoneChunk bone)
+		static GameObject CreateBone(BoneChunk bone, GameObject parent)
 		{
 			GameObject go = CreateGameObject(bone);
+			go.transform.SetParent(parent.transform);
 
 			var s4a = go.AddComponent<S4Animations>();
 			s4a.FromBoneAnimation(bone.Animation);
@@ -157,16 +241,18 @@ namespace AevenScnTool.IO
 			return go;
 		}
 
-		static GameObject CreateBoneSystem(BoneSystemChunk boneSys)
+		static GameObject CreateBoneSystem(BoneSystemChunk boneSys, GameObject parent)
 		{
 			GameObject go = CreateGameObject(boneSys);
+			go.transform.SetParent(parent.transform);
 
 			return go;
 		}
 
-		static GameObject CreateShape(ShapeChunk shape)
+		static GameObject CreateShape(ShapeChunk shape, GameObject parent)
 		{
 			GameObject go = CreateGameObject(shape);
+			go.transform.SetParent(parent.transform);
 
 			LineRenderer lr = go.AddComponent<LineRenderer>();
 
@@ -182,6 +268,19 @@ namespace AevenScnTool.IO
 
 		}
 
+		static GameObject CreateSkyDirect1(SkyDirect1Chunk chunk, GameObject parent)
+		{
+			GameObject go = CreateGameObject(chunk);
+			go.transform.SetParent(parent.transform);
+
+			TextMesh light = go.AddComponent<TextMesh>();
+
+			light.text = $"Color 1: {chunk.color1}\nColor 2: {chunk.color2}\nColor 3: {chunk.color3}\nColor 4: {chunk.color4}\nColor 5: {chunk.color5}\nColor 6: {chunk.color6}\n";
+
+			return go;
+
+		}
+
 		static GameObject CreateGameObject(SceneChunk chunk)
 		{
 			GameObject go = new GameObject(chunk.Name);
@@ -192,6 +291,7 @@ namespace AevenScnTool.IO
 
 			return go;
 		}
+
 
 		static Mesh CreateMesh(ModelChunk model)
 		{
@@ -306,7 +406,7 @@ namespace AevenScnTool.IO
 					string mainTex = di.FullName + "\\" + texEntry.FileName.Replace("tga", "dds");
 					if (File.Exists(mainTex))
 					{
-						mat_x.mainTexture = LoadTextureDXT(File.ReadAllBytes(mainTex));
+						mat_x.mainTexture = ParseTextureDXT(File.ReadAllBytes(mainTex));
 						mat_x.mainTexture.name = texEntry.FileName.Replace("tga", "dds");
 					}
 					else
@@ -320,7 +420,7 @@ namespace AevenScnTool.IO
 					{
 						if (File.Exists(sideTex))
 						{
-							Texture2D st = LoadTextureDXT(File.ReadAllBytes(sideTex));
+							Texture2D st = ParseTextureDXT(File.ReadAllBytes(sideTex));
 							st.name = texEntry.FileName2.Replace("tga", "dds");
 							if (model.TextureData.ExtraUV == 1)
 							{
@@ -414,8 +514,6 @@ namespace AevenScnTool.IO
 
 		static (Material, Material) LoadMaterials(string mainTexturePath, string sideTexturePath, RenderFlag shader, bool isNormal = false)
 		{
-
-
 			string mainMatName = new FileInfo(mainTexturePath).Name;
 			string sideMatName = new FileInfo(sideTexturePath).Name;
 
@@ -426,7 +524,7 @@ namespace AevenScnTool.IO
 				mainMat = new Material(mat);
 				if (File.Exists(mainTexturePath))
 				{
-					mainMat.mainTexture = LoadTextureDXT(File.ReadAllBytes(mainTexturePath));
+					mainMat.mainTexture = ParseTextureDXT(File.ReadAllBytes(mainTexturePath));
 					mainMat.mainTexture.name = new FileInfo(mainTexturePath).Name.Replace("tga", "dds");
 
 					MainMaterials.Add(mainMatName, mainMat);
@@ -434,14 +532,14 @@ namespace AevenScnTool.IO
 			}
 
 			Material sideMat;
-			if (SideMaterials.TryGetValue(sideMatName, out sideMat))
+			if (!SideMaterials.TryGetValue(sideMatName, out sideMat))
 			{
 				Material mat = GetMatFromShader(shader);
 				sideMat = new Material(mat);
 				if (File.Exists(sideTexturePath))
 				{
-					Texture2D st = LoadTextureDXT(File.ReadAllBytes(sideTexturePath));
-					st.name = new FileInfo(sideTexturePath).Name.Replace("tga", "dds");
+					Texture2D st = ParseTextureDXT(File.ReadAllBytes(sideTexturePath));
+					st.name = new FileInfo(sideTexturePath).Name.Replace(".tga", ".dds");
 					if (isNormal)
 					{
 						sideMat.SetTexture("_DetailAlbedoMap", st);
@@ -458,7 +556,7 @@ namespace AevenScnTool.IO
 			return (mainMat, sideMat);
 		}
 
-		public static Texture2D LoadTextureDXT(byte[] ddsBytes)
+		public static Texture2D ParseTextureDXT(byte[] ddsBytes)
 		{
 			byte a = ddsBytes[84];
 			byte b = ddsBytes[85];
@@ -490,6 +588,13 @@ namespace AevenScnTool.IO
 
 			return (texture);
 		}
+	}
+
+	class TreeItem<T>
+	{
+		public T item;
+		public List<TreeItem<T>> childs;
+		public TreeItem<T> parent;
 	}
 
 	public static class ScnFileExporter
@@ -545,7 +650,16 @@ namespace AevenScnTool.IO
 			if (smr) return CreateModelChunkSkinned(smr, container, parentChunk, relativeParent);
 
 			MeshRenderer mr = child.GetComponent<MeshRenderer>();
-			if (mr) return CreateModelChunk(mr, container, parentChunk, relativeParent);
+			if (mr)
+			{
+				var mesh = CreateModelChunk(mr, container, parentChunk, relativeParent);
+				CollisionData cd_mr = child.GetComponent<CollisionData>();
+				if (cd_mr)
+				{
+					CreateCollisionChunk(cd_mr, container, mesh);
+				}
+				return mesh;
+			}
 
 			CollisionData cd = child.GetComponent<CollisionData>();
 			if (cd) return CreateCollisionChunk(cd, container, parentChunk);

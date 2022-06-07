@@ -44,7 +44,7 @@ public static class AnimIO
 
 		foreach(var key in tKeys)
 		{
-			float time = (float)key.duration / 1000f;
+			float time = (float)key.frame / 1000f;
 			curveX.AddKey(new Keyframe(time, key.Translation.x, 0f, 0f, 0f, 0f));
 			curveY.AddKey(new Keyframe(time, key.Translation.y, 0f, 0f, 0f, 0f));
 			curveZ.AddKey(new Keyframe(time, key.Translation.z, 0f, 0f, 0f, 0f));
@@ -64,7 +64,7 @@ public static class AnimIO
 		Quaternion prev = initial;
 		foreach (var key in rKeys)
 		{
-			float time = (float)key.duration / 1000f;
+			float time = (float)key.frame / 1000f;
 			Quaternion current = key.Rotation;
 			curveX.AddKey(new Keyframe(time, current.x, 0f, 0f, 0f, 0f));
 			curveY.AddKey(new Keyframe(time, current.y, 0f, 0f, 0f, 0f));
@@ -88,7 +88,7 @@ public static class AnimIO
 
 		foreach (var key in rKeys)
 		{
-			float time = (float)key.duration / 1000f;
+			float time = (float)key.frame / 1000f;
 			Vector3 eulerKey = key.Rotation.eulerAngles;
 			curveX.AddKey(new Keyframe(time, eulerKey.x, 0f, 0f, 0f, 0f));
 			curveY.AddKey(new Keyframe(time, eulerKey.y, 0f, 0f, 0f, 0f));
@@ -106,7 +106,7 @@ public static class AnimIO
 
 		foreach (var key in sKeys)
 		{
-			float time = (float)key.duration / 1000f;
+			float time = (float)key.frame / 1000f;
 			curveX.AddKey(new Keyframe(time, key.Scale.x, 0f, 0f, 0f, 0f));
 			curveY.AddKey(new Keyframe(time, key.Scale.y, 0f, 0f, 0f, 0f));
 			curveZ.AddKey(new Keyframe(time, key.Scale.z, 0f, 0f, 0f, 0f));
@@ -122,7 +122,7 @@ public static class AnimIO
 
 		foreach (var key in fKeys)
 		{
-			curve.AddKey(key.duration, key.Alpha);
+			curve.AddKey(key.frame, key.Alpha);
 		}
 
 		//clip.SetCurve(pathToObj , typeof(Transform), "idk,hehe", curve);
@@ -211,7 +211,7 @@ public static class AnimIO
 			if (anim.TransformKeyData.TransformKey.TKey.Count < curve.keys.Length)
 			{
 				TKey key = new TKey();
-				key.duration = (int)(curve.keys[i].time * 1000f);
+				key.frame = (int)(curve.keys[i].time * 1000f);
 				key.Translation.x = curve.keys[i].value;
 				anim.TransformKeyData.TransformKey.TKey.Add(key);
 			}
@@ -231,7 +231,7 @@ public static class AnimIO
 			if (anim.TransformKeyData.TransformKey.TKey.Count < curve.keys.Length)
 			{
 				TKey key = new TKey();
-				key.duration = (int)(curve.keys[i].time * 1000f);
+				key.frame = (int)(curve.keys[i].time * 1000f);
 				key.Translation.y = curve.keys[i].value;
 				anim.TransformKeyData.TransformKey.TKey.Add(key);
 			}
@@ -251,7 +251,7 @@ public static class AnimIO
 			if (anim.TransformKeyData.TransformKey.TKey.Count < curve.keys.Length)
 			{
 				TKey key = new TKey();
-				key.duration = (int)(curve.keys[i].time * 1000f);
+				key.frame = (int)(curve.keys[i].time * 1000f);
 				key.Translation.z = curve.keys[i].value;
 				anim.TransformKeyData.TransformKey.TKey.Add(key);
 			}
@@ -271,7 +271,7 @@ public static class AnimIO
 			if (anim.TransformKeyData.TransformKey.RKey.Count < curve.keys.Length)
 			{
 				RKey key = new RKey();
-				key.duration = (int)(curve.keys[i].time * 1000f);
+				key.frame = (int)(curve.keys[i].time * 1000f);
 				key.Rotation.x = curve.keys[i].value;
 				anim.TransformKeyData.TransformKey.RKey.Add(key);
 			}
@@ -291,7 +291,7 @@ public static class AnimIO
 			if (anim.TransformKeyData.TransformKey.RKey.Count < curve.keys.Length)
 			{
 				RKey key = new RKey();
-				key.duration = (int)(curve.keys[i].time * 1000f);
+				key.frame = (int)(curve.keys[i].time * 1000f);
 				key.Rotation.y = curve.keys[i].value;
 				anim.TransformKeyData.TransformKey.RKey.Add(key);
 			}
@@ -311,7 +311,7 @@ public static class AnimIO
 			if (anim.TransformKeyData.TransformKey.RKey.Count < curve.keys.Length)
 			{
 				RKey key = new RKey();
-				key.duration = (int)(curve.keys[i].time * 1000f);
+				key.frame = (int)(curve.keys[i].time * 1000f);
 				key.Rotation.z = curve.keys[i].value;
 				anim.TransformKeyData.TransformKey.RKey.Add(key);
 			}
@@ -331,7 +331,7 @@ public static class AnimIO
 			if (anim.TransformKeyData.TransformKey.RKey.Count < curve.keys.Length)
 			{
 				RKey key = new RKey();
-				key.duration = (int)(curve.keys[i].time * 1000f);
+				key.frame = (int)(curve.keys[i].time * 1000f);
 				key.Rotation.w = curve.keys[i].value;
 				anim.TransformKeyData.TransformKey.RKey.Add(key);
 			}
@@ -351,7 +351,7 @@ public static class AnimIO
 			if (anim.TransformKeyData.TransformKey.SKey.Count < curve.keys.Length)
 			{
 				SKey key = new SKey();
-				key.duration = (int)(curve.keys[i].time * 1000f);
+				key.frame = (int)(curve.keys[i].time * 1000f);
 				key.Scale.x = curve.keys[i].value;
 				anim.TransformKeyData.TransformKey.SKey.Add(key);
 			}
@@ -371,7 +371,7 @@ public static class AnimIO
 			if (anim.TransformKeyData.TransformKey.SKey.Count < curve.keys.Length)
 			{
 				SKey key = new SKey();
-				key.duration = (int)(curve.keys[i].time * 1000f);
+				key.frame = (int)(curve.keys[i].time * 1000f);
 				key.Scale.y = curve.keys[i].value;
 				anim.TransformKeyData.TransformKey.SKey.Add(key);
 			}
@@ -391,7 +391,7 @@ public static class AnimIO
 			if (anim.TransformKeyData.TransformKey.SKey.Count < curve.keys.Length)
 			{
 				SKey key = new SKey();
-				key.duration = (int)(curve.keys[i].time * 1000f);
+				key.frame = (int)(curve.keys[i].time * 1000f);
 				key.Scale.z = curve.keys[i].value;
 				anim.TransformKeyData.TransformKey.SKey.Add(key);
 			}
@@ -408,7 +408,7 @@ public static class AnimIO
 		for (int i = 0; i < curve.keys.Length; i++)
 		{
 			FloatKey key = new FloatKey();
-			key.duration = (int)(curve.keys[i].time * 1000f);
+			key.frame = (int)(curve.keys[i].time * 1000f);
 			key.Alpha = curve.keys[i].value;
 			anim.TransformKeyData.FloatKeys.Add(key);
 		}

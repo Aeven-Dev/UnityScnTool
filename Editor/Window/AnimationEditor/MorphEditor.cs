@@ -19,11 +19,13 @@ public class MorphEditor : VisualElement
         }
     }
 
-    Mesh mesh;
+    Vector2[] uvs;
     List<(int, int)> lines;
+    Rect uvRegion;
+
     void OnGenerateVisualContent(MeshGenerationContext mgc)
     {
-		if (mesh == null)
+		if (uvs == null)
 		{
             return;
 		}
@@ -32,16 +34,9 @@ public class MorphEditor : VisualElement
             return; // Skip rendering when too small.
 
         MeshWriteData mwd = mgc.Allocate(lines.Count * 4, lines.Count * 6);
-        Rect uvRegion = mwd.uvRegion;
-        List<Vertex> vertices = new List<Vertex>(lines.Count * 4);
-        List<ushort> indices = new List<ushort>(lines.Count * 6);
-        for (int i = 0; i < lines.Count; i++)
-		{
-            var pair = DrawLine(mesh.uv[lines[i].Item1], mesh.uv[lines[i].Item2], i * 4, uvRegion);
-            vertices.AddRange(pair.Item1);
-            indices.AddRange(pair.Item2);
-        }
+        uvRegion = mwd.uvRegion;
 
+        (var vertices, var indices) = DrawUVs();
         // Since the texture may be stored in an atlas, the UV coordinates need to be
         // adjusted. Simply rescale them in the provided uvRegion.
 
@@ -49,7 +44,7 @@ public class MorphEditor : VisualElement
         mwd.SetAllIndices(indices.ToArray());
     }
 
-    (Vertex[], ushort[]) DrawLine(Vector2 a, Vector2 b, int indexoffset, Rect uvRegion)
+    (Vertex[], ushort[]) DrawLine(Vector2 a, Vector2 b, int indexoffset)
     {
         Vertex[] verts = new Vertex[4];
         ushort[] indices = {
@@ -84,11 +79,16 @@ public class MorphEditor : VisualElement
 
     public void SetMesh( Mesh mesh)
 	{
-        this.mesh = mesh;
+        this.uvs = mesh.uv;
         this.lines = CalculateLines(mesh);
 	}
 
-    List<(int, int)> CalculateLines(Mesh mesh)
+    public void SetUVs(Vector2[] uvs)
+	{
+        this.uvs = uvs;
+    }
+
+    public static List<(int, int)> CalculateLines(Mesh mesh)
 	{
         List<(int, int)> lines = new List<(int, int)>();
 		for (int i = 0; i < mesh.triangles.Length; i+=3)
@@ -106,7 +106,7 @@ public class MorphEditor : VisualElement
         return lines;
 	}
 
-    bool ContainsLine(List<(int, int)> lines, int a, int b)
+    static bool ContainsLine(List<(int, int)> lines, int a, int b)
 	{
 		foreach (var pair in lines)
 		{
@@ -121,4 +121,17 @@ public class MorphEditor : VisualElement
         }
         return false;
 	}
+
+    (List<Vertex>, List<ushort>) DrawUVs()
+	{
+        List<Vertex> vertices = new List<Vertex>(lines.Count * 4);
+        List<ushort> indices = new List<ushort>(lines.Count * 6);
+        for (int i = 0; i < lines.Count; i++)
+        {
+            var pair = DrawLine(uvs[lines[i].Item1], uvs[lines[i].Item2], i * 4);
+            vertices.AddRange(pair.Item1);
+            indices.AddRange(pair.Item2);
+        }
+        return (vertices, indices);
+    }
 }

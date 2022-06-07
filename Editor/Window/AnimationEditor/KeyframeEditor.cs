@@ -28,22 +28,18 @@ public class KeyframeEditor : VisualElement
 
     public static float zoom;
 
-    public int currentFrame;
-    public int totalFrames;
-    public UnityEvent onFrameChange;
+    FrameController frameController;
 
     VisualElement keyframeContent;
     VisualElement keyLine;
 
-    Scroller vertical;
     SliderInt frameSlider;
-    MinMaxSlider horizontal_zoom;
     IntegerField frameField;
     Label totalFramesField;
 
+    public ZoomViewport zoomViewport;
 
     VisualElement message;
-    VisualElement viewportRoot;
     VisualElement rulerHolder;
 
     Button prev;
@@ -58,33 +54,28 @@ public class KeyframeEditor : VisualElement
     Button keySca;
     Button keyAlp;
 
-    Label posLabel;
 
     bool playing;
-    float lastFrameTime;
     int lastRuleDrawCount = 0;
 
     Dictionary<S4Animations, TransformKeyData> bones = new();
     Dictionary<S4Animations, TransformKeyData> copies = new();
     Dictionary<TransformKeyData, TransformChannel> channels = new();
-    List<int> keyframes = new();
 
     public void Init()
     {
-        currentFrame = 0;
+        frameController = new FrameController();
         // Import UXML
         var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/ScnToolByAeven/Editor/Window/AnimationEditor/KeyframeEditor.uxml");
         visualTree.CloneTree(this);
 
+        zoomViewport = this.Q<ZoomViewport>("Viewport");
+
         frameSlider = this.Q<SliderInt>("FrameSlider");
-        vertical = this.Q<Scroller>("Vertical");
         keyframeContent = this.Q("Keyframes");
         keyLine = this.Q("KeyLine");
-        horizontal_zoom = this.Q<MinMaxSlider>("Hori_Zoom");
         frameField = this.Q<IntegerField>("FrameField");
         totalFramesField = this.Q<Label>("TotalFrames");
-
-        posLabel = this.Q<Label>("PosLabel");
 
         prev = this.Q<Button>("Prev");
         play = this.Q<Button>("Play");
@@ -99,47 +90,24 @@ public class KeyframeEditor : VisualElement
         keyAlp = this.Q<Button>("KeyAlp");
 
         message = this.Q("Message");
-        viewportRoot = this.Q("ViewportRoot");
         rulerHolder = this.Q("RulerHolder");
 
         SetCallbacks();
         Disable();
         message.style.display = DisplayStyle.Flex;
-        viewportRoot.style.display = DisplayStyle.None;
+        zoomViewport.style.display = DisplayStyle.None;
     }
 
     void SetCallbacks()
     {
-        keyframeContent.RegisterCallback<WheelEvent>(KeyframeWheel);
-        keyframeContent.RegisterCallback<MouseMoveEvent>((e) => { posLabel.text = e.localMousePosition.x + "x - " + e.localMousePosition.y + "y"; },TrickleDown.TrickleDown);
-        keyframeContent.RegisterCallback<MouseLeaveEvent>((e) => { posLabel.text = string.Empty; });
-        keyframeContent.RegisterCallback<MouseDownEvent>((evnt) =>
-        {
-            if (evnt.button == 2) keyframeContent.CaptureMouse();
-        });
-        keyframeContent.RegisterCallback<MouseMoveEvent>(KeyframeScroll);
-        keyframeContent.RegisterCallback<MouseUpEvent>((evnt) =>
-        {
-            if (evnt.button == 2) keyframeContent.ReleaseMouse();
-        });
+        frameController.onFrameChange += SetTransformToFrame;
+        zoomViewport.onViewportSet.AddListener(OnViewportSet);
 
-        vertical.valueChanged += (pos) =>
-        {
-
-            SetViewport(horizontal_zoom.value.x, horizontal_zoom.value.y, pos);
-        };
-
-        horizontal_zoom.RegisterValueChangedCallback((evnt) =>
-        {
-            //set zoom
-            SetViewport(evnt.newValue.x, evnt.newValue.y, vertical.value);
-        });
-
-        prev.clicked += PreviousFrame;
+        prev.clicked += frameController.PreviousFrame;
         play.clicked += Play;
-        next.clicked += NextFrame;
-        prevKey.clicked += PreviousKey;
-        nextKey.clicked += NextKey;
+        next.clicked += frameController.NextFrame;
+        prevKey.clicked += frameController.PreviousKey;
+        nextKey.clicked += frameController.NextKey;
 
         keyAll.clicked += KeyAll;
         keyPos.clicked += KeyPos;
@@ -147,8 +115,8 @@ public class KeyframeEditor : VisualElement
         keySca.clicked += KeySca;
         keyAlp.clicked += KeyAlp;
 
-        frameSlider.RegisterValueChangedCallback((e) => { SetFrame(e.newValue); });
-        frameField.RegisterValueChangedCallback((e) => { SetFrame(e.newValue); });
+        frameSlider.RegisterValueChangedCallback((e) => { frameController.SetFrame(e.newValue); });
+        frameField.RegisterValueChangedCallback((e) => { frameController.SetFrame(e.newValue); });
 
         keyLine[1].RegisterCallback<MouseOverEvent>((evnt) =>
         {
@@ -178,97 +146,6 @@ public class KeyframeEditor : VisualElement
         
     }
 
-    void PreviousFrame()
-	{
-        int frame = currentFrame - 1;
-        if (frame < 0) frame = totalFrames;
-
-        SetFrame(frame);
-    }
-    void NextFrame()
-	{
-        int frame = currentFrame + 1;
-        if (frame > totalFrames) frame = 0;
-
-        SetFrame(frame);
-    }
-    void PreviousKey()
-    {
-		//There's many options
-		//Option 1: Next global key, expensive, confusing for the user, denied
-		//Option 2: Next activated key, simpler, could be wonky, but stable
-		//Option 3: Next key of selected, also simple, can be frustrating if
-		if (keyframes.Count == 1)
-		{
-            SetFrame(keyframes[0]);
-            return;
-		}
-		for (int i = 0; i < keyframes.Count; i++)
-		{
-			if (currentFrame == keyframes[i])
-			{
-				if ( i == 0)
-                {
-                    SetFrame(keyframes[keyframes.Count - 1]);
-                    return;
-                }
-				else
-				{
-                    SetFrame(keyframes[i - 1]);
-                    return;
-                }
-            }
-			if (i == keyframes.Count -1)
-			{
-                SetFrame(keyframes[i - 1]);
-                return;
-            }
-			if (currentFrame > keyframes[i] && currentFrame < keyframes[i + 1])
-			{
-                SetFrame(keyframes[i]);
-                return;
-            }
-		}
-    }
-    void NextKey()
-    {
-        //There's many options
-        //Option 1: Next global key, expensive, confusing for the user, denied
-        //Option 2: Next activated key, simpler, could be wonky, but stable
-        //Option 3: Next key of selected, also simple, can be frustrating if
-        if (keyframes.Count == 1)
-        {
-            SetFrame(keyframes[0]);
-            return;
-        }
-        for (int i = 0; i < keyframes.Count; i++)
-        {
-            if (currentFrame == keyframes[i])
-            {
-                if (i == keyframes.Count - 1)
-                {
-                    SetFrame(keyframes[0]);
-                    return;
-                }
-                else
-                {
-                    SetFrame(keyframes[i + 1]);
-                    return;
-                }
-            }
-            if (i == keyframes.Count - 1)
-            {
-                SetFrame(keyframes[0]);
-                return;
-            }
-            if (currentFrame > keyframes[i] && currentFrame < keyframes[i + 1])
-            {
-                SetFrame(keyframes[i + 1]);
-                return;
-            }
-        }
-    }
-
     void Disable()
 	{
         prev.SetEnabled(false);
@@ -276,7 +153,6 @@ public class KeyframeEditor : VisualElement
         next.SetEnabled(false);
         prevKey.SetEnabled(false);
         nextKey.SetEnabled(false);
-        posLabel.text = string.Empty;
         totalFramesField.text = string.Empty;
         keyAll.SetEnabled(false);
         keyPos.SetEnabled(false);
@@ -285,12 +161,12 @@ public class KeyframeEditor : VisualElement
         keyAlp.SetEnabled(false);
 
         playing = !playing;
-        EditorApplication.update -= PlayAnimation;
+        EditorApplication.update -= frameController.PlayAnimation;
         play.text = "Play!";
 
-        SetFrame(0);
+        frameController.SetFrame(0);
     }
-
+    /*
     void SetViewport(float hMin, float hMax, float vPos)
     {
         float dis = hMax - hMin;
@@ -310,15 +186,37 @@ public class KeyframeEditor : VisualElement
 
         vertical.Adjust(dis / 100f);
 
-        frameSlider.style.width = new StyleLength(new Length(zoom * totalFrames / 10f + 14f, LengthUnit.Pixel));
+        frameSlider.style.width = new StyleLength(new Length(zoom * frameController.totalFrames / 10f + 14f, LengthUnit.Pixel));
         frameSlider.style.left = hOffset;
 
-        var length = new StyleLength(new Length(currentFrame * zoom / horizonalScale, LengthUnit.Pixel));
+        var length = new StyleLength(new Length(frameController.currentFrame * zoom / horizonalScale, LengthUnit.Pixel));
         keyLine.style.left = length;
         rulerHolder.style.left = hOffset;
-        DrawRuler(totalFrames);
+        DrawRuler(frameController.totalFrames);
         DrawKeyframes();
     }
+    */
+    void OnViewportSet(float zoomPercentage, float hMin, float vPos, float zoomInfluence)
+	{
+        StyleLength zp = new StyleLength(new Length(zoomPercentage, LengthUnit.Percent));
+        keyframeContent.style.width = zp;
+        keyframeContent.style.height = zp;
+
+        StyleLength hOffset = new StyleLength(new Length(-hMin * zoom, LengthUnit.Percent));
+        keyframeContent.style.left = hOffset;
+
+        keyframeContent.style.top = new StyleLength(new Length(vPos * zoomInfluence, LengthUnit.Percent));
+
+        frameSlider.style.width = new StyleLength(new Length(zoom * frameController.totalFrames / 10f + 14f, LengthUnit.Pixel));
+        frameSlider.style.left = hOffset;
+
+        var length = new StyleLength(new Length(frameController.currentFrame * zoom / horizonalScale, LengthUnit.Pixel));
+        keyLine.style.left = length;
+        rulerHolder.style.left = hOffset;
+        DrawRuler(frameController.totalFrames);
+        DrawKeyframes();
+    }
+
 
     void DrawRuler(int duration)
 	{
@@ -361,42 +259,11 @@ public class KeyframeEditor : VisualElement
 		}
 	}
 
-    void KeyframeScroll(MouseMoveEvent e)
-	{
-        if (keyframeContent.HasMouseCapture())
-        {
-            var val = new Vector2(horizontal_zoom.value.x - e.mouseDelta.x * 0.1f, horizontal_zoom.value.y - e.mouseDelta.x * 0.1f);
-            if (val.y < horizontal_zoom.highLimit && val.x > horizontal_zoom.lowLimit)
-            {
-                horizontal_zoom.value = val;
-            }
-            vertical.value -= e.mouseDelta.y * 0.5f;
-        }
-    }
-
-    void KeyframeWheel(WheelEvent e)
-	{
-        if (e.ctrlKey)
-        {
-            horizontal_zoom.value = new Vector2(horizontal_zoom.value.x - e.delta.y * 0.5f, horizontal_zoom.value.y + e.delta.y * 0.5f);
-        }
-        else if (e.shiftKey)
-        {
-            var val = new Vector2(horizontal_zoom.value.x + e.delta.y * 0.5f, horizontal_zoom.value.y + e.delta.y * 0.5f);
-            if (val.y < horizontal_zoom.highLimit && val.x > horizontal_zoom.lowLimit)
-            {
-                horizontal_zoom.value = val;
-            }
-        }
-        else
-        {
-            vertical.value += e.delta.y * 0.5f;
-        }
-    }
+    
 
     void KeylineDrag(MouseMoveEvent e)
 	{
-        SetFrame(currentFrame + (int)(e.mouseDelta.x * 10f));
+        frameController.SetFrame(frameController.currentFrame + (int)(e.mouseDelta.x * 10f));
     }
 
     void Play()
@@ -404,32 +271,20 @@ public class KeyframeEditor : VisualElement
         if (playing)
         {
             playing = !playing;
-            EditorApplication.update -= PlayAnimation;
+            EditorApplication.update -= frameController.PlayAnimation;
             play.text = "Play!";
         }
         else
         {
-            lastFrameTime = Time.realtimeSinceStartup;
+            frameController.lastFrameTime = Time.realtimeSinceStartup;
             playing = !playing;
-            EditorApplication.update += PlayAnimation;
+            EditorApplication.update += frameController.PlayAnimation;
             play.text = "Stop!";
         }
 
     }
 
-    void PlayAnimation()
-    {
-        if (Time.realtimeSinceStartup - lastFrameTime >= 0.0166666666666667f)
-        {
-            lastFrameTime = Time.realtimeSinceStartup;
-
-            SetFrame( currentFrame + (int)(1000f / 30f));
-            if (currentFrame > new List<TransformKeyData>(bones.Values)[0].duration)
-            {
-                SetFrame(0);
-            }
-        }
-    }
+    
     
     void SetTransformToFrame( int frame)
 	{
@@ -438,23 +293,45 @@ public class KeyframeEditor : VisualElement
 			if (copies.TryGetValue(part, out TransformKeyData copy))
 			{
 
-                part.transform.localPosition = copy.SamplePosition(frame);
-                part.transform.localRotation = copy.SampleRotation(frame);
-                part.transform.localScale = copy.SampleScale(frame);
+                Vector3 oldPos = part.transform.localPosition;
+                Vector3 newPos = copy.SamplePosition(frame);
+                if (oldPos != newPos)
+                    part.transform.localPosition = newPos;
+
+                Quaternion oldRot = part.transform.localRotation;
+                Quaternion newRot = copy.SampleRotation(frame);
+                if (oldRot != newRot)
+                    part.transform.localRotation = newRot;
+
+                Vector3 oldSca = part.transform.localScale;
+                Vector3 newSca = copy.SampleScale(frame);
+                if (oldSca != newSca)
+                    part.transform.localScale = newPos;
             }
 			else
             {
                 TransformKeyData tkd = bones[part];
-                part.transform.localPosition = tkd.SamplePosition(frame);
-                part.transform.localRotation = tkd.SampleRotation(frame);
-                part.transform.localScale = tkd.SampleScale(frame);
+                Vector3 oldPos = part.transform.localPosition;
+                Vector3 newPos = tkd.SamplePosition(frame);
+                if (oldPos != newPos)
+                    part.transform.localPosition = newPos;
+
+                Quaternion oldRot = part.transform.localRotation;
+                Quaternion newRot = tkd.SampleRotation(frame);
+                if (oldRot != newRot)
+                    part.transform.localRotation = newRot;
+
+                Vector3 oldSca = part.transform.localScale;
+                Vector3 newSca = tkd.SampleScale(frame);
+                if (oldSca != newSca)
+                    part.transform.localScale = newPos;
             }
         }
     }
 
     public void AddChannel(TransformKeyData tkd)
     {
-        channels.Add(tkd, new TransformChannel(tkd));
+        channels.Add(tkd, new TransformChannel(tkd, this));
     }
 
     public void ClearChannels()
@@ -471,10 +348,10 @@ public class KeyframeEditor : VisualElement
 
     public void AnimationChanged(Dictionary<S4Animations, TransformKeyData> bones, Dictionary<S4Animations, TransformKeyData> copies = null)
     {
-        keyframes.Clear();
+        frameController.keyframes.Clear();
 
         message.style.display = DisplayStyle.None;
-        viewportRoot.style.display = DisplayStyle.Flex;
+        zoomViewport.style.display = DisplayStyle.Flex;
 
         this.bones = bones;
         this.copies = copies;
@@ -482,10 +359,10 @@ public class KeyframeEditor : VisualElement
         int duration = bones[new List<S4Animations>(bones.Keys)[0]].duration;
 
         frameSlider.highValue = duration;
-        SetFrame(0);
+        frameController.SetFrame(0);
 
-        totalFrames = duration;
-        frameSlider.style.width = new StyleLength(new Length(zoom * totalFrames / 10f + 14f, LengthUnit.Pixel));
+        frameController.totalFrames = duration;
+        frameSlider.style.width = new StyleLength(new Length(zoom * frameController.totalFrames / 10f + 14f, LengthUnit.Pixel));
 
         StyleLength zp = new StyleLength(new Length(zoom * 100f, LengthUnit.Percent));
         keyframeContent.style.width = zp;
@@ -499,8 +376,8 @@ public class KeyframeEditor : VisualElement
         prevKey.SetEnabled(true);
         nextKey.SetEnabled(true);
 
-        DrawRuler(totalFrames);
-        SetViewport(horizontal_zoom.value.x, horizontal_zoom.value.y, vertical.value);
+        DrawRuler(frameController.totalFrames);
+        zoomViewport.UpdateViewport();
     }
 
     public void AnimationCleared()
@@ -508,24 +385,18 @@ public class KeyframeEditor : VisualElement
         ClearChannels();
         this.bones = new Dictionary<S4Animations, TransformKeyData>();
         message.style.display = DisplayStyle.Flex;
-        viewportRoot.style.display = DisplayStyle.None;
+        zoomViewport.style.display = DisplayStyle.None;
         Disable();
     }
 
     public void SetFrame(int newFrame)
     {
-		if (newFrame < 0)
-		{
-            return;
-		}
-        currentFrame = newFrame;
-
-        var length = new StyleLength(new Length(currentFrame * zoom / horizonalScale, LengthUnit.Pixel));
+        var length = new StyleLength(new Length(frameController.currentFrame * zoom / horizonalScale, LengthUnit.Pixel));
         keyLine.style.left = length;
-        frameSlider.SetValueWithoutNotify(currentFrame);
-        frameField.SetValueWithoutNotify(currentFrame);
+        frameSlider.SetValueWithoutNotify(frameController.currentFrame);
+        frameField.SetValueWithoutNotify(frameController.currentFrame);
 
-        SetTransformToFrame(currentFrame);
+        SetTransformToFrame(newFrame);
     }
     public void SetChannel(TransformKeyData part, bool state, TransformChannel.Channel channel)
     {
@@ -554,45 +425,45 @@ public class KeyframeEditor : VisualElement
 
     void CalculateKeyframes()
 	{
-        keyframes.Clear();
+        frameController.keyframes.Clear();
 		foreach (var item in channels)
 		{
             foreach (var item2 in item.Value.positionChannel)
             {
                 int value = item2.GetValue();
-                if (keyframes.Contains(value) == false)
+                if (frameController.keyframes.Contains(value) == false)
                 {
-                    keyframes.Add(value);
+                    frameController.keyframes.Add(value);
                 }
             }
             foreach (var item2 in item.Value.rotationChannel)
             {
                 int value = item2.GetValue();
-                if (keyframes.Contains(value) == false)
+                if (frameController.keyframes.Contains(value) == false)
                 {
-                    keyframes.Add(value);
+                    frameController.keyframes.Add(value);
                 }
             }
             foreach (var item2 in item.Value.scaleChannel)
             {
                 int value = item2.GetValue();
-                if (keyframes.Contains(value) == false)
+                if (frameController.keyframes.Contains(value) == false)
                 {
-                    keyframes.Add(value);
+                    frameController.keyframes.Add(value);
                 }
             }
             foreach (var item2 in item.Value.alphaChannel)
             {
                 int value = item2.GetValue();
-                if (keyframes.Contains(value) == false)
+                if (frameController.keyframes.Contains(value) == false)
                 {
-                    keyframes.Add(value);
+                    frameController.keyframes.Add(value);
                 }
             }
         }
 
-        keyframes.Sort();
-        Debug.Log("Keyframes calculated! " + keyframes.Count);
+        frameController.keyframes.Sort();
+        Debug.Log("Keyframes calculated! " + frameController.keyframes.Count);
     }
 
     public void ToggleKeying( bool state)
@@ -672,21 +543,21 @@ public class KeyframeEditor : VisualElement
 		{
             if (position)
             {
-                if(tkd.KeyTranslation(s4a.transform.localPosition, currentFrame))
+                if(tkd.KeyTranslation(s4a.transform.localPosition, frameController.currentFrame))
 				{
                     channels[tkd].PopulateChannel(TransformChannel.Channel.Position, keyframeContent[0]);
 				}
             }
             if (rotation)
             {
-                if(tkd.KeyRotation(s4a.transform.localRotation, currentFrame))
+                if(tkd.KeyRotation(s4a.transform.localRotation, frameController.currentFrame))
                 {
                     channels[tkd].PopulateChannel(TransformChannel.Channel.Rotation, keyframeContent[0]);
                 }
             }
             if (scale)
             {
-                if (tkd.KeyScale(s4a.transform.localScale, currentFrame))
+                if (tkd.KeyScale(s4a.transform.localScale, frameController.currentFrame))
 				{
 					channels[tkd].PopulateChannel(TransformChannel.Channel.Scale, keyframeContent[0]);
 				}
@@ -701,6 +572,7 @@ public class KeyframeEditor : VisualElement
 
 public class TransformChannel
 {
+    KeyframeEditor editor;
     public enum Channel { Position, Rotation, Scale, Alpha }
 
     TransformKeyData part;
@@ -710,9 +582,10 @@ public class TransformChannel
     public List<TickElement> scaleChannel = new List<TickElement>();
     public List<TickElement> alphaChannel = new List<TickElement>();
 
-    public TransformChannel(TransformKeyData part)
+    public TransformChannel(TransformKeyData part, KeyframeEditor editor)
     {
         this.part = part;
+        this.editor = editor;
     }
 
     public void PopulateChannel(Channel channel, VisualElement parent)
@@ -846,24 +719,25 @@ public class TransformChannel
 		for (int i = 0; i < positionChannel.Count; i++)
         {
             var tick = positionChannel[i];
-            tick.Redraw();
-            ((KeyElement)(tick[0])).Redraw(KeyframeEditor.tranlateScale);
-            ((KeyElement)(tick[1])).Redraw(KeyframeEditor.tranlateScale);
-            ((KeyElement)(tick[2])).Redraw(KeyframeEditor.tranlateScale);
+            tick.Redraw(editor.zoomViewport.zoom);
+            ((KeyElement)(tick[0])).Redraw(KeyframeEditor.tranlateScale, editor.zoomViewport.zoom);
+            ((KeyElement)(tick[1])).Redraw(KeyframeEditor.tranlateScale, editor.zoomViewport.zoom);
+            ((KeyElement)(tick[2])).Redraw(KeyframeEditor.tranlateScale, editor.zoomViewport.zoom);
         }
 	}
 
     TickElement CreatePosKeys(int index)
     {
         TickElement tick = new TickElement(part, index, 0);
+        tick.Redraw(editor.zoomViewport.zoom);
 
         var xKey = new KeyElement(Color.red, part, index, 0, 0, PosCallback);
         var yKey = new KeyElement(Color.green, part, index,0, 1, PosCallback);
         var zKey = new KeyElement(Color.blue, part, index, 0, 2, PosCallback);
 
-        xKey.Redraw(KeyframeEditor.tranlateScale);
-        yKey.Redraw(KeyframeEditor.tranlateScale);
-        zKey.Redraw(KeyframeEditor.tranlateScale);
+        xKey.Redraw(KeyframeEditor.tranlateScale, editor.zoomViewport.zoom);
+        yKey.Redraw(KeyframeEditor.tranlateScale, editor.zoomViewport.zoom);
+        zKey.Redraw(KeyframeEditor.tranlateScale, editor.zoomViewport.zoom);
 
         tick.Add(xKey);
         tick.Add(yKey);
@@ -896,11 +770,11 @@ public class TransformChannel
 				break;
 		}
 
-        tKey.duration = (int)((newX + 3));
+        tKey.frame = (int)((newX + 3));
         tKey.Translation = pos;
         part.TransformKey.TKey[keyElem.index] = tKey;
 
-        keyElem.Redraw(KeyframeEditor.tranlateScale);
+        keyElem.Redraw(KeyframeEditor.tranlateScale, editor.zoomViewport.zoom);
     }
 
 
@@ -946,7 +820,7 @@ public class TransformChannel
                 break;
         }
 
-        rKey.duration = (int)((newX + 3) * KeyframeEditor.horizonalScale);
+        rKey.frame = (int)((newX + 3) * KeyframeEditor.horizonalScale);
         rKey.Rotation = rot;
         part.TransformKey.RKey[keyElem.index] = rKey;
 
@@ -994,7 +868,7 @@ public class TransformChannel
             default:
                 break;
         }
-        sKey.duration = (int)((newX + 3) / KeyframeEditor.horizonalScale);
+        sKey.frame = (int)((newX + 3) / KeyframeEditor.horizonalScale);
         sKey.Scale = sca;
         part.TransformKey.SKey[keyElem.index] = sKey;
     }
@@ -1020,13 +894,11 @@ public class TransformChannel
 
 
         var fKey = part.FloatKeys[keyElem.index];
-        fKey.duration = (int)((newX + 3) * KeyframeEditor.horizonalScale);
+        fKey.frame = (int)((newX + 3) * KeyframeEditor.horizonalScale);
         fKey.Alpha = newValue / KeyframeEditor.alphaScale;
         part.FloatKeys[keyElem.index] = fKey;
 
     }
-
-
 
     float MoveParent(VisualElement parent, float deltaX)
     {
@@ -1047,6 +919,7 @@ public class TransformChannel
         return newX;
     }
 }
+
 public class TickElement : VisualElement
 {
     TransformKeyData data;
@@ -1058,7 +931,6 @@ public class TickElement : VisualElement
         this.index = index;
         this.type = type;
         style.position = Position.Absolute;
-        Redraw();
     }
 
     public int GetValue()
@@ -1066,24 +938,23 @@ public class TickElement : VisualElement
         switch (type)
         {
             case 0:
-                return data.TransformKey.TKey[index].duration;
+                return data.TransformKey.TKey[index].frame;
             case 1:
-                return data.TransformKey.RKey[index].duration;
+                return data.TransformKey.RKey[index].frame;
             case 2:
-                return data.TransformKey.SKey[index].duration;
+                return data.TransformKey.SKey[index].frame;
             case 3:
-                return data.FloatKeys[index].duration;
+                return data.FloatKeys[index].frame;
             default:
                 return 0;
         }
     }
 
-    public void Redraw()
+    public void Redraw(float zoom)
     {
-        style.left = new StyleLength(new Length((GetValue() * KeyframeEditor.zoom / KeyframeEditor.horizonalScale) - 3, LengthUnit.Pixel));
+        style.left = new StyleLength(new Length((GetValue() * zoom / KeyframeEditor.horizonalScale) - 3, LengthUnit.Pixel));
     }
 }
-
 
 class KeyElement : VisualElement
 {
@@ -1163,8 +1034,8 @@ class KeyElement : VisualElement
         }
 	}
 
-    public void Redraw( float scale)
+    public void Redraw( float scale, float zoom)
 	{
-        style.top = new StyleLength(new Length(GetValue() * KeyframeEditor.zoom / scale, LengthUnit.Pixel));
+        style.top = new StyleLength(new Length(GetValue() * zoom / scale, LengthUnit.Pixel));
     }
 }

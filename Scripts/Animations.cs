@@ -39,6 +39,8 @@ public class TransformKeyData2 : TransformKeyData
         using (var r = stream.ToBinaryReader(true))
             MorphKeys = r.DeserializeArray<MorphKey>(r.ReadInt32()).ToList();
     }
+
+    
 }
 
 [System.Serializable]
@@ -95,12 +97,12 @@ public class TransformKeyData : IManualSerializer
     {
         for (int i = 0; i < TransformKey.TKey.Count - 1; i++)
         {
-            if (frame >= TransformKey.TKey[i].duration && frame < TransformKey.TKey[i + 1].duration)
+            if (frame >= TransformKey.TKey[i].frame && frame < TransformKey.TKey[i + 1].frame)
             {
                 Vector3 pos1 = TransformKey.TKey[i].Translation;
                 Vector3 pos2 = TransformKey.TKey[i + 1].Translation;
-                float range = TransformKey.TKey[i + 1].duration - TransformKey.TKey[i].duration;
-                float t = frame - TransformKey.TKey[i].duration;
+                float range = TransformKey.TKey[i + 1].frame - TransformKey.TKey[i].frame;
+                float t = frame - TransformKey.TKey[i].frame;
                 return Vector3.Lerp(pos1, pos2, t / range);
             }
         }
@@ -110,12 +112,12 @@ public class TransformKeyData : IManualSerializer
     {
         for (int i = 0; i < TransformKey.RKey.Count - 1; i++)
         {
-            if (frame >= TransformKey.RKey[i].duration && frame < TransformKey.RKey[i + 1].duration)
+            if (frame >= TransformKey.RKey[i].frame && frame < TransformKey.RKey[i + 1].frame)
             {
                 Quaternion rot1 = TransformKey.RKey[i].Rotation;
                 Quaternion rot2 = TransformKey.RKey[i + 1].Rotation;
-                float range = TransformKey.RKey[i + 1].duration - TransformKey.RKey[i].duration;
-                float t = frame - TransformKey.RKey[i].duration;
+                float range = TransformKey.RKey[i + 1].frame - TransformKey.RKey[i].frame;
+                float t = frame - TransformKey.RKey[i].frame;
                 return Quaternion.Slerp(rot1, rot2, t / range);
             }
         }
@@ -125,12 +127,12 @@ public class TransformKeyData : IManualSerializer
     {
         for (int i = 0; i < TransformKey.SKey.Count - 1; i++)
         {
-            if (frame >= TransformKey.SKey[i].duration && frame < TransformKey.SKey[i + 1].duration)
+            if (frame >= TransformKey.SKey[i].frame && frame < TransformKey.SKey[i + 1].frame)
             {
                 Vector3 sca1 = TransformKey.SKey[i].Scale;
                 Vector3 sca2 = TransformKey.SKey[i + 1].Scale;
-                float range = TransformKey.SKey[i + 1].duration - TransformKey.SKey[i].duration;
-                float t = frame - TransformKey.SKey[i].duration;
+                float range = TransformKey.SKey[i + 1].frame - TransformKey.SKey[i].frame;
+                float t = frame - TransformKey.SKey[i].frame;
                 return Vector3.Lerp(sca1, sca2, t / range);
             }
         }
@@ -141,12 +143,12 @@ public class TransformKeyData : IManualSerializer
     {
         for (int i = 0; i < TransformKey.TKey.Count; i++)
         {
-			if (TransformKey.TKey[i].duration == frame)
+			if (TransformKey.TKey[i].frame == frame)
 			{
                 TransformKey.TKey[i] = new TKey(frame, pos);
                 return false;
             }
-            if (TransformKey.TKey[i].duration > frame)
+            if (TransformKey.TKey[i].frame > frame)
             {
                 TransformKey.TKey.Insert(i, new TKey(frame, pos));
                 return true;
@@ -159,12 +161,12 @@ public class TransformKeyData : IManualSerializer
     {
         for (int i = 0; i < TransformKey.RKey.Count; i++)
         {
-            if (TransformKey.RKey[i].duration == frame)
+            if (TransformKey.RKey[i].frame == frame)
             {
                 TransformKey.RKey[i] = new RKey(frame, rot);
                 return false;
             }
-            if (TransformKey.RKey[i].duration > frame)
+            if (TransformKey.RKey[i].frame > frame)
             {
 
                 TransformKey.RKey.Insert(i, new RKey(frame, rot));
@@ -178,12 +180,12 @@ public class TransformKeyData : IManualSerializer
     {
         for (int i = 0; i < TransformKey.SKey.Count; i++)
         {
-            if (TransformKey.SKey[i].duration > frame)
+            if (TransformKey.SKey[i].frame > frame)
             {
                 TransformKey.SKey[i] = new SKey(frame, sca);
                 return false;
             }
-            if (TransformKey.SKey[i].duration > frame)
+            if (TransformKey.SKey[i].frame > frame)
             {
                 TransformKey.SKey.Insert(i, new SKey(frame, sca));
                 return true;
@@ -232,82 +234,78 @@ public class TransformKey : IManualSerializer
 
     public void Serialize(Stream stream)
     {
-        using (var w = stream.ToBinaryWriter(true))
-        {
-            w.Write(Translation.x);
-            w.Write(Translation.y);
-            w.Write(Translation.z);
+		using var w = stream.ToBinaryWriter(true);
+		w.Write(Translation.x);
+		w.Write(Translation.y);
+		w.Write(Translation.z);
 
-            w.Write(Rotation.x);
-            w.Write(Rotation.y);
-            w.Write(Rotation.z);
-            w.Write(Rotation.w);
+		w.Write(Rotation.x);
+		w.Write(Rotation.y);
+		w.Write(Rotation.z);
+		w.Write(Rotation.w);
 
-            w.Write(Scale.x);
-            w.Write(Scale.y);
-            w.Write(Scale.z);
+		w.Write(Scale.x);
+		w.Write(Scale.y);
+		w.Write(Scale.z);
 
-            w.Write(TKey.Count);
-            foreach (var tkey in TKey)
-            {
-                w.Write((uint)tkey.duration);
+		w.Write(TKey.Count);
+		foreach (var tkey in TKey)
+		{
+			w.Write((uint)tkey.frame);
 
-                w.Write(tkey.Translation.x);
-                w.Write(tkey.Translation.y);
-                w.Write(tkey.Translation.z);
-            }
+			w.Write(tkey.Translation.x);
+			w.Write(tkey.Translation.y);
+			w.Write(tkey.Translation.z);
+		}
 
-            w.Write(RKey.Count);
-            foreach (var rkey in RKey)
-            {
-                w.Write((uint)rkey.duration);
+		w.Write(RKey.Count);
+		foreach (var rkey in RKey)
+		{
+			w.Write((uint)rkey.frame);
 
-                w.Write(rkey.Rotation.x);
-                w.Write(rkey.Rotation.y);
-                w.Write(rkey.Rotation.z);
-                w.Write(rkey.Rotation.w);
-            }
+			w.Write(rkey.Rotation.x);
+			w.Write(rkey.Rotation.y);
+			w.Write(rkey.Rotation.z);
+			w.Write(rkey.Rotation.w);
+		}
 
-            w.Write(SKey.Count);
-            foreach (var skey in SKey)
-            {
-                w.Write((uint)skey.duration);
+		w.Write(SKey.Count);
+		foreach (var skey in SKey)
+		{
+			w.Write((uint)skey.frame);
 
-                w.Write(skey.Scale.x);
-                w.Write(skey.Scale.y);
-                w.Write(skey.Scale.z);
-            }
-        }
-    }
+			w.Write(skey.Scale.x);
+			w.Write(skey.Scale.y);
+			w.Write(skey.Scale.z);
+		}
+	}
 
     public void Deserialize(Stream stream)
     {
-        using (var r = stream.ToBinaryReader(true))
-        {
-            Translation = new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
-            Rotation = new Quaternion(r.ReadSingle(), r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
-            Scale = new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+		using var r = stream.ToBinaryReader(true);
+		Translation = new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+		Rotation = new Quaternion(r.ReadSingle(), r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+		Scale = new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
 
-            uint count = r.ReadUInt32();
-            for (int n = 0; n < count; n++)
-                TKey.Add(new TKey { duration = (int)r.ReadUInt32(), Translation = new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle()) });
+		uint count = r.ReadUInt32();
+		for (int n = 0; n < count; n++)
+			TKey.Add(new TKey { frame = (int)r.ReadUInt32(), Translation = new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle()) });
 
-            count = r.ReadUInt32();
-            for (int n = 0; n < count; n++)
-                RKey.Add(new RKey { duration = (int)r.ReadUInt32(), Rotation = new Quaternion(r.ReadSingle(), r.ReadSingle(), r.ReadSingle(), r.ReadSingle()) });
+		count = r.ReadUInt32();
+		for (int n = 0; n < count; n++)
+			RKey.Add(new RKey { frame = (int)r.ReadUInt32(), Rotation = new Quaternion(r.ReadSingle(), r.ReadSingle(), r.ReadSingle(), r.ReadSingle()) });
 
-            count = r.ReadUInt32();
-            for (int n = 0; n < count; n++)
-                SKey.Add(new SKey { duration = (int)r.ReadUInt32(), Scale = new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle()) });
-        }
-    }
+		count = r.ReadUInt32();
+		for (int n = 0; n < count; n++)
+			SKey.Add(new SKey { frame = (int)r.ReadUInt32(), Scale = new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle()) });
+	}
 }
 
 [System.Serializable]
 public struct TKey
 {
-    public TKey(int duration, Vector3 Translation) { this.duration = duration; this.Translation = Translation; }
-    public int duration;
+    public TKey(int frame, Vector3 Translation) { this.frame = frame; this.Translation = Translation; }
+    public int frame;
     public Vector3 Translation;
     public void SetTranslation(Vector3 newTranslation)
 	{
@@ -318,8 +316,8 @@ public struct TKey
 [System.Serializable]
 public struct RKey
 {
-    public RKey(int duration, Quaternion Rotation) { this.duration = duration; this.Rotation = Rotation; }
-    public int duration;
+    public RKey(int frame, Quaternion Rotation) { this.frame = frame; this.Rotation = Rotation; }
+    public int frame;
     public Quaternion Rotation;
     public void SetRotation(Quaternion newRotation)
     {
@@ -330,8 +328,8 @@ public struct RKey
 [System.Serializable]
 public struct SKey
 {
-    public SKey(int duration, Vector3 Scale) { this.duration = duration; this.Scale = Scale; }
-    public int duration;
+    public SKey(int frame, Vector3 Scale) { this.frame = frame; this.Scale = Scale; }
+    public int frame;
     public Vector3 Scale;
     public void SetScale(Vector3 newScale)
     {
@@ -342,14 +340,14 @@ public struct SKey
 [System.Serializable]
 public class FloatKey : IManualSerializer
 {
-    public int duration;
+    public int frame;
     public float Alpha;
 
     public void Serialize(Stream stream)
     {
         using (var w = stream.ToBinaryWriter(true))
         {
-            w.Write((uint)duration);
+            w.Write((uint)frame);
             w.Write(Alpha);
         }
     }
@@ -358,7 +356,7 @@ public class FloatKey : IManualSerializer
     {
         using (var r = stream.ToBinaryReader(true))
         {
-            duration = (int)r.ReadUInt32();
+            frame = (int)r.ReadUInt32();
             Alpha = r.ReadSingle();
         }
     }
@@ -367,7 +365,7 @@ public class FloatKey : IManualSerializer
 [System.Serializable]
 public class MorphKey : IManualSerializer
 {
-    public int duration;
+    public int frame;
     public List<VertexMorph> Vertices;
     public List<UVMorph> UVs;
 
@@ -381,7 +379,7 @@ public class MorphKey : IManualSerializer
     {
         using (var w = stream.ToBinaryWriter(true))
         {
-            w.Write((uint)duration);
+            w.Write((uint)frame);
 
             w.Write(Vertices.Count);
             foreach (var vertexMorph in Vertices)
@@ -406,7 +404,7 @@ public class MorphKey : IManualSerializer
     {
         using (var r = stream.ToBinaryReader(true))
         {
-            duration = (int)r.ReadUInt32();
+            frame = (int)r.ReadUInt32();
 
             int count = r.ReadInt32();
             for (int j = 0; j < count; j++)

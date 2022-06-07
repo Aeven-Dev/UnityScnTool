@@ -30,16 +30,24 @@ namespace NetsphereScnTool
             w.Write(transposed.m11);
             w.Write(transposed.m12);
             w.Write(transposed.m13);
-                    
+
             w.Write(transposed.m20);
             w.Write(transposed.m21);
             w.Write(transposed.m22);
             w.Write(transposed.m23);
-                    
+
             w.Write(transposed.m30);
             w.Write(transposed.m31);
             w.Write(transposed.m32);
             w.Write(transposed.m33);
+        }
+
+        internal static void Write(this BinaryWriter w, Color value)
+        {
+            w.Write(value.r);
+            w.Write(value.g);
+            w.Write(value.b);
+            w.Write(value.a);
         }
     }
 }

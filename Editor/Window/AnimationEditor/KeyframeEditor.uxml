@@ -1,6 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <ui:VisualElement style="flex-grow: 1; flex-direction: row; width: auto;">
-        <ui:VisualElement style="flex-grow: 1; flex-direction: column; min-width: 450px; width: auto;">
+    <ui:VisualElement style="flex-grow: 1; flex-direction: row; width: auto; height: 256px;">
+        <ui:VisualElement style="flex-grow: 1; flex-direction: column; min-width: 450px;">
             <ui:VisualElement style="flex-grow: 0; flex-shrink: 0; flex-direction: row;">
                 <uie:IntegerField value="24" name="FrameField" binding-path="frame" is-delayed="true" style="width: 64px; margin-left: 0; margin-right: 0; align-items: stretch; justify-content: flex-start;" />
                 <ui:Label text="Label" display-tooltip-when-elided="true" name="TotalFrames" style="width: 64px; -unity-text-align: middle-center;" />
@@ -16,16 +16,13 @@
                 <ui:Button text="A" display-tooltip-when-elided="true" name="KeyAlp" enable-rich-text="false" style="margin-left: 0; border-left-width: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; padding-left: 3px; padding-right: 3px; border-right-width: 1px; border-top-right-radius: 5px; border-bottom-right-radius: 5px;" />
             </ui:VisualElement>
             <ui:Label text="Nothing to display :P" display-tooltip-when-elided="true" name="Message" style="position: relative; flex-grow: 1; left: 0; top: 0; right: 0; bottom: 0; -unity-text-align: middle-center; display: none; border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; border-left-color: rgb(110, 110, 110); border-right-color: rgb(110, 110, 110); border-top-color: rgb(110, 110, 110); border-bottom-color: rgb(110, 110, 110);" />
-            <ui:VisualElement name="ViewportRoot" style="flex-grow: 1; flex-direction: row; display: flex; visibility: visible;">
+            <ZoomViewport name="Viewport" style="flex-grow: 1;">
                 <ui:VisualElement style="flex-grow: 1; flex-shrink: 0; overflow: hidden; display: flex; visibility: visible;">
                     <ui:VisualElement style="height: 100%; width: 100%; min-height: 100%; min-width: 100%; scale: 1 1; translate: 0 0; transform-origin: left top; align-items: stretch; justify-content: space-between; background-color: rgb(34, 34, 34); flex-grow: 0; flex-shrink: 1;">
                         <ui:VisualElement style="background-color: rgb(156, 156, 156); position: absolute; left: 0; right: 0; height: 1px; top: 50%; bottom: 0; flex-shrink: 0;" />
                     </ui:VisualElement>
                     <ui:VisualElement name="RulerHolder" style="flex-grow: 1; position: absolute; background-color: rgb(255, 255, 255); top: auto; left: auto; right: auto; bottom: auto; height: 100%;" />
                     <ui:SliderInt picking-mode="Ignore" value="0" high-value="100" low-value="0" name="FrameSlider" binding-path="frame" style="border-bottom-color: rgb(110, 110, 110); border-bottom-width: 2px; position: absolute; top: 0; left: 0; right: auto; bottom: 298px; background-color: rgb(56, 56, 56); margin-left: 0; border-left-width: 2px; border-right-width: 2px; margin-right: 0; padding-left: 0; border-left-color: rgb(110, 110, 110); border-right-color: rgb(110, 110, 110); margin-top: 0; min-width: auto; width: 112px; transform-origin: left top; padding-right: 0; height: 18px;" />
-                    <ui:VisualElement style="left: 100%; top: 100%; width: 0; height: 10px;">
-                        <ui:Label text="10x - 120y" display-tooltip-when-elided="false" picking-mode="Ignore" name="PosLabel" style="left: -200px; top: -182%; right: auto; bottom: auto; flex-direction: column; flex-grow: 0; flex-basis: 100%; width: 200px; -unity-text-align: upper-right; white-space: nowrap;" />
-                    </ui:VisualElement>
                     <ui:VisualElement name="Keyframes" style="height: 100%; width: 100%; position: absolute; top: 0; left: -1px; max-height: none; max-width: none; min-height: auto; min-width: 100%; scale: 1 1; visibility: visible; overflow: visible; display: flex; translate: 0 0; transform-origin: left top; margin-left: 6px; align-items: stretch; justify-content: space-between;">
                         <ui:VisualElement style="background-color: rgb(156, 156, 156); position: absolute; left: 0; right: 0; height: 1px; top: 50%; bottom: 0; flex-shrink: 0;" />
                         <ui:VisualElement name="KeyLine" style="height: 100%; width: 1px; left: 50px; min-width: 1px; margin-left: 0; visibility: visible;">
@@ -36,10 +33,8 @@
                         </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:Scroller high-value="100" direction="Vertical" value="50" name="Vertical" low-value="0" style="flex-grow: 0; scale: 1 1;" />
-            </ui:VisualElement>
-            <ui:MinMaxSlider picking-mode="Ignore" min-value="0" max-value="100" low-limit="0" high-limit="100" name="Hori_Zoom" enable-rich-text="true" text="Hook!" style="translate: 0 0;" />
+            </ZoomViewport>
         </ui:VisualElement>
-        <ui:VisualElement style="flex-grow: 0; height: auto; width: 200px; min-width: auto; border-left-width: 2px; border-right-width: 2px; border-top-width: 2px; border-bottom-width: 2px; border-left-color: rgb(110, 110, 110); border-right-color: rgb(110, 110, 110); border-top-color: rgb(110, 110, 110); border-bottom-color: rgb(110, 110, 110);" />
+        <ui:VisualElement style="flex-grow: 0; width: 200px; border-left-width: 2px; border-right-width: 2px; border-top-width: 2px; border-bottom-width: 2px; border-left-color: rgb(110, 110, 110); border-right-color: rgb(110, 110, 110); border-top-color: rgb(110, 110, 110); border-bottom-color: rgb(110, 110, 110);" />
     </ui:VisualElement>
 </ui:UXML>
