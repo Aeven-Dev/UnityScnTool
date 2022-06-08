@@ -880,11 +880,21 @@ namespace AevenScnTool.IO
 			}
 
 			TextureReference tr = mr.GetComponent<TextureReference>();
-
-			model.Shader = tr.renderFlags;
-			SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal);
+			if (tr)
+			{
+				model.Shader = tr.renderFlags;
+				SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal);
+			}
+			else
+			{
+				model.Shader = RenderFlag.None;
+				SetMesh(model.Mesh, mesh, false, false);
+				Debug.LogError("Goodness me! You have a mesh without a texture reference! That will make the mesh have so much problems!", mr.gameObject);
+			}
 
 			SetTextureData(model.TextureData, mesh, tr);
+
+
 
 			(Vector3 position, Quaternion rotation, Vector3 scale) = DealWithModelParenting(mr.transform, relativeParent, model, parentChunk, container);
 
@@ -1096,6 +1106,12 @@ namespace AevenScnTool.IO
 		{
 			textureData.Version = 0.2000000029802322f;
 			textureData.ExtraUV = (mesh.uv2.Length != 0) ? (uint)1 : (uint)0;
+
+			if (textures == null)
+			{
+				return;
+			}
+
 			for (int i = 0; i < textures.textures.Count; i++)
 			{
 				TextureEntry te = new TextureEntry();
