@@ -768,7 +768,7 @@ namespace AevenScnTool.IO
 				Mesh mesh = cd.GetComponent<MeshCollider>().sharedMesh;
 				if (mesh)
 				{
-					return CreateModelChunkFromMesh(
+					CreateModelChunkFromMesh(
 						cd.transform,
 						mesh,
 						"oct_" + cd.ground.ToString().Replace("wire", "@").Replace("hash", "#"));
@@ -784,7 +784,7 @@ namespace AevenScnTool.IO
 				Mesh mesh = cd.GetComponent<MeshCollider>().sharedMesh;
 				if (mesh)
 				{
-					return CreateModelChunkFromMesh(cd.transform, mesh, "oct_" + cd.weapon.ToString());
+					CreateModelChunkFromMesh(cd.transform, mesh, "oct_" + cd.weapon.ToString());
 				}
 				else
 				{
