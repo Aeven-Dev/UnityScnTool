@@ -174,7 +174,9 @@ namespace AevenScnTool.IO
 		{
 			GameObject go = CreateGameObject(model);
 			go.transform.SetParent(parent.transform);
-
+			go.transform.localPosition = model.Matrix.GetPosition();
+			go.transform.localRotation = model.Matrix.rotation;
+			go.transform.localScale = model.Matrix.lossyScale;
 
 			Mesh mesh = CreateMesh(model);
 
@@ -192,6 +194,11 @@ namespace AevenScnTool.IO
 			else if (model.Name.StartsWith("oct_"))
 			{
 				SetOctMesh(go, model, mesh);
+				
+				if (!model.Name.StartsWith("oct_land") && !model.Name.StartsWith("oct_weapon"))
+				{
+					
+				}
 			}
 			else
 			{
