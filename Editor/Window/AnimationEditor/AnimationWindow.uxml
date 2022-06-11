@@ -12,6 +12,10 @@
                     <ui:Button text="Import!" display-tooltip-when-elided="true" name="ImportBtn" style="flex-grow: 1;" />
                     <ui:Button text="Export!" display-tooltip-when-elided="true" name="ExportBtn" style="flex-grow: 1;" />
                 </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; justify-content: center;">
+                    <ui:Button text="Transform Editor" display-tooltip-when-elided="true" name="SwitchTransformEditor" style="flex-grow: 1;" />
+                    <ui:Button text="UVAnim Editor" display-tooltip-when-elided="true" name="SwitchUVAnimEditor" style="flex-grow: 1;" />
+                </ui:VisualElement>
                 <ui:VisualElement style="flex-direction: row; border-bottom-width: 2px; border-bottom-color: rgb(110, 110, 110); flex-grow: 0;">
                     <ui:TextField picking-mode="Ignore" name="AnimName" is-delayed="true" style="flex-grow: 1;" />
                 </ui:VisualElement>
@@ -29,8 +33,10 @@
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
-            <KeyframeEditor name="Editor" style="width: 452px; flex-grow: 1;" />
-            <MorphEditor name="MorphEditor" />
+            <ui:VisualElement style="flex-grow: 1; flex-direction: row;">
+                <TransformEditor name="TransformEditor" style="width: 452px; flex-grow: 1; flex-direction: column;" />
+                <UVAnimEditor name="UVAnimEditor" style="display: none; flex-grow: 1;" />
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

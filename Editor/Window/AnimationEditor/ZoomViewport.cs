@@ -38,13 +38,21 @@ public class ZoomViewport : VisualElement
         var template = visualTree.Instantiate();
         template.style.flexGrow = 1f;
         hierarchy.Add(template);
-        //base.contentContainer.Add(template);
 
+        GetGUIReferences();
+        SetCallBacks();
+    }
+    void GetGUIReferences()
+    {
         vertical = this.Q<Scroller>("Vertical");
         horizontal_zoom = this.Q<MinMaxSlider>("Hori_Zoom");
         container = this.Q("Container");
         posLabel = this.Q<Label>("PosLabel");
+    }
 
+
+    void SetCallBacks()
+    {
         vertical.valueChanged += (pos) =>
         {
             SetViewport(horizontal_zoom.value.x, horizontal_zoom.value.y, pos);

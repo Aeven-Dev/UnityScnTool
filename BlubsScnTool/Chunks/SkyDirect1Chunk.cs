@@ -14,6 +14,9 @@ namespace NetsphereScnTool.Scene.Chunks
         public Color color4;
         public Color color5;
         public Color color6;
+        public Color color7;
+        public int int1;
+        public short short1;
 
         public SkyDirect1Chunk(SceneContainer container)
             : base(container)
@@ -24,6 +27,7 @@ namespace NetsphereScnTool.Scene.Chunks
             color4 = Color.white;
             color5 = Color.white;
             color6 = Color.white;
+            color7 = Color.white;
         }
 
         public override void Serialize(Stream stream)
@@ -40,6 +44,9 @@ namespace NetsphereScnTool.Scene.Chunks
             w.Write(color4);
             w.Write(color5);
             w.Write(color6);
+            w.Write(color7);
+            w.Write(int1);
+            w.Write(short1);
         }
 
         public override void Deserialize(Stream stream)
@@ -53,7 +60,10 @@ namespace NetsphereScnTool.Scene.Chunks
             color4 = new Color(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
             color5 = new Color(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
             color6 = new Color(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
-
+            color7 = new Color(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+            int1 = r.ReadInt32();
+            r.ReadInt32();
+            r.ReadInt32();
         }
     }
 }

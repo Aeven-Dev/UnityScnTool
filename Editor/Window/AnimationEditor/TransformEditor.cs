@@ -5,9 +5,9 @@ using UnityEditor.UIElements;
 using System.Collections.Generic;
 using UnityEngine.Events;
 
-public class KeyframeEditor : VisualElement
+public class TransformEditor : VisualElement
 {
-    public new class UxmlFactory : UxmlFactory<KeyframeEditor, UxmlTraits> { }
+    public new class UxmlFactory : UxmlFactory<TransformEditor, UxmlTraits> { }
 
     public new class UxmlTraits : VisualElement.UxmlTraits
     {
@@ -15,8 +15,9 @@ public class KeyframeEditor : VisualElement
         {
             base.Init(ve, bag, cc);
 
-            KeyframeEditor kfe = ve as KeyframeEditor;
-            kfe.Init();
+            TransformEditor te = ve as TransformEditor;
+            te.Clear();
+            te.Init();
         }
     }
 
@@ -56,17 +57,26 @@ public class KeyframeEditor : VisualElement
     bool playing;
     int lastRuleDrawCount = 0;
 
-    Dictionary<S4Animations, TransformKeyData> bones = new();
-    Dictionary<S4Animations, TransformKeyData> copies = new();
+    Dictionary<S4Animations, S4Animation> bones = new();
+    Dictionary<S4Animations, S4Animation> copies = new();
     Dictionary<TransformKeyData, TransformChannel> channels = new();
 
     public void Init()
     {
         frameController = new FrameController();
         // Import UXML
-        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/ScnToolByAeven/Editor/Window/AnimationEditor/KeyframeEditor.uxml");
+        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/ScnToolByAeven/Editor/Window/AnimationEditor/TransformEditor.uxml");
         visualTree.CloneTree(this);
 
+        GetGUIReferences();
+        SetCallbacks();
+        Disable();
+        message.style.display = DisplayStyle.Flex;
+        zoomViewport.style.display = DisplayStyle.None;
+    }
+
+    void GetGUIReferences()
+	{
         zoomViewport = this.Q<ZoomViewport>("Viewport");
 
         frameSlider = this.Q<SliderInt>("FrameSlider");
@@ -89,11 +99,6 @@ public class KeyframeEditor : VisualElement
 
         message = this.Q("Message");
         rulerHolder = this.Q("RulerHolder");
-
-        SetCallbacks();
-        Disable();
-        message.style.display = DisplayStyle.Flex;
-        zoomViewport.style.display = DisplayStyle.None;
     }
 
     void SetCallbacks()
@@ -158,7 +163,7 @@ public class KeyframeEditor : VisualElement
         keySca.SetEnabled(false);
         keyAlp.SetEnabled(false);
 
-        playing = !playing;
+        playing = false;
         EditorApplication.update -= frameController.PlayAnimation;
         play.text = "Play!";
 
@@ -215,7 +220,6 @@ public class KeyframeEditor : VisualElement
         DrawKeyframes();
     }
 
-
     void DrawRuler(int duration)
 	{
         //option 1 draw a line every 1000 frames
@@ -257,8 +261,6 @@ public class KeyframeEditor : VisualElement
 		}
 	}
 
-    
-
     void KeylineDrag(MouseMoveEvent e)
 	{
         frameController.SetFrame(frameController.currentFrame + (int)(e.mouseDelta.x * 10f));
@@ -282,45 +284,43 @@ public class KeyframeEditor : VisualElement
 
     }
 
-    
-    
     void SetTransformToFrame( int frame)
 	{
         foreach (var part in bones.Keys)
 		{
-			if (copies.TryGetValue(part, out TransformKeyData copy))
+			if (copies.TryGetValue(part, out S4Animation copy))
 			{
 
                 Vector3 oldPos = part.transform.localPosition;
-                Vector3 newPos = copy.SamplePosition(frame);
+                Vector3 newPos = copy.TransformKeyData.SamplePosition(frame);
                 if (oldPos != newPos)
                     part.transform.localPosition = newPos;
 
                 Quaternion oldRot = part.transform.localRotation;
-                Quaternion newRot = copy.SampleRotation(frame);
+                Quaternion newRot = copy.TransformKeyData.SampleRotation(frame);
                 if (oldRot != newRot)
                     part.transform.localRotation = newRot;
 
                 Vector3 oldSca = part.transform.localScale;
-                Vector3 newSca = copy.SampleScale(frame);
+                Vector3 newSca = copy.TransformKeyData.SampleScale(frame);
                 if (oldSca != newSca)
                     part.transform.localScale = newPos;
             }
 			else
             {
-                TransformKeyData tkd = bones[part];
+                S4Animation tkd = bones[part];
                 Vector3 oldPos = part.transform.localPosition;
-                Vector3 newPos = tkd.SamplePosition(frame);
+                Vector3 newPos = tkd.TransformKeyData.SamplePosition(frame);
                 if (oldPos != newPos)
                     part.transform.localPosition = newPos;
 
                 Quaternion oldRot = part.transform.localRotation;
-                Quaternion newRot = tkd.SampleRotation(frame);
+                Quaternion newRot = tkd.TransformKeyData.SampleRotation(frame);
                 if (oldRot != newRot)
                     part.transform.localRotation = newRot;
 
                 Vector3 oldSca = part.transform.localScale;
-                Vector3 newSca = tkd.SampleScale(frame);
+                Vector3 newSca = tkd.TransformKeyData.SampleScale(frame);
                 if (oldSca != newSca)
                     part.transform.localScale = newPos;
             }
@@ -344,7 +344,7 @@ public class KeyframeEditor : VisualElement
         channels.Clear();
     }
 
-    public void AnimationChanged(Dictionary<S4Animations, TransformKeyData> bones, Dictionary<S4Animations, TransformKeyData> copies = null)
+    public void AnimationChanged(Dictionary<S4Animations, S4Animation> bones, Dictionary<S4Animations, S4Animation> copies = null)
     {
         frameController.keyframes.Clear();
 
@@ -354,7 +354,7 @@ public class KeyframeEditor : VisualElement
         this.bones = bones;
         this.copies = copies;
 
-        int duration = bones[new List<S4Animations>(bones.Keys)[0]].duration;
+        int duration = bones[new List<S4Animations>(bones.Keys)[0]].TransformKeyData.duration;
 
         frameSlider.highValue = duration;
         frameController.SetFrame(0);
@@ -381,7 +381,7 @@ public class KeyframeEditor : VisualElement
     public void AnimationCleared()
 	{
         ClearChannels();
-        this.bones = new Dictionary<S4Animations, TransformKeyData>();
+        this.bones = new Dictionary<S4Animations, S4Animation>();
         message.style.display = DisplayStyle.Flex;
         zoomViewport.style.display = DisplayStyle.None;
         Disable();
@@ -537,27 +537,27 @@ public class KeyframeEditor : VisualElement
 
     void TransformChanged(S4Animations s4a, bool position, bool rotation, bool scale, bool alpha)
     {
-		if (bones.TryGetValue(s4a, out TransformKeyData tkd))
+		if (bones.TryGetValue(s4a, out S4Animation tkd))
 		{
             if (position)
             {
-                if(tkd.KeyTranslation(s4a.transform.localPosition, frameController.currentFrame))
+                if(tkd.TransformKeyData.KeyTranslation(s4a.transform.localPosition, frameController.currentFrame))
 				{
-                    channels[tkd].PopulateChannel(TransformChannel.Channel.Position, keyframeContent[0]);
+                    channels[tkd.TransformKeyData].PopulateChannel(TransformChannel.Channel.Position, keyframeContent[0]);
 				}
             }
             if (rotation)
             {
-                if(tkd.KeyRotation(s4a.transform.localRotation, frameController.currentFrame))
+                if(tkd.TransformKeyData.KeyRotation(s4a.transform.localRotation, frameController.currentFrame))
                 {
-                    channels[tkd].PopulateChannel(TransformChannel.Channel.Rotation, keyframeContent[0]);
+                    channels[tkd.TransformKeyData].PopulateChannel(TransformChannel.Channel.Rotation, keyframeContent[0]);
                 }
             }
             if (scale)
             {
-                if (tkd.KeyScale(s4a.transform.localScale, frameController.currentFrame))
+                if (tkd.TransformKeyData.KeyScale(s4a.transform.localScale, frameController.currentFrame))
 				{
-					channels[tkd].PopulateChannel(TransformChannel.Channel.Scale, keyframeContent[0]);
+					channels[tkd.TransformKeyData].PopulateChannel(TransformChannel.Channel.Scale, keyframeContent[0]);
 				}
             }
             if (alpha)
@@ -570,7 +570,7 @@ public class KeyframeEditor : VisualElement
 
 public class TransformChannel
 {
-    KeyframeEditor editor;
+    TransformEditor editor;
     public enum Channel { Position, Rotation, Scale, Alpha }
 
     TransformKeyData part;
@@ -580,7 +580,7 @@ public class TransformChannel
     public List<TickElement> scaleChannel = new List<TickElement>();
     public List<TickElement> alphaChannel = new List<TickElement>();
 
-    public TransformChannel(TransformKeyData part, KeyframeEditor editor)
+    public TransformChannel(TransformKeyData part, TransformEditor editor)
     {
         this.part = part;
         this.editor = editor;
@@ -718,9 +718,9 @@ public class TransformChannel
         {
             var tick = positionChannel[i];
             tick.Redraw(editor.zoomViewport.zoom);
-            ((KeyElement)(tick[0])).Redraw(KeyframeEditor.tranlateScale, editor.zoomViewport.zoom);
-            ((KeyElement)(tick[1])).Redraw(KeyframeEditor.tranlateScale, editor.zoomViewport.zoom);
-            ((KeyElement)(tick[2])).Redraw(KeyframeEditor.tranlateScale, editor.zoomViewport.zoom);
+            ((KeyElement)(tick[0])).Redraw(TransformEditor.tranlateScale, editor.zoomViewport.zoom);
+            ((KeyElement)(tick[1])).Redraw(TransformEditor.tranlateScale, editor.zoomViewport.zoom);
+            ((KeyElement)(tick[2])).Redraw(TransformEditor.tranlateScale, editor.zoomViewport.zoom);
         }
 	}
 
@@ -733,9 +733,9 @@ public class TransformChannel
         var yKey = new KeyElement(Color.green, part, index,0, 1, PosCallback);
         var zKey = new KeyElement(Color.blue, part, index, 0, 2, PosCallback);
 
-        xKey.Redraw(KeyframeEditor.tranlateScale, editor.zoomViewport.zoom);
-        yKey.Redraw(KeyframeEditor.tranlateScale, editor.zoomViewport.zoom);
-        zKey.Redraw(KeyframeEditor.tranlateScale, editor.zoomViewport.zoom);
+        xKey.Redraw(TransformEditor.tranlateScale, editor.zoomViewport.zoom);
+        yKey.Redraw(TransformEditor.tranlateScale, editor.zoomViewport.zoom);
+        zKey.Redraw(TransformEditor.tranlateScale, editor.zoomViewport.zoom);
 
         tick.Add(xKey);
         tick.Add(yKey);
@@ -756,13 +756,13 @@ public class TransformChannel
 		switch (keyElem.variable)
         {
             case 0:
-                pos.x = newValue * KeyframeEditor.tranlateScale;
+                pos.x = newValue * TransformEditor.tranlateScale;
                 break;
             case 1:
-                pos.y = newValue * KeyframeEditor.tranlateScale;
+                pos.y = newValue * TransformEditor.tranlateScale;
                 break;
             case 2:
-                pos.z = newValue * KeyframeEditor.tranlateScale;
+                pos.z = newValue * TransformEditor.tranlateScale;
                 break;
             default:
 				break;
@@ -772,7 +772,7 @@ public class TransformChannel
         tKey.Translation = pos;
         part.TransformKey.TKey[keyElem.index] = tKey;
 
-        keyElem.Redraw(KeyframeEditor.tranlateScale, editor.zoomViewport.zoom);
+        keyElem.Redraw(TransformEditor.tranlateScale, editor.zoomViewport.zoom);
     }
 
 
@@ -803,22 +803,22 @@ public class TransformChannel
         switch (keyElem.variable)
         {
             case 0:
-                rot.x = newValue / KeyframeEditor.rotationScale;
+                rot.x = newValue / TransformEditor.rotationScale;
                 break;
             case 1:
-                rot.y = newValue / KeyframeEditor.rotationScale;
+                rot.y = newValue / TransformEditor.rotationScale;
                 break;
             case 2:
-                rot.z = newValue / KeyframeEditor.rotationScale;
+                rot.z = newValue / TransformEditor.rotationScale;
                 break;
             case 3:
-                rot.w = newValue / KeyframeEditor.rotationScale;
+                rot.w = newValue / TransformEditor.rotationScale;
                 break;
             default:
                 break;
         }
 
-        rKey.frame = (int)((newX + 3) * KeyframeEditor.horizonalScale);
+        rKey.frame = (int)((newX + 3) * TransformEditor.horizonalScale);
         rKey.Rotation = rot;
         part.TransformKey.RKey[keyElem.index] = rKey;
 
@@ -829,7 +829,7 @@ public class TransformChannel
     {
         TickElement tick = new TickElement(part,index,2);
 
-        Vector3 pos = part.TransformKey.SKey[index].Scale / KeyframeEditor.tranlateScale;
+        Vector3 pos = part.TransformKey.SKey[index].Scale / TransformEditor.tranlateScale;
 
         var xKey = new KeyElement(Color.red, part, index, 2, 0, ScaCallback);
         var yKey = new KeyElement(Color.green, part, index, 2, 1, ScaCallback);
@@ -855,18 +855,18 @@ public class TransformChannel
         switch (keyElem.variable)
         {
             case 0:
-                sca.x = newValue / KeyframeEditor.scaleScale;
+                sca.x = newValue / TransformEditor.scaleScale;
                 break;
             case 1:
-                sca.y = newValue / KeyframeEditor.scaleScale;
+                sca.y = newValue / TransformEditor.scaleScale;
                 break;
             case 2:
-                sca.z = newValue / KeyframeEditor.scaleScale;
+                sca.z = newValue / TransformEditor.scaleScale;
                 break;
             default:
                 break;
         }
-        sKey.frame = (int)((newX + 3) / KeyframeEditor.horizonalScale);
+        sKey.frame = (int)((newX + 3) / TransformEditor.horizonalScale);
         sKey.Scale = sca;
         part.TransformKey.SKey[keyElem.index] = sKey;
     }
@@ -892,8 +892,8 @@ public class TransformChannel
 
 
         var fKey = part.FloatKeys[keyElem.index];
-        fKey.frame = (int)((newX + 3) * KeyframeEditor.horizonalScale);
-        fKey.Alpha = newValue / KeyframeEditor.alphaScale;
+        fKey.frame = (int)((newX + 3) * TransformEditor.horizonalScale);
+        fKey.Alpha = newValue / TransformEditor.alphaScale;
         part.FloatKeys[keyElem.index] = fKey;
 
     }
@@ -901,7 +901,7 @@ public class TransformChannel
     float MoveParent(VisualElement parent, float deltaX, float zoom)
     {
         float value = (parent.style.left.value.value + deltaX);
-        float newX = value * KeyframeEditor.horizonalScale / zoom;
+        float newX = value * TransformEditor.horizonalScale / zoom;
         if (newX < 0) {
             newX = 0;
             value = 0;
@@ -909,7 +909,7 @@ public class TransformChannel
         if (newX > part.duration)
         {
             newX = part.duration;
-            value = part.duration * zoom / KeyframeEditor.horizonalScale;
+            value = part.duration * zoom / TransformEditor.horizonalScale;
         }
 
         parent.style.left = new StyleLength(new Length(value));
@@ -950,7 +950,7 @@ public class TickElement : VisualElement
 
     public void Redraw(float zoom)
     {
-        style.left = new StyleLength(new Length((GetValue() * zoom / KeyframeEditor.horizonalScale) - 3, LengthUnit.Pixel));
+        style.left = new StyleLength(new Length((GetValue() * zoom / TransformEditor.horizonalScale) - 3, LengthUnit.Pixel));
     }
 }
 

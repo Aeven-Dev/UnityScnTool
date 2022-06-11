@@ -20,7 +20,7 @@ public static class AnimIO
 		foreach (var item in parts.Keys)
 		{
 			string pathToObj = AnimationUtility.CalculateTransformPath(item.transform, anim.GetRoot().transform);
-			TransformKeyData tkd = parts[item];
+			TransformKeyData tkd = parts[item].TransformKeyData;
 			SetTransformCurves(clip, pathToObj, tkd);
 		}
 

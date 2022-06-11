@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-class FrameController
+public class FrameController
 {
     public delegate void IntEvent(int frame);
 

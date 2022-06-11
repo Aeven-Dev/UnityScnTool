@@ -7,8 +7,8 @@ public abstract class AnimationWrapper
 
     public abstract void ChangeAnimationName(string oldName, string newName);
 
-    public abstract Dictionary<S4Animations, TransformKeyData> GetParts(string name);
-    public abstract Dictionary<S4Animations, TransformKeyData> GetCopies(string name);
+    public abstract Dictionary<S4Animations, S4Animation> GetParts(string name);
+    public abstract Dictionary<S4Animations, S4Animation> GetCopies(string name);
 
     public abstract GameObject GetRoot();
 
@@ -44,22 +44,22 @@ class SingleAnimationWrapper : AnimationWrapper
         return names;
     }
 
-    public override Dictionary<S4Animations, TransformKeyData> GetParts(string name)
+    public override Dictionary<S4Animations, S4Animation> GetParts(string name)
     {
-        var result = new Dictionary<S4Animations, TransformKeyData>();
+        var result = new Dictionary<S4Animations, S4Animation>();
         foreach (var item in data.animations)
         {
             if (item.Name == name)
             {
-                result.Add(data, item.TransformKeyData);
+                result.Add(data, item);
                 break;
             }
         }
         return result;
     }
-    public override Dictionary<S4Animations, TransformKeyData> GetCopies(string name)
+    public override Dictionary<S4Animations, S4Animation> GetCopies(string name)
     {
-        var result = new Dictionary<S4Animations, TransformKeyData>();
+        var result = new Dictionary<S4Animations, S4Animation>();
         foreach (var item in data.animations)
         {
             if (item.Name == name)
@@ -68,7 +68,7 @@ class SingleAnimationWrapper : AnimationWrapper
                 {
                     if (item.Copy == copy.Name)
                     {
-                        result.Add(data, copy.TransformKeyData);
+                        result.Add(data, copy);
                         break;
                     }
                 }
@@ -126,25 +126,25 @@ class ArmatureAnimationWrapper : AnimationWrapper
         return names;
     }
 
-    public override Dictionary<S4Animations, TransformKeyData> GetParts(string name)
+    public override Dictionary<S4Animations, S4Animation> GetParts(string name)
     {
-        Dictionary<S4Animations, TransformKeyData> parts = new Dictionary<S4Animations, TransformKeyData>();
+        Dictionary<S4Animations, S4Animation> parts = new();
         foreach (var bone in bones)
         {
             foreach (var anim in bone.animations)
             {
                 if (anim.Name == name)
                 {
-                    parts.Add(bone, anim.TransformKeyData);
+                    parts.Add(bone, anim);
                     break;
                 }
             }
         }
         return parts;
     }
-    public override Dictionary<S4Animations, TransformKeyData> GetCopies(string name)
+    public override Dictionary<S4Animations, S4Animation> GetCopies(string name)
     {
-        var result = new Dictionary<S4Animations, TransformKeyData>();
+        var result = new Dictionary<S4Animations, S4Animation>();
         foreach (var bone in bones)
         {
             foreach (var anim in bone.animations)
@@ -155,7 +155,7 @@ class ArmatureAnimationWrapper : AnimationWrapper
                     {
                         if (anim.Copy == copy.Name)
                         {
-                            result.Add(bone, copy.TransformKeyData);
+                            result.Add(bone, copy);
                             break;
                         }
                     }
@@ -215,25 +215,25 @@ class SceneAnimationWrapper : AnimationWrapper
         return names;
     }
 
-    public override Dictionary<S4Animations, TransformKeyData> GetParts(string name)
+    public override Dictionary<S4Animations, S4Animation> GetParts(string name)
     {
-        Dictionary<S4Animations, TransformKeyData> parts = new Dictionary<S4Animations, TransformKeyData>();
+        Dictionary<S4Animations, S4Animation> parts = new();
         foreach (var obj in objects)
         {
             foreach (var anim in obj.animations)
             {
                 if (anim.Name == name)
                 {
-                    parts.Add(obj, anim.TransformKeyData);
+                    parts.Add(obj, anim);
                     break;
                 }
             }
         }
         return parts;
     }
-    public override Dictionary<S4Animations, TransformKeyData> GetCopies(string name)
+    public override Dictionary<S4Animations, S4Animation> GetCopies(string name)
     {
-        var result = new Dictionary<S4Animations, TransformKeyData>();
+        var result = new Dictionary<S4Animations, S4Animation>();
         foreach (var obj in objects)
         {
             foreach (var anim in obj.animations)
@@ -244,7 +244,7 @@ class SceneAnimationWrapper : AnimationWrapper
                     {
                         if (anim.Copy == copy.Name)
                         {
-                            result.Add(obj, copy.TransformKeyData);
+                            result.Add(obj, copy);
                             break;
                         }
                     }

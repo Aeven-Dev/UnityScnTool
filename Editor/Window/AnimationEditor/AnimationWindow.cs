@@ -21,7 +21,11 @@ public class AnimationWindow : EditorWindow
     Button import;
     Button export;
 
-    KeyframeEditor editor;
+    Button switchToTransformEditor;
+    Button switchToUVEditor;
+
+    TransformEditor transformEditor;
+    UVAnimEditor uvAnimEditor;
 
     ListView animationList;
     TextField animName;
@@ -29,8 +33,8 @@ public class AnimationWindow : EditorWindow
 
     bool attached = false;
 
-    Dictionary<S4Animations, TransformKeyData> bones;
-    Dictionary<S4Animations, TransformKeyData> copies;
+    Dictionary<S4Animations, S4Animation> bones;
+    Dictionary<S4Animations, S4Animation> copies;
 
     private void OnSelectionChange()
     {
@@ -60,33 +64,13 @@ public class AnimationWindow : EditorWindow
         visualTree.CloneTree(root);
 
         //Getting references----------------
-        attachInd = root.Q("AttachInd") as Button;
-        attachArm = root.Q("AttachArm") as Button;
-        attachScene = root.Q("AttachScene") as Button;
-        detach = root.Q("Detach") as Button;
-
-        import = root.Q("ImportBtn") as Button;
-        export = root.Q("ExportBtn") as Button;
-
-        IntegerField frameField = root.Q("Frame") as IntegerField;
-        animationList = root.Q("AnimList") as ListView;
-        animName = root.Q("AnimName") as TextField;
-
-        ScrollView partContainerScrollview = root.Q("Scrollview") as ScrollView;
-        channelList = partContainerScrollview.contentContainer;
-        editor = root.Q<KeyframeEditor>("Editor");
+        GetGUIReferences();
 
         //Setting up things-----------------
 
         CheckSelectedObject();// Check the selected object to enable some stuff
 
-        attachInd.clicked += AttachToIndividualObject;
-        attachArm.clicked += AttachToArmature;
-        attachScene.clicked += AttachToScene;
-        detach.clicked += Detach;
-
-        export.clicked += Export;
-        import.clicked += Import;
+        SetCallbacks();
 
         export.SetEnabled(false);
         import.SetEnabled(false);
@@ -101,6 +85,42 @@ public class AnimationWindow : EditorWindow
         animationList.onSelectedIndicesChange += AnimationChanged;
     }
 
+    void GetGUIReferences()
+	{
+        attachInd = rootVisualElement.Q("AttachInd") as Button;
+        attachArm = rootVisualElement.Q("AttachArm") as Button;
+        attachScene = rootVisualElement.Q("AttachScene") as Button;
+        detach = rootVisualElement.Q("Detach") as Button;
+
+        import = rootVisualElement.Q("ImportBtn") as Button;
+        export = rootVisualElement.Q("ExportBtn") as Button;
+
+        switchToTransformEditor = rootVisualElement.Q<Button>("SwitchTransformEditor");
+        switchToUVEditor = rootVisualElement.Q<Button>("SwitchUVAnimEditor");
+
+        animationList = rootVisualElement.Q("AnimList") as ListView;
+        animName = rootVisualElement.Q("AnimName") as TextField;
+
+        ScrollView partContainerScrollview = rootVisualElement.Q("Scrollview") as ScrollView;
+        channelList = partContainerScrollview.contentContainer;
+        transformEditor = rootVisualElement.Q<TransformEditor>("TransformEditor");
+        uvAnimEditor = rootVisualElement.Q<UVAnimEditor>("UVAnimEditor");
+    }
+
+    void SetCallbacks()
+	{
+        attachInd.clicked += AttachToIndividualObject;
+        attachArm.clicked += AttachToArmature;
+        attachScene.clicked += AttachToScene;
+        detach.clicked += Detach;
+
+        export.clicked += Export;
+        import.clicked += Import;
+
+        switchToTransformEditor.clicked += SwitchToTransformEditor;
+        switchToUVEditor.clicked += SwitchToUVAnimEditor;
+    }
+
     void CheckSelectedObject()
     {
         if (Selection.activeGameObject)
@@ -112,21 +132,21 @@ public class AnimationWindow : EditorWindow
                 attachArm.SetEnabled(true);
                 attachScene.SetEnabled(false);
 
-                editor.ToggleKeying(attached);
+                transformEditor.ToggleKeying(attached);
             }
             else if (Selection.activeGameObject.GetComponent<ScnData>())
             {
                 attachInd.SetEnabled(false);
                 attachArm.SetEnabled(false);
                 attachScene.SetEnabled(true);
-                editor.ToggleKeying(false);
+                transformEditor.ToggleKeying(false);
             }
             else
             {
                 attachInd.SetEnabled(false);
                 attachArm.SetEnabled(false);
                 attachScene.SetEnabled(false);
-                editor.ToggleKeying(false);
+                transformEditor.ToggleKeying(false);
             }
         }
         else
@@ -134,7 +154,7 @@ public class AnimationWindow : EditorWindow
             attachInd.SetEnabled(false);
             attachArm.SetEnabled(false);
             attachScene.SetEnabled(false);
-            editor.ToggleKeying(false);
+            transformEditor.ToggleKeying(false);
         }
     }
 
@@ -201,7 +221,7 @@ public class AnimationWindow : EditorWindow
 
         import.SetEnabled(false);
 
-        editor.AnimationCleared();
+        transformEditor.AnimationCleared();
     }
 
     void SwapAttachButtons(bool state)
@@ -242,7 +262,8 @@ public class AnimationWindow : EditorWindow
 
         export.SetEnabled(true);
 
-        editor.AnimationChanged(bones, copies);
+        transformEditor.AnimationChanged(bones, copies);
+        uvAnimEditor.AnimationChanged(bones, copies);
     }
 
     void ClearAnimations()
@@ -260,19 +281,19 @@ public class AnimationWindow : EditorWindow
     void SetAnimBones()
 	{
         channelList.Clear();
-        editor.ClearChannels();
+        transformEditor.ClearChannels();
         bones = animation.GetParts(selectedAnimName);
         copies = animation.GetCopies(selectedAnimName);
 
         bool alternateBackground = true;
         Color bg1 = new Color(0.3f, 0.3f, 0.3f);
         Color bg2 = new Color(0.275f, 0.275f, 0.275f);
-        Color bg = new Color(0.2196079f, 0.2196079f, 0.2196079f);
 
-        foreach (var bone in bones.Keys)
+        foreach (var bone in bones)
         {
-            var parent = new VisualElement();
-            var gbl = new Toggle();
+            alternateBackground = !alternateBackground;
+            var parent = new ChannelItem(bone.Key.name, alternateBackground ? bg1 : bg2, transformEditor, bone.Value);
+           /* var gbl = new Toggle();
             var foldout = new Foldout();
             var pos = new Toggle();
             var rot = new Toggle();
@@ -303,34 +324,32 @@ public class AnimationWindow : EditorWindow
             parent.Add(gbl);
             parent.Add(foldout);
             parent.style.flexDirection = FlexDirection.Row;
-            alternateBackground = !alternateBackground;
-            parent.style.backgroundColor = alternateBackground ? bg1 : bg2;
 
-            gbl.RegisterValueChangedCallback((evnt) => {BoneChannelGlobalCallback(evnt, bones[bone]);});
+            gbl.RegisterValueChangedCallback((evnt) => {BoneChannelGlobalCallback(evnt, bones[bone].TransformKeyData);});
 
-            TransformKeyData tkd = bones[bone];
+            TransformKeyData tkd = bones[bone].TransformKeyData;
             pos.RegisterValueChangedCallback((evnt) => {
-                editor.SetChannel(tkd, evnt.newValue, TransformChannel.Channel.Position);
+                transformEditor.SetChannel(tkd, evnt.newValue, TransformChannel.Channel.Position);
                 evnt.StopPropagation();
             });
             rot.RegisterValueChangedCallback((evnt) => {
-                editor.SetChannel(tkd, evnt.newValue, TransformChannel.Channel.Rotation);
+                transformEditor.SetChannel(tkd, evnt.newValue, TransformChannel.Channel.Rotation);
                 evnt.StopPropagation();
             });
             sca.RegisterValueChangedCallback((evnt) => {
-                editor.SetChannel(tkd, evnt.newValue, TransformChannel.Channel.Scale);
+                transformEditor.SetChannel(tkd, evnt.newValue, TransformChannel.Channel.Scale);
                 evnt.StopPropagation();
             });
             alp.RegisterValueChangedCallback((evnt) => {
-                editor.SetChannel(tkd, evnt.newValue, TransformChannel.Channel.Alpha);
+                transformEditor.SetChannel(tkd, evnt.newValue, TransformChannel.Channel.Alpha);
                 evnt.StopPropagation();
-            });
+            });*/
 
             channelList.Add(parent);
-            editor.AddChannel(tkd);
+            transformEditor.AddChannel(bone.Value.TransformKeyData);
         }
     }
-
+    /*
     void BoneChannelGlobalCallback(ChangeEvent<bool> e, TransformKeyData tkd)
 	{
         Foldout foldout = ((VisualElement)(e.target)).parent[1] as Foldout;
@@ -344,7 +363,7 @@ public class AnimationWindow : EditorWindow
             rot.SetEnabled(true);
             sca.SetEnabled(true);
             alp.SetEnabled(true);
-            editor.SetAllChannels(tkd, pos.value);
+            transformEditor.SetAllChannels(tkd, pos.value);
         }
         else
         {
@@ -352,10 +371,10 @@ public class AnimationWindow : EditorWindow
             rot.SetEnabled(false);
             sca.SetEnabled(false);
             alp.SetEnabled(false);
-            editor.SetAllChannels(tkd, false);
+            transformEditor.SetAllChannels(tkd, false);
         }
         e.StopPropagation();
-    }
+    }*/
 
     void Export()
 	{
@@ -374,4 +393,119 @@ public class AnimationWindow : EditorWindow
         selectedAnimName = evnt.newValue;
     }
 
+
+    void SwitchToTransformEditor()
+	{
+        switchToTransformEditor.SetEnabled(false);
+        switchToUVEditor.SetEnabled(true);
+
+        transformEditor.SetEnabled(true);
+        transformEditor.style.display = DisplayStyle.Flex;
+
+        uvAnimEditor.SetEnabled(false);
+        uvAnimEditor.style.display = DisplayStyle.None;
+    }
+
+    void SwitchToUVAnimEditor()
+	{
+
+        switchToTransformEditor.SetEnabled(true);
+        switchToUVEditor.SetEnabled(false);
+
+        transformEditor.SetEnabled(false);
+        transformEditor.style.display = DisplayStyle.None;
+
+        uvAnimEditor.SetEnabled(true);
+        uvAnimEditor.style.display = DisplayStyle.Flex;
+    }
+}
+
+class ChannelItem : VisualElement
+{
+    static Color bg = new Color(0.2196079f, 0.2196079f, 0.2196079f);
+    TransformEditor _transformEditor;
+    public ChannelItem(string name, Color backgroundColor, TransformEditor transformEditor, S4Animation animation)
+	{
+        _transformEditor = transformEditor;
+        var gbl = new Toggle();
+        var foldout = new Foldout();
+        var pos = new Toggle();
+        var rot = new Toggle();
+        var sca = new Toggle();
+        var alp = new Toggle();
+
+        gbl.SetValueWithoutNotify(true);
+        foldout.text = name;
+        foldout.value = false;
+
+        pos.text = "Position"; rot.text = "Rotation"; sca.text = "Scale"; alp.text = "Alpha";
+        pos.style.paddingLeft = rot.style.paddingLeft = sca.style.paddingLeft = alp.style.paddingLeft = 30;
+
+        pos.SetValueWithoutNotify(false);
+        rot.SetValueWithoutNotify(false);
+        sca.SetValueWithoutNotify(false);
+        alp.SetValueWithoutNotify(false);
+
+        pos.style.backgroundColor = rot.style.backgroundColor = sca.style.backgroundColor = alp.style.backgroundColor = bg;
+
+        foldout.Add(pos);
+        foldout.Add(rot);
+        foldout.Add(sca);
+        foldout.Add(alp);
+
+        gbl[0].style.flexGrow = 0f;
+        gbl[0][0].style.alignSelf = Align.FlexStart;
+        parent.Add(gbl);
+        parent.Add(foldout);
+        parent.style.flexDirection = FlexDirection.Row;
+        
+        parent.style.backgroundColor = backgroundColor;
+
+        gbl.RegisterValueChangedCallback((evnt) => { BoneChannelGlobalCallback(evnt, animation.TransformKeyData); });
+
+        pos.RegisterValueChangedCallback((evnt) => {
+            transformEditor.SetChannel(animation.TransformKeyData, evnt.newValue, TransformChannel.Channel.Position);
+            evnt.StopPropagation();
+        });
+        rot.RegisterValueChangedCallback((evnt) => {
+            transformEditor.SetChannel(animation.TransformKeyData, evnt.newValue, TransformChannel.Channel.Rotation);
+            evnt.StopPropagation();
+        });
+        sca.RegisterValueChangedCallback((evnt) => {
+            transformEditor.SetChannel(animation.TransformKeyData, evnt.newValue, TransformChannel.Channel.Scale);
+            evnt.StopPropagation();
+        });
+        alp.RegisterValueChangedCallback((evnt) => {
+            transformEditor.SetChannel(animation.TransformKeyData, evnt.newValue, TransformChannel.Channel.Alpha);
+            evnt.StopPropagation();
+        });
+
+    }
+
+
+    void BoneChannelGlobalCallback(ChangeEvent<bool> e, TransformKeyData tkd)
+    {
+        Foldout foldout = ((VisualElement)(e.target)).parent[1] as Foldout;
+        Toggle pos = foldout[0] as Toggle;
+        Toggle rot = foldout[1] as Toggle;
+        Toggle sca = foldout[2] as Toggle;
+        Toggle alp = foldout[3] as Toggle;
+        if (e.newValue)
+        {
+            pos.SetEnabled(true);
+            rot.SetEnabled(true);
+            sca.SetEnabled(true);
+            alp.SetEnabled(true);
+            _transformEditor.SetAllChannels(tkd, pos.value);
+        }
+        else
+        {
+            pos.SetEnabled(false);
+            rot.SetEnabled(false);
+            sca.SetEnabled(false);
+            alp.SetEnabled(false);
+            _transformEditor.SetAllChannels(tkd, false);
+        }
+        e.StopPropagation();
+    }
 }
