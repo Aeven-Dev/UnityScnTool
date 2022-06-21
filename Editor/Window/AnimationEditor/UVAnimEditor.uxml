@@ -3,22 +3,15 @@
         <ui:VisualElement style="flex-grow: 1; flex-direction: column; min-width: 450px; width: auto;">
             <KeyframeController name="KeyframeController" focusable="true" buttons="KeyAll, KeySel" />
             <ui:Label text="Nothing to display :P" display-tooltip-when-elided="true" name="Message" style="position: relative; flex-grow: 1; left: 0; top: 0; right: 0; bottom: 0; -unity-text-align: middle-center; display: none; border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; border-left-color: rgb(110, 110, 110); border-right-color: rgb(110, 110, 110); border-top-color: rgb(110, 110, 110); border-bottom-color: rgb(110, 110, 110);" />
-            <ui:SliderInt picking-mode="Ignore" value="0" high-value="100" low-value="0" name="FrameSlider" binding-path="frame" style="border-bottom-color: rgb(110, 110, 110); border-bottom-width: 2px; background-color: rgb(56, 56, 56); margin-left: 0; border-left-width: 2px; border-right-width: 2px; margin-right: 0; padding-left: 0; margin-top: 0; min-width: auto; transform-origin: left top; padding-right: 0; flex-grow: 0; flex-direction: row; border-top-width: 2px; border-top-color: rgb(110, 110, 110);" />
-            <ui:VisualElement name="ViewportRoot" style="flex-grow: 1; flex-direction: row; display: flex; visibility: visible;">
-                <ui:VisualElement style="flex-grow: 1; flex-shrink: 0; overflow: hidden; display: flex; visibility: visible;">
-                    <ui:VisualElement style="height: 100%; width: 100%; min-height: 100%; min-width: 100%; scale: 1 1; translate: 0 0; transform-origin: left top; align-items: stretch; justify-content: space-between; background-color: rgb(34, 34, 34); flex-grow: 0; flex-shrink: 1;">
-                        <ui:VisualElement name="Texture" style="position: absolute; left: 50%; right: 0; height: 100px; top: 50%; bottom: 0; flex-shrink: 0; width: 100px; border-left-color: rgb(111, 111, 111); border-right-color: rgb(111, 111, 111); border-top-color: rgb(111, 111, 111); border-bottom-color: rgb(111, 111, 111); border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px;">
-                            <MorphEditor name="Editor" style="flex-grow: 1;" />
-                        </ui:VisualElement>
+            <ui:VisualElement name="Viewport" style="flex-grow: 1;">
+                <ui:SliderInt picking-mode="Ignore" value="0" high-value="100" low-value="0" name="FrameSlider" binding-path="frame" style="border-bottom-color: rgb(110, 110, 110); border-bottom-width: 2px; background-color: rgb(56, 56, 56); margin-left: 0; border-left-width: 2px; border-right-width: 2px; margin-right: 0; padding-left: 0; margin-top: 0; min-width: auto; transform-origin: left top; padding-right: 0; flex-grow: 0; flex-direction: row; border-top-width: 2px; border-top-color: rgb(110, 110, 110);" />
+                <ZoomViewport name="ZoomViewport" style="flex-grow: 1;">
+                    <ui:VisualElement name="Texture" style="position: absolute; left: 50%; right: 0; height: 100px; top: 50%; bottom: 0; flex-shrink: 0; width: 100px; border-left-color: rgb(111, 111, 111); border-right-color: rgb(111, 111, 111); border-top-color: rgb(111, 111, 111); border-bottom-color: rgb(111, 111, 111); border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; translate: -50% -50%;">
+                        <MorphEditor name="Editor" style="flex-grow: 1;" />
+                        <ui:VisualElement name="PointContainer" style="width: 100%; height: 100%; position: absolute; flex-grow: 0;" />
                     </ui:VisualElement>
-                    <ui:VisualElement name="RulerHolder" style="flex-grow: 1; position: absolute; background-color: rgb(255, 255, 255); top: auto; left: auto; right: auto; bottom: auto; height: 100%;" />
-                    <ui:VisualElement style="left: 100%; top: -16px; width: 0; height: 0; flex-direction: column-reverse; justify-content: flex-end; align-items: flex-start;">
-                        <ui:Label text="10x - 120y" display-tooltip-when-elided="false" picking-mode="Ignore" name="PosLabel" style="left: -200px; top: -182%; right: auto; bottom: auto; flex-direction: column; flex-grow: 0; flex-basis: 100%; width: 200px; -unity-text-align: upper-right; white-space: nowrap;" />
-                    </ui:VisualElement>
-                </ui:VisualElement>
-                <ui:Scroller high-value="100" direction="Vertical" value="50" name="Vertical" low-value="0" style="flex-grow: 0; scale: 1 1;" />
+                </ZoomViewport>
             </ui:VisualElement>
-            <ui:MinMaxSlider picking-mode="Ignore" min-value="0" max-value="100" low-limit="0" high-limit="100" name="Hori_Zoom" enable-rich-text="true" text="Hook!" style="translate: 0 0;" />
         </ui:VisualElement>
         <ui:VisualElement style="flex-grow: 0; height: auto; width: 200px; min-width: auto; border-left-width: 2px; border-right-width: 2px; border-top-width: 2px; border-bottom-width: 2px; border-left-color: rgb(110, 110, 110); border-right-color: rgb(110, 110, 110); border-top-color: rgb(110, 110, 110); border-bottom-color: rgb(110, 110, 110);" />
     </ui:VisualElement>

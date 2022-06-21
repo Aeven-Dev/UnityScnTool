@@ -33,6 +33,8 @@ public class AnimationWindow : EditorWindow
 
     bool attached = false;
 
+    bool editingTransform = true;
+
     Dictionary<S4Animations, S4Animation> bones;
     Dictionary<S4Animations, S4Animation> copies;
 
@@ -65,11 +67,11 @@ public class AnimationWindow : EditorWindow
 
         //Getting references----------------
         GetGUIReferences();
-
+        
         //Setting up things-----------------
 
         CheckSelectedObject();// Check the selected object to enable some stuff
-
+        switchToTransformEditor.SetEnabled(false);
         SetCallbacks();
 
         export.SetEnabled(false);
@@ -256,14 +258,21 @@ public class AnimationWindow : EditorWindow
         animName.SetValueWithoutNotify(selectedAnimName);
         animName.SetEnabled(true);
 
-        SetAnimBones();
-        
         frame = 0;
 
         export.SetEnabled(true);
 
-        transformEditor.AnimationChanged(bones, copies);
-        uvAnimEditor.AnimationChanged(bones, copies);
+        if (editingTransform)
+        {
+            SetTransformBones();
+            transformEditor.AnimationChanged(bones, copies);
+        }
+        else
+        {
+            SetUVBones();
+            uvAnimEditor.AnimationChanged(bones, copies);
+        }
+        
     }
 
     void ClearAnimations()
@@ -278,7 +287,7 @@ public class AnimationWindow : EditorWindow
         animName.SetValueWithoutNotify(string.Empty);
     }
 
-    void SetAnimBones()
+    void SetTransformBones()
 	{
         channelList.Clear();
         transformEditor.ClearChannels();
@@ -349,6 +358,27 @@ public class AnimationWindow : EditorWindow
             transformEditor.AddChannel(bone.Value.TransformKeyData);
         }
     }
+
+    void SetUVBones()
+	{
+        channelList.Clear();
+        transformEditor.ClearChannels();
+        bones = animation.GetParts(selectedAnimName);
+        copies = animation.GetCopies(selectedAnimName);
+
+        bool alternateBackground = true;
+        Color bg1 = new Color(0.3f, 0.3f, 0.3f);
+        Color bg2 = new Color(0.275f, 0.275f, 0.275f);
+
+        foreach (var bone in bones)
+        {
+            alternateBackground = !alternateBackground;
+            var parent = new ChannelItem(bone.Key.name, alternateBackground ? bg1 : bg2, transformEditor, bone.Value);
+            
+            channelList.Add(parent);
+            transformEditor.AddChannel(bone.Value.TransformKeyData);
+        }
+    }
     /*
     void BoneChannelGlobalCallback(ChangeEvent<bool> e, TransformKeyData tkd)
 	{
@@ -396,6 +426,7 @@ public class AnimationWindow : EditorWindow
 
     void SwitchToTransformEditor()
 	{
+        editingTransform = true;
         switchToTransformEditor.SetEnabled(false);
         switchToUVEditor.SetEnabled(true);
 
@@ -409,6 +440,7 @@ public class AnimationWindow : EditorWindow
     void SwitchToUVAnimEditor()
 	{
 
+        editingTransform = false;
         switchToTransformEditor.SetEnabled(true);
         switchToUVEditor.SetEnabled(false);
 
@@ -455,11 +487,11 @@ class ChannelItem : VisualElement
 
         gbl[0].style.flexGrow = 0f;
         gbl[0][0].style.alignSelf = Align.FlexStart;
-        parent.Add(gbl);
-        parent.Add(foldout);
-        parent.style.flexDirection = FlexDirection.Row;
+        Add(gbl);
+        Add(foldout);
+        style.flexDirection = FlexDirection.Row;
         
-        parent.style.backgroundColor = backgroundColor;
+        style.backgroundColor = backgroundColor;
 
         gbl.RegisterValueChangedCallback((evnt) => { BoneChannelGlobalCallback(evnt, animation.TransformKeyData); });
 

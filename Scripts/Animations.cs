@@ -180,7 +180,7 @@ public class TransformKeyData : IManualSerializer
     {
         for (int i = 0; i < TransformKey.SKey.Count; i++)
         {
-            if (TransformKey.SKey[i].frame > frame)
+            if (TransformKey.SKey[i].frame == frame)
             {
                 TransformKey.SKey[i] = new SKey(frame, sca);
                 return false;

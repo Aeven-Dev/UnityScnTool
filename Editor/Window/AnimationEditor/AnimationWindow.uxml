@@ -14,7 +14,7 @@
                 </ui:VisualElement>
                 <ui:VisualElement style="flex-direction: row; justify-content: center;">
                     <ui:Button text="Transform Editor" display-tooltip-when-elided="true" name="SwitchTransformEditor" style="flex-grow: 1;" />
-                    <ui:Button text="UVAnim Editor" display-tooltip-when-elided="true" name="SwitchUVAnimEditor" style="flex-grow: 1;" />
+                    <ui:Button text="UVAnim Editor" display-tooltip-when-elided="true" name="SwitchUVAnimEditor" style="flex-grow: 1; display: flex; visibility: visible;" />
                 </ui:VisualElement>
                 <ui:VisualElement style="flex-direction: row; border-bottom-width: 2px; border-bottom-color: rgb(110, 110, 110); flex-grow: 0;">
                     <ui:TextField picking-mode="Ignore" name="AnimName" is-delayed="true" style="flex-grow: 1;" />

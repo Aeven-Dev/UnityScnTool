@@ -119,6 +119,7 @@ namespace AevenScnTool.Menus
         public static void Open(SceneContainer container)
         {
             SelectImport window = (SelectImport)GetWindow(typeof(SelectImport));
+            window.titleContent = new GUIContent("Import Selection!");
             window.container = container;
 
             window.roots = window.GetSelectedItems(container);
@@ -163,6 +164,11 @@ namespace AevenScnTool.Menus
             }
             foreach (var item in items)
             {
+				if (((SceneChunk)item.element).SubName == container.Header.Name)
+				{
+                    roots.Add(item);
+                    continue;
+                }
                 bool foundParent = false;
                 for (int i = 0; i < items.Count; i++)
                 {

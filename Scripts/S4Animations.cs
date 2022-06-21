@@ -127,7 +127,7 @@ public class S4Animation
                 key.Vertices.Add(new MorphKey.VertexMorph(MorphKeys[i].Vertices[j].index, MorphKeys[i].Vertices[j].position));
 
             }
-            for (int j = 0; j < MorphKeys[i].Vertices.Count; j++)
+            for (int j = 0; j < MorphKeys[i].UVs.Count; j++)
             {
                 key.UVs.Add(new MorphKey.UVMorph(MorphKeys[i].UVs[j].index, MorphKeys[i].UVs[j].position));
 
@@ -176,6 +176,10 @@ public class S4Animation
 
     public Vector2[] SampleUVs(int frame)
     {
+		if (MorphKeys.Count == 0)
+		{
+            return null;
+		}
         for (int i = 0; i < MorphKeys.Count - 1; i++)
         {
             MorphKey prev = MorphKeys[i];
@@ -195,6 +199,42 @@ public class S4Animation
                 return uvs;
             }
         }
-        return null;
+        Vector2[] last_uvs = new Vector2[MorphKeys[MorphKeys.Count - 1].UVs.Count];
+        for (int u = 0; u < last_uvs.Length; u++)
+        {
+            last_uvs[u] = MorphKeys[MorphKeys.Count - 1].UVs[u].position;
+        }
+        return last_uvs;
+    }
+
+    public bool KeyUVs(int frame ,Vector2[] data)
+	{
+
+        List<MorphKey.UVMorph> uvs = new();
+
+        for (int u = 0; u < data.Length; u++)
+        {
+            uvs.Add(new MorphKey.UVMorph((uint)u, data[u]));
+        }
+
+        MorphKey mk = new MorphKey();
+        mk.UVs = uvs;
+        mk.frame = frame;
+
+        for (int i = 0; i < MorphKeys.Count; i++)
+        {
+            if (MorphKeys[i].frame == frame)
+            {
+                MorphKeys[i] = mk;
+                return false;
+            }
+            if (MorphKeys[i].frame > frame)
+            {
+                MorphKeys.Insert(i, mk);
+                return true;
+            }
+        }
+        MorphKeys.Add(mk);
+        return true;
     }
 }

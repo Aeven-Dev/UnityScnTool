@@ -67,15 +67,8 @@ public class ZoomViewport : VisualElement
         container.RegisterCallback<WheelEvent>(KeyframeWheel);
         container.RegisterCallback<MouseMoveEvent>((e) => { posLabel.text = e.localMousePosition.x + "x - " + e.localMousePosition.y + "y"; }, TrickleDown.TrickleDown);
         container.RegisterCallback<MouseLeaveEvent>((e) => { posLabel.text = string.Empty; });
-        container.RegisterCallback<MouseDownEvent>((evnt) =>
-        {
-            if (evnt.button == 2) container.CaptureMouse();
-        });
-        container.RegisterCallback<MouseMoveEvent>(KeyframeScroll);
-        container.RegisterCallback<MouseUpEvent>((evnt) =>
-        {
-            if (evnt.button == 2) container.ReleaseMouse();
-        });
+
+        SetKeyframeScrollCallback();
     }
 
     public void UpdateViewport()
@@ -98,17 +91,36 @@ public class ZoomViewport : VisualElement
         onViewportSet.Invoke(zoomPercentage, hMin, vPos, zoomInfluence);
     }
 
-    void KeyframeScroll(MouseMoveEvent e)
-    {
-        if (container.HasMouseCapture())
+    void SetKeyframeScrollCallback()
+	{
+        bool scrolling = false;
+        container.RegisterCallback<MouseDownEvent>((evnt) =>
         {
-            var val = new Vector2(horizontal_zoom.value.x - e.mouseDelta.x * 0.1f, horizontal_zoom.value.y - e.mouseDelta.x * 0.1f);
-            if (val.y < horizontal_zoom.highLimit && val.x > horizontal_zoom.lowLimit)
+            if (evnt.button == 2)
             {
-                horizontal_zoom.value = val;
+                container.CaptureMouse();
+                scrolling = true;
             }
-            vertical.value -= e.mouseDelta.y * 0.5f;
-        }
+        });
+        container.RegisterCallback<MouseMoveEvent>(
+            e => {
+                if (scrolling)
+                {
+                    var val = new Vector2(horizontal_zoom.value.x - e.mouseDelta.x * 0.1f, horizontal_zoom.value.y - e.mouseDelta.x * 0.1f);
+                    if (val.y < horizontal_zoom.highLimit && val.x > horizontal_zoom.lowLimit)
+                    {
+                        horizontal_zoom.value = val;
+                    }
+                    vertical.value -= e.mouseDelta.y * 0.5f;
+                }
+            }
+            );
+        container.RegisterCallback<MouseUpEvent>((evnt) =>
+        {
+            if (evnt.button == 2) { container.ReleaseMouse();
+                scrolling = false;
+            }
+        });
     }
 
     void KeyframeWheel(WheelEvent e)

@@ -14,7 +14,7 @@ public class ScnToolData : ScriptableObject
 	public bool uv_flipHorizontal = false;
 
 	public Material base_mat;
-	Material GetMatFromShader(NetsphereScnTool.Scene.Shader shader)
+	Material GetMatFromShader(RenderFlag shader)
 	{
 
 

@@ -29,8 +29,8 @@ public class KeyframeController : VisualElement
     public string buttons { get; set; }
 
     public FrameController frameController;
-    public float dopesheetMult;
-    public float dopesheetOffset;
+    public float dopesheetMult = 0.1f;
+    public float dopesheetOffset = 2f;
 
     Button prev;
     Button prevKey;
@@ -48,6 +48,7 @@ public class KeyframeController : VisualElement
 
 
     bool playing = false;
+    public bool IsPlaying { get => playing; }
 
     public void Init(List<string> keyingButtonNames)
     {
@@ -79,6 +80,7 @@ public class KeyframeController : VisualElement
     void SetCallBacks()
     {
         frameController.onFrameChange += frameField.SetValueWithoutNotify;
+        frameField.RegisterValueChangedCallback(e => frameController.SetFrame(e.newValue));
         prev.clicked += frameController.PreviousFrame;
         play.clicked += Play;
         next.clicked += frameController.NextFrame;
@@ -103,6 +105,9 @@ public class KeyframeController : VisualElement
 
             button.style.marginRight = 0;
             button.style.marginLeft = 0;
+
+            button.style.paddingRight= 3;
+            button.style.paddingLeft = 3;
             button.style.borderRightWidth = 0;
             if (i == 0)
             {
@@ -139,12 +144,26 @@ public class KeyframeController : VisualElement
 
     public void SetTotalFrames(int frames)
 	{
+        frameController.totalFrames = frames;
         totalFramesField.text = frames.ToString();
     }
 
     public void SetDopesheet(List<int> frames)
 	{
+		if (frames == null) return;
+		
+        dopesheet.Clear();
         frameController.keyframes = frames;
+		if (frames.Count == 0)
+        {
+            prevKey.SetEnabled(false);
+            nextKey.SetEnabled(false);
+        }
+		else
+        {
+            prevKey.SetEnabled(true);
+            nextKey.SetEnabled(true);
+        }
 		foreach (var item in frames)
 		{
             VisualElement f = MakeTick(item);
@@ -159,11 +178,14 @@ public class KeyframeController : VisualElement
             f.style.height = 7;
             f.style.width = 7;
             f.style.borderBottomLeftRadius = new StyleLength(new Length(50, LengthUnit.Percent));
-            f.style.borderBottomRightRadius = new StyleLength(new Length(50, LengthUnit.Percent));
-            f.style.borderTopLeftRadius = new StyleLength(new Length(50, LengthUnit.Percent));
+            //f.style.borderBottomRightRadius = new StyleLength(new Length(50, LengthUnit.Percent));
+            //f.style.borderTopLeftRadius = new StyleLength(new Length(50, LengthUnit.Percent));
             f.style.borderTopRightRadius = new StyleLength(new Length(50, LengthUnit.Percent));
+            f.style.rotate = new StyleRotate(new Rotate(45));
+            f.style.translate = new StyleTranslate(new Translate(0,-3,0));
             f.style.left = new StyleLength(new Length((left * dopesheetMult) + dopesheetOffset, LengthUnit.Pixel));
             f.style.top = new StyleLength(new Length(50, LengthUnit.Percent));
+            f.style.backgroundColor = Color.yellow;
             return f;
         }
 	}
@@ -186,14 +208,21 @@ public class KeyframeController : VisualElement
 
     }
 
+    public void ToggleKeying(bool state)
+	{
+        foreach (var item in keyingButtons)
+        {
+            item.Value.SetEnabled(state);
+        }
+    }
+
     public void Disable()
 	{
 
         prev.SetEnabled(false);
         play.SetEnabled(false);
         next.SetEnabled(false);
-        prevKey.SetEnabled(false);
-        nextKey.SetEnabled(false);
+        SetDopesheet(new List<int>());
         totalFramesField.text = string.Empty;
 
         playing = false;

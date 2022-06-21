@@ -623,7 +623,7 @@ namespace AevenScnTool.IO
 
 		public static SceneContainer CreateContainerFromScenes(FileInfo fileInfo, ScnData[] scenes)
 		{
-			usedNames.Clear();
+			usedNames = new();
 			SceneContainer container = new SceneContainer();
 			container.Header.Name = fileInfo.Name;
 			foreach (var scene in scenes)

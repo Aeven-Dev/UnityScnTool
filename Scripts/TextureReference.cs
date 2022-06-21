@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.ProBuilder;
 
 [AddComponentMenu("S4 scn/Texture Reference")]
 public class TextureReference : MonoBehaviour
@@ -317,5 +316,8 @@ public enum RenderFlag
     Glow = 16384,
     Water = 32768,
     Distortion = 65536,
-    Dark = 131072
+    Dark = 131072,
+    Unk1 = 262144,
+    Unk2 = 524288,
+    Unk3 = 1048576
 }

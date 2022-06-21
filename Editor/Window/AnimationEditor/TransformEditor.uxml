@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <ui:VisualElement style="flex-grow: 1; flex-direction: row; width: auto; height: 256px;">
         <ui:VisualElement style="flex-grow: 1; flex-direction: column; min-width: 450px;">
-            <ui:VisualElement style="flex-grow: 0; flex-shrink: 0; flex-direction: row;">
+            <ui:VisualElement style="flex-grow: 0; flex-shrink: 0; flex-direction: row; display: none;">
                 <uie:IntegerField value="24" name="FrameField" binding-path="frame" is-delayed="true" style="width: 64px; margin-left: 0; margin-right: 0; align-items: stretch; justify-content: flex-start;" />
                 <ui:Label text="Label" display-tooltip-when-elided="true" name="TotalFrames" style="width: 64px; -unity-text-align: middle-center;" />
                 <ui:Button text="&lt;&lt;" display-tooltip-when-elided="true" name="PrevKey" style="width: 25px; border-top-left-radius: 5px; border-bottom-left-radius: 5px; border-top-right-radius: 0; border-bottom-right-radius: 0; border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; margin-left: 1px; margin-right: 0; padding-left: 9px; padding-right: 9px;" />
@@ -15,6 +15,7 @@
                 <ui:Button text="S" display-tooltip-when-elided="true" name="KeySca" enable-rich-text="false" style="margin-left: 0; margin-right: 0; border-left-width: 0; border-right-width: 1px; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; padding-left: 4px; padding-right: 4px;" />
                 <ui:Button text="A" display-tooltip-when-elided="true" name="KeyAlp" enable-rich-text="false" style="margin-left: 0; border-left-width: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; padding-left: 3px; padding-right: 3px; border-right-width: 1px; border-top-right-radius: 5px; border-bottom-right-radius: 5px;" />
             </ui:VisualElement>
+            <KeyframeController buttons="Key All,P,R,S,A" name="KeyframeController" />
             <ui:Label text="Nothing to display :P" display-tooltip-when-elided="true" name="Message" style="position: relative; flex-grow: 1; left: 0; top: 0; right: 0; bottom: 0; -unity-text-align: middle-center; display: none; border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; border-left-color: rgb(110, 110, 110); border-right-color: rgb(110, 110, 110); border-top-color: rgb(110, 110, 110); border-bottom-color: rgb(110, 110, 110);" />
             <ZoomViewport name="Viewport" style="flex-grow: 1;">
                 <ui:VisualElement style="flex-grow: 1; flex-shrink: 0; overflow: hidden; display: flex; visibility: visible;">

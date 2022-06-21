@@ -57,6 +57,7 @@ namespace AevenScnTool.Menus
         public static void Open()
         {
             SelectExport window = (SelectExport)GetWindow(typeof(SelectExport));
+            window.titleContent = new GUIContent("Export Selection!");
 
             List<SelectableItem> scenesInHierarchy = new List<SelectableItem>();
             for (int i = 0; i < SceneManager.sceneCount; i++)
