@@ -30,6 +30,14 @@ public class UVAnimEditor : VisualElement
     VisualElement texture;
     VisualElement pointContainer;
 
+    VisualElement R_C_S;
+    VisualElement R_C_T;
+
+    FloatField scale_1;
+    FloatField scale_2;
+    Button SetScale_1;
+    Button SetScale_2;
+
     SliderInt frameSlider;
 
     Dictionary<S4Animations, S4Animation> bones = new();
@@ -64,6 +72,12 @@ public class UVAnimEditor : VisualElement
         viewport = this.Q("Viewport");
         texture = this.Q("Texture");
         pointContainer = this.Q("PointContainer");
+        R_C_S = this.Q("R_C_S");
+        R_C_T = this.Q("R_C_T");
+        scale_1 = this.Q<FloatField>("Scale_Selection");
+        scale_2 = this.Q<FloatField>("Scale_Center");
+        SetScale_1 = this.Q<Button>("SetScaleSelection");
+        SetScale_2 = this.Q<Button>("SetScaleCenter");
     }
 
     void SetCallBacks()
@@ -78,6 +92,8 @@ public class UVAnimEditor : VisualElement
 
         SetSelectionLogic();
         SetMoveSelectionLogic();
+        SetRotationCallbacks();
+        SetScaleCallbacks();
     }
 
     void Disable()
@@ -118,6 +134,7 @@ public class UVAnimEditor : VisualElement
 
         keyframeController.Enable();
 
+        keyframeController.frameController.SetFrame(0);
         zoomViewport.UpdateViewport();
         List<Mesh> meshes = new();
 		foreach (var item in bones)
@@ -419,6 +436,96 @@ public class UVAnimEditor : VisualElement
 
         SetSomeUVS(thing);
 
+    }
+
+    void SetRotationCallbacks()
+    {
+        ((Button)R_C_S[0]).clicked += () => RotateSelected(-90, CenterOfSelected());
+        ((Button)R_C_S[1]).clicked += () => RotateSelected(-10, CenterOfSelected());
+        ((Button)R_C_S[2]).clicked += () => RotateSelected(-1, CenterOfSelected());
+        ((Button)R_C_S[3]).clicked += () => RotateSelected(1, CenterOfSelected());
+        ((Button)R_C_S[4]).clicked += () => RotateSelected(10, CenterOfSelected());
+        ((Button)R_C_S[5]).clicked += () => RotateSelected(90, CenterOfSelected());
+
+        ((Button)R_C_T[0]).clicked += () => RotateSelected(-90, Center());
+        ((Button)R_C_T[1]).clicked += () => RotateSelected(-10, Center());
+        ((Button)R_C_T[2]).clicked += () => RotateSelected(-1, Center());
+        ((Button)R_C_T[3]).clicked += () => RotateSelected(1, Center());
+        ((Button)R_C_T[4]).clicked += () => RotateSelected(10, Center());
+        ((Button)R_C_T[5]).clicked += () => RotateSelected(90, Center());
+    }
+
+    void SetScaleCallbacks()
+    {
+        SetScale_1.clicked += () => ScaleSelected(scale_1.value, CenterOfSelected());
+        SetScale_2.clicked += () => ScaleSelected(scale_2.value, Center());
+    }
+    Vector2 Center()
+    {
+        return new Vector2(0.5f,0.5f);
+        //return new Vector2(pointContainer.resolvedStyle.width / 2f, pointContainer.resolvedStyle.height / 2f);
+    }
+
+    Vector2 CenterOfSelected()
+	{
+        Vector2 center = new Vector2(0, 0);
+		foreach (var item in selectedPoints)
+		{
+            center += uvList[item.mesh][item.index];
+        }
+        center /= selectedPoints.Count;
+        return center;
+	}
+
+    void RotateSelected(float angle, Vector2 center)
+    {
+        if (keyframeController.IsPlaying)
+        {
+            return;
+        }
+        Dictionary<Mesh, List<(int, Vector2)>> thing = new();
+        foreach (var item in selectedPoints)
+        {
+            Vector2 point = uvList[item.mesh][item.index];
+            Vector2 pos = (Vector2)(Quaternion.Euler(0f, 0f, angle) * (point - center)) + center;
+
+            item.style.left = new StyleLength(new Length(pos.x * pointContainer.resolvedStyle.width, LengthUnit.Pixel));
+            item.style.top = new StyleLength(new Length(pos.y * pointContainer.resolvedStyle.height, LengthUnit.Pixel));
+
+            if (!thing.ContainsKey(item.mesh))
+            {
+                thing.Add(item.mesh, new List<(int, Vector2)>());
+            }
+            thing[item.mesh].Add((item.index, pos));
+        }
+
+        SetSomeUVS(thing);
+    }
+    void ScaleSelected(float amount, Vector2 center)
+    {
+        if (keyframeController.IsPlaying)
+        {
+            return;
+        }
+        Dictionary<Mesh, List<(int, Vector2)>> thing = new();
+        foreach (var item in selectedPoints)
+        {
+            Vector2 point = uvList[item.mesh][item.index];
+            Vector2 dir = point - center;
+            dir *= amount;
+            Vector2 pos = center + dir;
+
+            item.style.left = new StyleLength(new Length(pos.x * pointContainer.resolvedStyle.width, LengthUnit.Pixel));
+            item.style.top = new StyleLength(new Length(pos.y * pointContainer.resolvedStyle.height, LengthUnit.Pixel));
+
+            if (!thing.ContainsKey(item.mesh))
+            {
+                thing.Add(item.mesh, new List<(int, Vector2)>());
+            }
+            thing[item.mesh].Add((item.index, pos));
+        }
+
+        SetSomeUVS(thing);
     }
 }
 

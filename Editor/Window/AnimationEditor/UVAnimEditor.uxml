@@ -13,6 +13,35 @@
                 </ZoomViewport>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement style="flex-grow: 0; height: auto; width: 200px; min-width: auto; border-left-width: 2px; border-right-width: 2px; border-top-width: 2px; border-bottom-width: 2px; border-left-color: rgb(110, 110, 110); border-right-color: rgb(110, 110, 110); border-top-color: rgb(110, 110, 110); border-bottom-color: rgb(110, 110, 110);" />
+        <ui:VisualElement style="flex-grow: 0; height: auto; width: 200px; min-width: auto; border-left-width: 2px; border-right-width: 2px; border-top-width: 2px; border-bottom-width: 2px; border-left-color: rgb(110, 110, 110); border-right-color: rgb(110, 110, 110); border-top-color: rgb(110, 110, 110); border-bottom-color: rgb(110, 110, 110);">
+            <ui:Label text="Rotate at center of selection" display-tooltip-when-elided="true" />
+            <ui:VisualElement name="R_C_S" style="flex-direction: row; padding-left: 4px; padding-right: 4px;">
+                <ui:Button text="-90" display-tooltip-when-elided="true" style="flex-grow: 1; margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 5px; border-bottom-left-radius: 5px; border-right-width: 0;" />
+                <ui:Button text="-10" display-tooltip-when-elided="true" style="flex-grow: 1; margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right-width: 0;" />
+                <ui:Button text="-1" display-tooltip-when-elided="true" style="flex-grow: 1; padding-left: 0; padding-right: 0; margin-left: 0; margin-right: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0;" />
+                <ui:Button text=" 1" display-tooltip-when-elided="true" style="flex-grow: 1; margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0;" />
+                <ui:Button text=" 10" display-tooltip-when-elided="true" style="flex-grow: 1; margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-left-width: 0;" />
+                <ui:Button text=" 90" display-tooltip-when-elided="true" style="flex-grow: 1; margin-left: 0; margin-right: 0; padding-right: 0; padding-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-left-width: 0;" />
+            </ui:VisualElement>
+            <ui:Label text="Rotate at 0.5,0.5" display-tooltip-when-elided="true" />
+            <ui:VisualElement name="R_C_T" style="flex-direction: row; padding-right: 4px; padding-left: 4px;">
+                <ui:Button text="-90" display-tooltip-when-elided="true" style="flex-grow: 1; margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 5px; border-bottom-left-radius: 5px; border-right-width: 0;" />
+                <ui:Button text="-10" display-tooltip-when-elided="true" style="flex-grow: 1; margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right-width: 0;" />
+                <ui:Button text="-1" display-tooltip-when-elided="true" style="flex-grow: 1; padding-left: 0; padding-right: 0; margin-left: 0; margin-right: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0;" />
+                <ui:Button text=" 1" display-tooltip-when-elided="true" style="flex-grow: 1; margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0;" />
+                <ui:Button text=" 10" display-tooltip-when-elided="true" style="flex-grow: 1; margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-left-width: 0;" />
+                <ui:Button text=" 90" display-tooltip-when-elided="true" style="flex-grow: 1; margin-left: 0; margin-right: 0; padding-right: 0; padding-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-left-width: 0;" />
+            </ui:VisualElement>
+            <ui:Label text="Scale at center of selection" display-tooltip-when-elided="true" />
+            <ui:VisualElement style="flex-direction: row; padding-left: 4px; padding-right: 4px;">
+                <ui:Button text="Set Scale!" display-tooltip-when-elided="true" name="SetScaleSelection" />
+                <uie:FloatField value="2" is-delayed="true" name="Scale_Selection" style="flex-grow: 1; flex-direction: row;" />
+            </ui:VisualElement>
+            <ui:Label text="Scale at 0.5,0.5" display-tooltip-when-elided="true" />
+            <ui:VisualElement style="flex-direction: row; padding-right: 4px; padding-left: 4px;">
+                <ui:Button text="Set Scale!" display-tooltip-when-elided="true" name="SetScaleCenter" />
+                <uie:FloatField value="2" is-delayed="true" name="Scale_Center" style="flex-grow: 1;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
