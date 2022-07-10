@@ -167,7 +167,7 @@ namespace NetsphereScnTool.Scene.Chunks
 
                 count = r.ReadInt32();
                 for (int i = 0; i < count; i++)
-                    Faces.Add(new Vector3Int(r.ReadInt16(), r.ReadInt16(), r.ReadInt16()));
+                    Faces.Add(new Vector3Int(r.ReadUInt16(), r.ReadUInt16(), r.ReadUInt16()));
 
                 count = r.ReadInt32();
                 for (int i = 0; i < count; i++)

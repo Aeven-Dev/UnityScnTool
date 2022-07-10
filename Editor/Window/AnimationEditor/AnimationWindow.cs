@@ -51,7 +51,7 @@ public class AnimationWindow : EditorWindow
 		}
 	}
 
-	[MenuItem("Window/Animation Window! :D")]
+	[MenuItem("Window/S4 Scn/Animation Window! :D")]
     public static void Init()
     {
         AnimationWindow wnd = GetWindow<AnimationWindow>();
@@ -301,7 +301,7 @@ public class AnimationWindow : EditorWindow
         foreach (var bone in bones)
         {
             alternateBackground = !alternateBackground;
-            var parent = new ChannelItem(bone.Key.name, alternateBackground ? bg1 : bg2, transformEditor, bone.Value);
+            var parent = new ChannelItem(bone.Key.name, alternateBackground ? bg1 : bg2, transformEditor, uvAnimEditor, bone.Value);
            /* var gbl = new Toggle();
             var foldout = new Foldout();
             var pos = new Toggle();
@@ -373,7 +373,7 @@ public class AnimationWindow : EditorWindow
         foreach (var bone in bones)
         {
             alternateBackground = !alternateBackground;
-            var parent = new ChannelItem(bone.Key.name, alternateBackground ? bg1 : bg2, transformEditor, bone.Value);
+            var parent = new ChannelItem(bone.Key.name, alternateBackground ? bg1 : bg2, transformEditor, uvAnimEditor, bone.Value);
             
             channelList.Add(parent);
             transformEditor.AddChannel(bone.Value.TransformKeyData);
@@ -435,11 +435,13 @@ public class AnimationWindow : EditorWindow
 
         uvAnimEditor.SetEnabled(false);
         uvAnimEditor.style.display = DisplayStyle.None;
+
+        SetTransformBones();
+        transformEditor.AnimationChanged(bones, copies);
     }
 
     void SwitchToUVAnimEditor()
 	{
-
         editingTransform = false;
         switchToTransformEditor.SetEnabled(true);
         switchToUVEditor.SetEnabled(false);
@@ -449,6 +451,9 @@ public class AnimationWindow : EditorWindow
 
         uvAnimEditor.SetEnabled(true);
         uvAnimEditor.style.display = DisplayStyle.Flex;
+
+        SetUVBones();
+        uvAnimEditor.AnimationChanged(bones, copies);
     }
 }
 
@@ -456,11 +461,16 @@ class ChannelItem : VisualElement
 {
     static Color bg = new Color(0.2196079f, 0.2196079f, 0.2196079f);
     TransformEditor _transformEditor;
-    public ChannelItem(string name, Color backgroundColor, TransformEditor transformEditor, S4Animation animation)
-	{
+    UVAnimEditor _uvanimEditor;
+    bool displayingTransform;
+    Toggle gbl;
+    Foldout foldout;
+    public ChannelItem(string name, Color backgroundColor, TransformEditor transformEditor, UVAnimEditor uvanimEditor, S4Animation animation)
+    {
         _transformEditor = transformEditor;
-        var gbl = new Toggle();
-        var foldout = new Foldout();
+        _uvanimEditor = uvanimEditor;
+        gbl = new Toggle();
+        foldout = new Foldout();
         var pos = new Toggle();
         var rot = new Toggle();
         var sca = new Toggle();
@@ -539,5 +549,28 @@ class ChannelItem : VisualElement
             _transformEditor.SetAllChannels(tkd, false);
         }
         e.StopPropagation();
+    }
+
+    void UvGlobalCallback(ChangeEvent<bool> e)
+	{
+
+	}
+
+    void SetTransformEnabled()
+	{
+        displayingTransform = true;
+
+        gbl.RegisterValueChangedCallback((evnt) => { BoneChannelGlobalCallback(evnt, null); });
+        foldout.SetEnabled(true);
+    }
+
+    void SetUVEnabled()
+	{
+        displayingTransform = false;
+
+        gbl.RegisterValueChangedCallback((evnt) => { UvGlobalCallback(evnt); });
+
+        foldout.value = false;
+        foldout.SetEnabled(false);
     }
 }

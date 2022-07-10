@@ -194,22 +194,28 @@ namespace AevenScnTool.IO
 			else if (model.Name.StartsWith("oct_"))
 			{
 				SetOctMesh(go, model, mesh);
-				
-				if (!model.Name.StartsWith("oct_land") && !model.Name.StartsWith("oct_weapon"))
-				{
-					
-				}
 			}
 			else
 			{
-
 				MeshFilter mf = go.AddComponent<MeshFilter>();
 				MeshRenderer mr = go.AddComponent<MeshRenderer>();
 				mr.materials = mats;
 				mf.mesh = mesh;
 			}
 
-			go.AddComponent<S4Animations>().FromModelAnimation(model.Animation);
+			if (ModelAnimationIsTransform(model.Animation))
+			{
+				if (model.Animation.Count != 0)
+				{
+					go.transform.position = model.Animation[0].TransformKeyData2.TransformKey.Translation;
+					go.transform.rotation = model.Animation[0].TransformKeyData2.TransformKey.Rotation;
+					go.transform.localScale = model.Animation[0].TransformKeyData2.TransformKey.Scale;
+				}
+			}
+			else
+			{
+				go.AddComponent<S4Animations>().FromModelAnimation(model.Animation);
+			}
 
 			return go;
 		}
@@ -254,10 +260,28 @@ namespace AevenScnTool.IO
 		{
 			GameObject go = CreateGameObject(bone);
 			go.transform.SetParent(parent.transform);
+			if (!BoneAnimationIsTransform(bone.Animation))
+			{
+				
+			}
 
-			var s4a = go.AddComponent<S4Animations>();
-			s4a.FromBoneAnimation(bone.Animation);
-			go.AddComponent<Bone>().s4Animations = s4a;
+
+			if (BoneAnimationIsTransform(bone.Animation))
+			{
+				if (bone.Animation.Count != 0)
+				{
+					go.transform.position = bone.Animation[0].TransformKeyData.TransformKey.Translation;
+					go.transform.rotation = bone.Animation[0].TransformKeyData.TransformKey.Rotation;
+					go.transform.localScale = bone.Animation[0].TransformKeyData.TransformKey.Scale;
+				}
+			}
+			else
+			{
+				var s4a = go.AddComponent<S4Animations>();
+				s4a.FromBoneAnimation(bone.Animation);
+				go.AddComponent<Bone>().s4Animations = s4a;
+			}
+
 			return go;
 		}
 
@@ -415,11 +439,24 @@ namespace AevenScnTool.IO
 			if (model.TextureData.Textures.Count > 0)
 			{
 				mesh.subMeshCount = model.TextureData.Textures.Count;
+				int[] tris = model.Mesh.Triangles();
+
+				for (int i = 0; i < tris.Length; i++)
+				{
+					if (tris[i] >= mesh.vertexCount)
+					{
+						Debug.Log("Goodness me, some face index are above the vert count X:");
+					}
+					if (tris[i] < 0)
+					{
+						Debug.Log("Goodness me, face index are negative D:");
+					}
+				}
+
 				for (int i = 0; i < model.TextureData.Textures.Count; i++)
 				{
 					TextureEntry texEntry = model.TextureData.Textures[i];
-
-					mesh.SetTriangles(model.Mesh.Triangles(), texEntry.FaceOffset * 3, texEntry.FaceCount * 3, i);
+					mesh.SetTriangles(tris, texEntry.FaceOffset * 3, texEntry.FaceCount * 3, i);
 
 					Material mat_x = new Material(mat);
 
@@ -530,6 +567,78 @@ namespace AevenScnTool.IO
 
 			mc.cookingOptions = MeshColliderCookingOptions.EnableMeshCleaning;
 			mc.sharedMesh = mesh;
+		}
+
+		static bool ModelAnimationIsTransform(List<ModelAnimation> anims)
+		{
+			if (anims.Count == 0)
+			{
+				return true;
+			}
+			else if (anims.Count > 1)
+			{
+				return false;
+			}
+			else if (anims.Count == 1)
+			{
+				var anim = anims[0];
+				if (anim.TransformKeyData2.TransformKey.TKey.Count != 0)
+				{
+					return false;
+				}
+				if (anim.TransformKeyData2.TransformKey.RKey.Count != 0)
+				{
+					return false;
+				}
+				if (anim.TransformKeyData2.TransformKey.SKey.Count != 0)
+				{
+					return false;
+				}
+				if (anim.TransformKeyData2.FloatKeys.Count != 0)
+				{
+					return false;
+				}
+				if (anim.TransformKeyData2.MorphKeys.Count != 0)
+				{
+					return false;
+				}
+				return true;
+			}
+			return false;
+		}
+
+		static bool BoneAnimationIsTransform(List<BoneAnimation> anims)
+		{
+			if (anims.Count == 0)
+			{
+				return true;
+			}
+			else if (anims.Count > 1)
+			{
+				return false;
+			}
+			else if (anims.Count == 1)
+			{
+				var anim = anims[0];
+				if (anim.TransformKeyData.TransformKey.TKey.Count != 0)
+				{
+					return false;
+				}
+				if (anim.TransformKeyData.TransformKey.RKey.Count != 0)
+				{
+					return false;
+				}
+				if (anim.TransformKeyData.TransformKey.SKey.Count != 0)
+				{
+					return false;
+				}
+				if (anim.TransformKeyData.FloatKeys.Count != 0)
+				{
+					return false;
+				}
+				return true;
+			}
+			return false;
 		}
 
 		static (Material, Material) LoadMaterials(string mainTexturePath, string sideTexturePath, RenderFlag shader, bool isNormal = false)

@@ -301,7 +301,7 @@ namespace AevenScnTool.Menus
 			}
 		}
 
-		[MenuItem("Window/S4 Scn Window <3")]
+		[MenuItem("Window/S4 Scn/Scn IO <3")]
 		public static void OpenWindow()
 		{
 			GetWindow(typeof(ScnToolMenu));
@@ -320,7 +320,7 @@ namespace AevenScnTool.Menus
 			return false;
 		}
 
-		[MenuItem("Window/Load Aaaaaall maps!!!")]
+		[MenuItem("Window/S4 Scn/Load Aaaaaall maps!!!")]
 		public static void LoadAllS4Scns()
 		{
 			string resourcesFolder = EditorUtility.OpenFolderPanel("Select the resources folder!", "", "");
