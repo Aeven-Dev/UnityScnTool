@@ -207,8 +207,8 @@ namespace AevenScnTool.IO
 			{
 				if (model.Animation.Count != 0)
 				{
-					go.transform.position = model.Animation[0].TransformKeyData2.TransformKey.Translation;
-					go.transform.rotation = model.Animation[0].TransformKeyData2.TransformKey.Rotation;
+					go.transform.localPosition = model.Animation[0].TransformKeyData2.TransformKey.Translation;
+					go.transform.localRotation = model.Animation[0].TransformKeyData2.TransformKey.Rotation;
 					go.transform.localScale = model.Animation[0].TransformKeyData2.TransformKey.Scale;
 				}
 			}
@@ -260,10 +260,6 @@ namespace AevenScnTool.IO
 		{
 			GameObject go = CreateGameObject(bone);
 			go.transform.SetParent(parent.transform);
-			if (!BoneAnimationIsTransform(bone.Animation))
-			{
-				
-			}
 
 
 			if (BoneAnimationIsTransform(bone.Animation))
