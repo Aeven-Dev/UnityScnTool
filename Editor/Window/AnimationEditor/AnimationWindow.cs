@@ -24,6 +24,9 @@ public class AnimationWindow : EditorWindow
     Button switchToTransformEditor;
     Button switchToUVEditor;
 
+    Button addAnim;
+    Button removeAnim;
+
     TransformEditor transformEditor;
     UVAnimEditor uvAnimEditor;
 
@@ -107,6 +110,9 @@ public class AnimationWindow : EditorWindow
         channelList = partContainerScrollview.contentContainer;
         transformEditor = rootVisualElement.Q<TransformEditor>("TransformEditor");
         uvAnimEditor = rootVisualElement.Q<UVAnimEditor>("UVAnimEditor");
+
+        addAnim = rootVisualElement.Q<Button>("AddAnimation");
+        removeAnim = rootVisualElement.Q<Button>("RemoveAnimation");
     }
 
     void SetCallbacks()
@@ -121,6 +127,12 @@ public class AnimationWindow : EditorWindow
 
         switchToTransformEditor.clicked += SwitchToTransformEditor;
         switchToUVEditor.clicked += SwitchToUVAnimEditor;
+
+        addAnim.clicked += AddAnimation;
+        removeAnim.clicked += RemoveAnimation;
+
+        transformEditor.RegisterSetTotalFramesCallback(e => SetTotalFrames(e.newValue));
+        uvAnimEditor.RegisterSetTotalFramesCallback(e => SetTotalFrames(e.newValue));
     }
 
     void CheckSelectedObject()
@@ -163,10 +175,11 @@ public class AnimationWindow : EditorWindow
     void AttachToIndividualObject()
 	{
         var anims = Selection.activeGameObject.GetComponent<S4Animations>();
+        bool isMesh = Selection.activeGameObject.GetComponent<Bone>() == null;
         if (anims)
         {
             ClearAnimations();
-            animation = new SingleAnimationWrapper(anims);
+            animation = new SingleAnimationWrapper(anims, isMesh);
             animationNames = animation.GetAnimationNames();
             selectedAnimName = string.Empty;
 
@@ -419,6 +432,11 @@ public class AnimationWindow : EditorWindow
 
     void ChangeAnimName(ChangeEvent<string> evnt)
     {
+		if (evnt.newValue == string.Empty)
+        {
+            animName.SetValueWithoutNotify(selectedAnimName);
+            return;
+		}
         animation.ChangeAnimationName(selectedAnimName, evnt.newValue);
         selectedAnimName = evnt.newValue;
     }
@@ -436,8 +454,11 @@ public class AnimationWindow : EditorWindow
         uvAnimEditor.SetEnabled(false);
         uvAnimEditor.style.display = DisplayStyle.None;
 
-        SetTransformBones();
-        transformEditor.AnimationChanged(bones, copies);
+		if (selectedAnimName != string.Empty && animation != null)
+        {
+            SetTransformBones();
+            transformEditor.AnimationChanged(bones, copies);
+        }
     }
 
     void SwitchToUVAnimEditor()
@@ -452,9 +473,34 @@ public class AnimationWindow : EditorWindow
         uvAnimEditor.SetEnabled(true);
         uvAnimEditor.style.display = DisplayStyle.Flex;
 
-        SetUVBones();
-        uvAnimEditor.AnimationChanged(bones, copies);
+        if (selectedAnimName != string.Empty && animation != null)
+        {
+            SetUVBones();
+            uvAnimEditor.AnimationChanged(bones, copies);
+        }
     }
+
+    void AddAnimation()
+	{
+        animation.AddAnimation( new string[]{ "SWAY","SPIN", "WHIRL","TWIRL","PIROUETTE", "PRANCE", "JIG", "HOP","BOB", "BOUNCE"}[Random.Range(0,10)] + "_" + animationNames.Count);
+        animationNames = animation.GetAnimationNames();
+        animationList.SetSelection(animationNames.Count - 1);
+        animName.Focus();
+	}
+
+    void RemoveAnimation()
+	{
+		if (selectedAnimName != string.Empty)
+		{
+            animation.RemoveAnimation(selectedAnimName);
+            animationNames = animation.GetAnimationNames();
+        }
+	}
+
+    void SetTotalFrames( int frames)
+	{
+        animation.SetTotalFrames(selectedAnimName, frames);
+	}
 }
 
 class ChannelItem : VisualElement

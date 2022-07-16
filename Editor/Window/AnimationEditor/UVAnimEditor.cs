@@ -125,7 +125,12 @@ public class UVAnimEditor : VisualElement
 
         this.bones = bones;
         this.copies = copies;
-
+		if (bones.Count == 0)
+		{
+            keyframeController.frameController.SetFrame(0);
+            zoomViewport.UpdateViewport();
+            return;
+		}
         int duration = bones[new List<S4Animations>(bones.Keys)[0]].TransformKeyData.duration;
 
         frameSlider.highValue = duration;
@@ -137,6 +142,7 @@ public class UVAnimEditor : VisualElement
         keyframeController.frameController.SetFrame(0);
         zoomViewport.UpdateViewport();
         List<Mesh> meshes = new();
+        thing.Clear();
 		foreach (var item in bones)
 		{
             MeshFilter mf = item.Key.gameObject.GetComponent<MeshFilter>();
@@ -178,7 +184,15 @@ public class UVAnimEditor : VisualElement
             {
                 Mesh mesh = mf.sharedMesh;
                 Vector2[] uvs = item.Value.SampleUVs(frame);
-                uvList[mesh] = uvs;
+				if (uvs == null)
+				{
+
+                    uvList[mesh] = mesh.uv;
+                }
+				else
+                {
+                    uvList[mesh] = uvs;
+                }
             }
         }
     }
@@ -254,6 +268,7 @@ public class UVAnimEditor : VisualElement
 
     void GenerateControlPoints(List<Mesh> meshes)
     {
+        ClearControlPoints();
 		foreach (var mesh in meshes)
 		{
             var list = new List<UVControl>();
@@ -306,18 +321,29 @@ public class UVAnimEditor : VisualElement
 		}
     }
 
+    void ClearControlPoints()
+	{
+        pointContainer.Clear();
+        controllPoints.Clear();
+
+    }
+
     void SetSelectionLogic()
 	{
-        VisualElement selection = null;
+        VisualElement selection = new VisualElement();
         Vector2 initialPos = Vector2.zero;
         zoomViewport.contentContainer.RegisterCallback<MouseDownEvent>(e => {
 			if (e.button != 0)
 			{
                 return;
 			}
+            selection.style.left = e.localMousePosition.x;
+            selection.style.top = e.localMousePosition.y;
+            selection.style.width = 0;
+            selection.style.height = 0;
 
             zoomViewport.contentContainer.CaptureMouse();
-            selection = new VisualElement();
+            
             selection.style.position = Position.Absolute;
             initialPos = e.localMousePosition;
 
@@ -336,6 +362,7 @@ public class UVAnimEditor : VisualElement
 
         });
         zoomViewport.contentContainer.RegisterCallback<MouseMoveEvent>(e => {
+            
 			if (e.button != 0)
 			{
                 return;
@@ -360,6 +387,7 @@ public class UVAnimEditor : VisualElement
             Vector2 max = new Vector2(Mathf.Max(initialPos.x, e.localMousePosition.x), Mathf.Max(initialPos.y, e.localMousePosition.y));
             zoomViewport.contentContainer.ReleaseMouse();
             zoomViewport.Remove(selection);
+
 
             SelectRect(min, max);
         });
@@ -526,6 +554,11 @@ public class UVAnimEditor : VisualElement
         }
 
         SetSomeUVS(thing);
+    }
+
+    public void RegisterSetTotalFramesCallback(EventCallback<ChangeEvent<int>> callback)
+    {
+        keyframeController.RegisterSetTotalFramesCallback(callback);
     }
 }
 

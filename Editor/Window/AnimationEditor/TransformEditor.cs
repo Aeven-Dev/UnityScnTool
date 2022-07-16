@@ -480,6 +480,11 @@ public class TransformEditor : VisualElement
             }
 		}
 	}
+
+    public void RegisterSetTotalFramesCallback(EventCallback<ChangeEvent<int>> callback)
+    {
+        keyframeController.RegisterSetTotalFramesCallback(callback);
+    }
 }
 
 public class TransformChannel

@@ -654,6 +654,10 @@ namespace AevenScnTool.IO
 
 					MainMaterials.Add(mainMatName, mainMat);
 				}
+				else
+				{
+					Debug.Log("Gosh! there's no texture at " + mainTexturePath);
+				}
 			}
 
 			Material sideMat;
@@ -676,6 +680,10 @@ namespace AevenScnTool.IO
 						sideMat.EnableKeyword("_NORMALMAP");
 					}
 					SideMaterials.Add(sideMatName, sideMat);
+				}
+				else
+				{
+					Debug.Log("Gosh! there's no texture at " + sideTexturePath);
 				}
 			}
 			return (mainMat, sideMat);

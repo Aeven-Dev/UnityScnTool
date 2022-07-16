@@ -50,6 +50,7 @@ public class MorphEditor : VisualElement
         //uv_list.Clear();
         //line_list.Clear();
         lineCount = 0;
+        thing.Clear();
         foreach (var item in meshes)
         {
             var lines = CalculateLines(item);

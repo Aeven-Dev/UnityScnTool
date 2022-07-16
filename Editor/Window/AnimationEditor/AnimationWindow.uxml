@@ -23,8 +23,8 @@
                     <ui:VisualElement style="height: 100%; flex-grow: initial; flex-shrink: initial; flex-basis: auto; flex-direction: column; max-height: none; border-bottom-width: 0; border-bottom-color: rgb(0, 0, 0); justify-content: flex-start; flex-wrap: wrap-reverse; border-left-width: 0; border-right-width: 0; border-top-width: 0;">
                         <ui:ListView focusable="true" show-border="true" horizontal-scrolling="false" name="AnimList" binding-path="animationNames" show-bound-collection-size="false" show-alternating-row-backgrounds="All" virtualization-method="DynamicHeight" show-foldout-header="false" show-add-remove-footer="false" reorderable="false" style="width: 100px; height: 95px; max-height: none; flex-grow: 1; flex-direction: column; flex-shrink: 0; flex-basis: auto;" />
                         <ui:VisualElement style="flex-direction: row;">
-                            <ui:Button text="+" display-tooltip-when-elided="true" />
-                            <ui:Button text="-" display-tooltip-when-elided="true" />
+                            <ui:Button text="+" display-tooltip-when-elided="true" name="AddAnimation" />
+                            <ui:Button text="-" display-tooltip-when-elided="true" name="RemoveAnimation" />
                         </ui:VisualElement>
                     </ui:VisualElement>
                     <ui:VisualElement style="flex-grow: 1;">

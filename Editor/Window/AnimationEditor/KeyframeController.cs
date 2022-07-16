@@ -39,7 +39,7 @@ public class KeyframeController : VisualElement
     Button nextKey;
 
     IntegerField frameField;
-    Label totalFramesField;
+    IntegerField totalFramesField;
 
     VisualElement dopesheet;
     VisualElement keyingButtonContainer;
@@ -65,8 +65,7 @@ public class KeyframeController : VisualElement
     void GetGUIReferences()
     {
         frameField = this.Q<IntegerField>("FrameField");
-        totalFramesField = this.Q<Label>("TotalFrames");
-
+        totalFramesField = this.Q<IntegerField>("TotalFrameField");
         prev = this.Q<Button>("Prev");
         play = this.Q<Button>("Play");
         next = this.Q<Button>("Next");
@@ -86,6 +85,11 @@ public class KeyframeController : VisualElement
         next.clicked += frameController.NextFrame;
         prevKey.clicked += frameController.PreviousKey;
         nextKey.clicked += frameController.NextKey;
+
+        totalFramesField.RegisterValueChangedCallback(e =>
+        {
+            frameController.totalFrames = e.newValue;
+        });
     }
 
     void CreateKeyingButtons(List<string> keyingButtonNames)
@@ -145,7 +149,7 @@ public class KeyframeController : VisualElement
     public void SetTotalFrames(int frames)
 	{
         frameController.totalFrames = frames;
-        totalFramesField.text = frames.ToString();
+        totalFramesField?.SetValueWithoutNotify(frames);
     }
 
     public void SetDopesheet(List<int> frames)
@@ -223,7 +227,7 @@ public class KeyframeController : VisualElement
         play.SetEnabled(false);
         next.SetEnabled(false);
         SetDopesheet(new List<int>());
-        totalFramesField.text = string.Empty;
+        totalFramesField?.SetValueWithoutNotify(0);
 
         playing = false;
         EditorApplication.update -= frameController.PlayAnimation;
@@ -251,4 +255,9 @@ public class KeyframeController : VisualElement
             item.Value.SetEnabled(true);
         }
     }
+
+    public void RegisterSetTotalFramesCallback(EventCallback<ChangeEvent<int>> callback)
+	{
+        totalFramesField.RegisterValueChangedCallback(callback);
+	}
 }

@@ -1,9 +1,9 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <ui:VisualElement style="flex-direction: row; border-bottom-color: rgb(88, 88, 88); border-bottom-width: 1px;">
-        <ui:Button text="S4 Folder" display-tooltip-when-elided="true" />
-        <ui:TextField picking-mode="Ignore" value="filler text" text="filler text" binding-path="rootFolder" style="flex-grow: 1;" />
+        <ui:Button text="S4 Client Folder" display-tooltip-when-elided="true" name="Folder" />
+        <ui:Label display-tooltip-when-elided="true" name="Folder_Text" style="flex-grow: 1;" />
     </ui:VisualElement>
-    <ui:VisualElement name="Root" style="flex-direction: row; left: 0; transition-property: left; transition-duration: 0.25s; transition-timing-function: ease; transition-delay: 0s; flex-grow: 1; min-height: auto; min-width: auto; max-width: none; height: 100%;">
+    <ui:VisualElement name="Root" style="flex-direction: row; left: 0; transition-property: left; transition-duration: 0.25s; transition-timing-function: ease; transition-delay: 0s; flex-grow: 1; min-height: auto; min-width: auto; max-width: none; height: 100%; visibility: visible; display: none;">
         <ui:VisualElement style="position: absolute; left: 0; width: 100%; height: auto; overflow: hidden; display: flex;">
             <ui:VisualElement style="background-image: url(&apos;project://database/Assets/ScnToolByAeven/Editor/Window/CharacterLoader/professor%20oak.jpg?fileID=2800000&amp;guid=72619383bf846bf44ae88c93253fefb5&amp;type=3#professor oak&apos;); width: 75%; height: 250px; max-width: none; max-height: none; left: 12.5%; -unity-background-scale-mode: scale-to-fit;" />
             <ui:VisualElement style="flex-direction: row; justify-content: center; align-items: center; height: 75px;">

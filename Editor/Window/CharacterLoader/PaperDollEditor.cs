@@ -1,17 +1,17 @@
+using AevenScnTool.IO;
+using NetsphereScnTool.Scene;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Xml;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
-using System.Xml;
-using System.Collections.Generic;
-using System.IO;
-using NetsphereScnTool.Scene;
-using AevenScnTool.IO;
-using System;
 
-public class CharacterLoader : EditorWindow
+[CustomEditor(typeof(PaperDoll))]
+public class PaperDollEditor : Editor
 {
-
     VisualElement Root;
     Label folder_text;
     ScrollView ClothesSelector;
@@ -35,21 +35,13 @@ public class CharacterLoader : EditorWindow
 
     string rootFolder;
 
-    [MenuItem("Window/S4 Scn/CharacterLoader")]
-    public static void ShowExample()
+    public override VisualElement CreateInspectorGUI()
     {
-        CharacterLoader wnd = GetWindow<CharacterLoader>();
-        wnd.titleContent = new GUIContent("CharacterLoader");
-    }
-
-
-    public void CreateGUI()
-    {        
         // Each editor window contains a root VisualElement object
-        VisualElement root = rootVisualElement;
         var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/ScnToolByAeven/Editor/Window/CharacterLoader/CharacterLoader.uxml");
-        VisualElement labelFromUXML = visualTree.Instantiate();
-        root.Add(labelFromUXML);
+        VisualElement root = visualTree.Instantiate();
+
+        root.style.height = 570;
 
         Root = root.Q("Root");
         folder_text = root.Q<Label>("Folder_Text");
@@ -103,10 +95,11 @@ public class CharacterLoader : EditorWindow
         accesorySelection.clicked += () => { SelectClothes(PaperDoll.Type.acc); };
         petSelection.clicked += () => { SelectClothes(PaperDoll.Type.pet); };
 
+        return root;
     }
 
     void SelectS4Folder()
-	{
+    {
         string path = EditorUtility.OpenFolderPanel("Select the S4 Client Folder!", "", "");
         if (path == string.Empty)
         {
@@ -263,33 +256,33 @@ public class CharacterLoader : EditorWindow
         doc.Load(rootFolder + "\\xml\\item.x7");
 
         unisex[PaperDoll.Type.hair] = new List<XmlNode>();
-        unisex[PaperDoll.Type.face]= new List<XmlNode>();
-        unisex[PaperDoll.Type.body]= new List<XmlNode>();
-        unisex[PaperDoll.Type.leg]=new List<XmlNode>();
-        unisex[PaperDoll.Type.hand]= new List<XmlNode>();
-        unisex[PaperDoll.Type.foot]= new List<XmlNode>();
-        unisex[PaperDoll.Type.acc]=new List<XmlNode>();
-        unisex[PaperDoll.Type.pet]=new List<XmlNode>();
-        unisex[PaperDoll.Type.NONE]= new List<XmlNode>();
+        unisex[PaperDoll.Type.face] = new List<XmlNode>();
+        unisex[PaperDoll.Type.body] = new List<XmlNode>();
+        unisex[PaperDoll.Type.leg] = new List<XmlNode>();
+        unisex[PaperDoll.Type.hand] = new List<XmlNode>();
+        unisex[PaperDoll.Type.foot] = new List<XmlNode>();
+        unisex[PaperDoll.Type.acc] = new List<XmlNode>();
+        unisex[PaperDoll.Type.pet] = new List<XmlNode>();
+        unisex[PaperDoll.Type.NONE] = new List<XmlNode>();
 
         female[PaperDoll.Type.hair] = new List<XmlNode>();
-        female[PaperDoll.Type.face]= new List<XmlNode>();
-        female[PaperDoll.Type.body]= new List<XmlNode>();
-        female[PaperDoll.Type.leg]=new List<XmlNode>();
-        female[PaperDoll.Type.hand]= new List<XmlNode>();
-        female[PaperDoll.Type.foot]= new List<XmlNode>();
-        female[PaperDoll.Type.acc]=new List<XmlNode>();
-        female[PaperDoll.Type.pet]=new List<XmlNode>();
+        female[PaperDoll.Type.face] = new List<XmlNode>();
+        female[PaperDoll.Type.body] = new List<XmlNode>();
+        female[PaperDoll.Type.leg] = new List<XmlNode>();
+        female[PaperDoll.Type.hand] = new List<XmlNode>();
+        female[PaperDoll.Type.foot] = new List<XmlNode>();
+        female[PaperDoll.Type.acc] = new List<XmlNode>();
+        female[PaperDoll.Type.pet] = new List<XmlNode>();
         female[PaperDoll.Type.NONE] = new List<XmlNode>();
 
         male[PaperDoll.Type.hair] = new List<XmlNode>();
-        male[PaperDoll.Type.face]= new List<XmlNode>();
-        male[PaperDoll.Type.body]= new List<XmlNode>();
-        male[PaperDoll.Type.leg]=new List<XmlNode>();
-        male[PaperDoll.Type.hand]= new List<XmlNode>();
-        male[PaperDoll.Type.foot]= new List<XmlNode>();
-        male[PaperDoll.Type.acc]=new List<XmlNode>();
-        male[PaperDoll.Type.pet]=new List<XmlNode>();
+        male[PaperDoll.Type.face] = new List<XmlNode>();
+        male[PaperDoll.Type.body] = new List<XmlNode>();
+        male[PaperDoll.Type.leg] = new List<XmlNode>();
+        male[PaperDoll.Type.hand] = new List<XmlNode>();
+        male[PaperDoll.Type.foot] = new List<XmlNode>();
+        male[PaperDoll.Type.acc] = new List<XmlNode>();
+        male[PaperDoll.Type.pet] = new List<XmlNode>();
         male[PaperDoll.Type.NONE] = new List<XmlNode>();
 
         for (int i = 0; i < doc.DocumentElement.ChildNodes.Count; i++)
@@ -317,7 +310,7 @@ public class CharacterLoader : EditorWindow
                 continue;
             }
 
-            PaperDoll.Type type = GetType(doc.DocumentElement.ChildNodes[i].Attributes.GetNamedItem("item_key").Value.Substring(0,3));
+            PaperDoll.Type type = GetType(doc.DocumentElement.ChildNodes[i].Attributes.GetNamedItem("item_key").Value.Substring(0, 3));
 
             string gender = genderNode.Value;
             switch (gender)
@@ -338,14 +331,14 @@ public class CharacterLoader : EditorWindow
     }
 
     PaperDoll.Type GetType(string id_string)
-	{
-		if (int.TryParse(id_string, out int id))
-		{
-            if(Enum.IsDefined(typeof(PaperDoll.Type), id))
-			{
+    {
+        if (int.TryParse(id_string, out int id))
+        {
+            if (Enum.IsDefined(typeof(PaperDoll.Type), id))
+            {
                 return (PaperDoll.Type)id;
-			}
-		}
+            }
+        }
         return PaperDoll.Type.NONE;
     }
 
@@ -393,7 +386,7 @@ public class CharacterLoader : EditorWindow
         paperdoll = sceneObj.gameObject.AddComponent<PaperDoll>();
         paperdoll.isGirl = isGirl;
         if (false)
-		{
+        {
             //load the other bip with newer animations
             ScnData extraNimations = LoadModel(rootFolder + $@"\resources\model\character\bip_{(paperdoll.isGirl ? "female" : "male")}\{(paperdoll.isGirl ? "female" : "male")}_bip_0000.scn");
         }
@@ -408,8 +401,8 @@ public class CharacterLoader : EditorWindow
             SelectClotheItem(PaperDoll.Type.hand, female[PaperDoll.Type.hand][0].SelectSingleNode("./child::graphic"));
             SelectClotheItem(PaperDoll.Type.foot, female[PaperDoll.Type.foot][0].SelectSingleNode("./child::graphic"));
         }
-		else
-		{
+        else
+        {
 
             SelectClotheItem(PaperDoll.Type.hair, male[PaperDoll.Type.hair][0].SelectSingleNode("./child::graphic"));
             SelectClotheItem(PaperDoll.Type.body, male[PaperDoll.Type.body][0].SelectSingleNode("./child::graphic"));
@@ -423,7 +416,7 @@ public class CharacterLoader : EditorWindow
     }
 
     ScnData LoadModel(string path)
-	{
+    {
         SceneContainer container = SceneContainer.ReadFrom(path);
         var go = new GameObject(container.Header.Name);
         container.fileInfo = new FileInfo(path);
@@ -436,7 +429,7 @@ public class CharacterLoader : EditorWindow
     }
 
     void AttachBonesystem(ScnData attachTo, ScnData addon, string attachPoint)
-	{
+    {
         addon.transform.SetParent(FindChild(attachTo.transform, attachPoint));
         addon.transform.localPosition = Vector3.zero;
         addon.transform.localRotation = Quaternion.identity;
@@ -444,11 +437,11 @@ public class CharacterLoader : EditorWindow
     }
 
     void MergeBoneSystem(ScnData attachTo, ScnData addon)
-	{
+    {
         //Getting the mesh to be skinned to the biped
         //I'll asume that under the addon Scn there's an object called BONESYSTEM
-		foreach (Transform item in addon.transform.GetChild(0))
-		{
+        foreach (Transform item in addon.transform.GetChild(0))
+        {
             var smr = item.GetComponent<SkinnedMeshRenderer>();
             if (smr)
             {
@@ -462,7 +455,7 @@ public class CharacterLoader : EditorWindow
 
                 smr.bones = newBones.ToArray();
             }
-		}
+        }
     }
 
 
@@ -476,10 +469,10 @@ public class CharacterLoader : EditorWindow
                 return child;
             }
             child = FindChild(child, name);
-			if (child)
-			{
+            if (child)
+            {
                 return child;
-			}
+            }
         }
         return null;
     }
@@ -499,14 +492,14 @@ public class CharacterLoader : EditorWindow
                     break;
                 }
             }
-            
+
             if (tkd == null)
             {
                 if (part.animations.Count > 0)
                 {
                     tkd = part.animations[0].TransformKeyData;
                 }
-				else
+                else
                 {
                     continue;
                 }

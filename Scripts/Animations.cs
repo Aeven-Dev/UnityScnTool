@@ -60,6 +60,7 @@ public class TransformKeyData : IManualSerializer
 
     public TransformKeyData()
     {
+        TransformKey = new TransformKey();
         duration = 0;
         FloatKeys = new List<FloatKey>();
     }
