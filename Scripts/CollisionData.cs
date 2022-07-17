@@ -40,6 +40,7 @@ public enum GroundFlag
     land_water_wirehash,
     land_glass_wirehash,
     block_alpha,
+    block_beta,
 }
 public enum WeaponFlag
 {
