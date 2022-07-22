@@ -49,7 +49,7 @@ public class TransformEditor : VisualElement
     public void Init()
     {
         // Import UXML
-        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/ScnToolByAeven/Editor/Window/AnimationEditor/TransformEditor.uxml");
+        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AevenScnTool.IO.ScnFileImporter.RootPath + "Editor/Window/AnimationEditor/TransformEditor.uxml");
         visualTree.CloneTree(this);
 
         GetGUIReferences();
@@ -59,16 +59,13 @@ public class TransformEditor : VisualElement
 
     void GetGUIReferences()
 	{
-        zoomViewport = this.Q<ZoomViewport>("Viewport");
-
-        frameSlider = this.Q<SliderInt>("FrameSlider");
-        keyframeContent = this.Q("Keyframes");
-        keyLine = this.Q("KeyLine");
-
-        message = this.Q("Message");
-        rulerHolder = this.Q("RulerHolder");
-
-        keyframeController = this.Q<KeyframeController>("KeyframeController");
+        zoomViewport        = this.Q<ZoomViewport>      ("Viewport");
+        frameSlider         = this.Q<SliderInt>         ("FrameSlider");
+        keyframeContent     = this.Q                    ("Keyframes");
+        keyLine             = this.Q                    ("KeyLine");
+        message             = this.Q                    ("Message");
+        rulerHolder         = this.Q                    ("RulerHolder");
+        keyframeController  = this.Q<KeyframeController>("KeyframeController");
     }
 
     void SetCallbacks()
@@ -84,31 +81,11 @@ public class TransformEditor : VisualElement
 
         frameSlider.RegisterValueChangedCallback((e) => { keyframeController.frameController.SetFrame(e.newValue); });
 
-        keyLine[1].RegisterCallback<MouseOverEvent>((evnt) =>
-        {
-            keyLine[1][0].style.visibility = Visibility.Visible;
-        });
-        keyLine[1].RegisterCallback<MouseLeaveEvent>((evnt) =>
-        {
-            keyLine[1][0].style.visibility = Visibility.Hidden;
-        });
+        keyLine[1].RegisterCallback<MouseOverEvent>(KeylineHover);
+        keyLine[1].RegisterCallback<MouseLeaveEvent>(KeylineLeave);
 
-        keyLine[1].RegisterCallback<MouseDownEvent>((evnt) =>
-        {
-            if (evnt.button == 0)
-            {
-                keyLine[1].CaptureMouse();
-                keyLine[1].RegisterCallback<MouseMoveEvent>(KeylineDrag);
-            }
-        });
-        keyLine[1].RegisterCallback<MouseUpEvent>((evnt) =>
-        {
-            if (evnt.button == 0)
-            {
-                keyLine[1].ReleaseMouse();
-                keyLine[1].UnregisterCallback<MouseMoveEvent>(KeylineDrag);
-            }
-        });
+        keyLine[1].RegisterCallback<MouseDownEvent>(KeylineCapture);
+        keyLine[1].RegisterCallback<MouseUpEvent>(KeylineRelease);
         
     }
 
@@ -210,9 +187,33 @@ public class TransformEditor : VisualElement
 		}
 	}
 
+    void KeylineHover(MouseOverEvent e)
+    {
+        keyLine[1][0].style.visibility = Visibility.Visible;
+    }
+    void KeylineLeave(MouseLeaveEvent e)
+    {
+        keyLine[1][0].style.visibility = Visibility.Hidden;
+    }
     void KeylineDrag(MouseMoveEvent e)
-	{
+    {
         keyframeController.frameController.SetFrame(keyframeController.frameController.currentFrame + (int)(e.mouseDelta.x * 10f));
+    }
+    void KeylineCapture(MouseDownEvent e)
+    {
+        if (e.button == 0)
+        {
+            keyLine[1].CaptureMouse();
+            keyLine[1].RegisterCallback<MouseMoveEvent>(KeylineDrag);
+        }
+    }
+    void KeylineRelease(MouseUpEvent e)
+    {
+        if (e.button == 0)
+        {
+            keyLine[1].ReleaseMouse();
+            keyLine[1].UnregisterCallback<MouseMoveEvent>(KeylineDrag);
+        }
     }
 
     void SetTransformToFrame( int frame)

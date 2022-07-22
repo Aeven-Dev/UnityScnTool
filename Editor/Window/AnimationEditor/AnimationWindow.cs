@@ -65,7 +65,7 @@ public class AnimationWindow : EditorWindow
     {
         //Init------------------------------
         VisualElement root = rootVisualElement;
-        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/ScnToolByAeven/Editor/Window/AnimationEditor/AnimationWindow.uxml");
+        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AevenScnTool.IO.ScnFileImporter.RootPath + "Editor/Window/AnimationEditor/AnimationWindow.uxml");
         visualTree.CloneTree(root);
 
         //Getting references----------------

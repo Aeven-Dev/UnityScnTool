@@ -1,10 +1,23 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
 public class ScnToolData : ScriptableObject
 {
+	static string rootPath = null;
+	public static string RootPath
+	{
+		get
+		{
+			if (rootPath == null)
+			{
+				GetRootPath();
+			}
+			return rootPath;
+		}
+	}
 	public string s4_folder_path = "";
 	public string s4_startup_file = "";
 	public float scale = 1;
@@ -92,16 +105,32 @@ public class ScnToolData : ScriptableObject
 		{
 			if (!instance)
 			{
-				instance = AssetDatabase.LoadAssetAtPath<ScnToolData>("Assets/ScnToolByAeven/Editor/Data/Data.asset");
+				instance = AssetDatabase.LoadAssetAtPath<ScnToolData>(RootPath + "Editor/Data/Data.asset");
 				if (!instance)
 				{
 					instance = CreateInstance<ScnToolData>(); 
-					AssetDatabase.CreateAsset(instance, "Assets/ScnToolByAeven/Editor/Data/Data.asset");
+					AssetDatabase.CreateAsset(instance, RootPath + "Editor/Data/Data.asset");
 				}
 			}
 			return instance;
 		} }
-
+	static void GetRootPath()
+	{
+		if (rootPath != null)
+		{
+			return;
+		}
+		var files = AssetDatabase.FindAssets("t:script").Select(AssetDatabase.GUIDToAssetPath);
+		foreach (var item in files)
+		{
+			if (item.EndsWith("ScnFileIO.cs"))
+			{
+				rootPath = item.Replace("ScnFileIO.cs", "");
+				Debug.Log(rootPath);
+				return;
+			}
+		}
+	}
 	public static string GetRandomName()
 	{
 		return names[Random.Range(0, names.Length)];

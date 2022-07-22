@@ -16,6 +16,15 @@ namespace AevenScnTool.IO
 {
 	public static class ScnFileImporter
 	{
+		static string rootPath = null;
+		public static string RootPath { get {
+				if (rootPath == null)
+				{
+					GetRootPath();
+				}
+				return rootPath;
+			} }
+
 		public static Dictionary<string, Material> MainMaterials = new Dictionary<string, Material>();
 		public static Dictionary<string, Material> SideMaterials = new Dictionary<string, Material>();
 		static Dictionary<SceneChunk, GameObject> createdObjects = new Dictionary<SceneChunk, GameObject>();
@@ -93,6 +102,23 @@ namespace AevenScnTool.IO
 			}
 		}
 
+		static void GetRootPath()
+		{
+			if (rootPath != null)
+			{
+				return;
+			}
+			var files = AssetDatabase.FindAssets("t:script").Select(AssetDatabase.GUIDToAssetPath);
+			foreach (var item in files)
+			{
+				if (item.EndsWith("ScnFileIO.cs"))
+				{
+					rootPath = item.Replace("ScnFileIO.cs", "");
+					Debug.Log(rootPath);
+					return;
+				}
+			}
+		}
 
 		static List<TreeItem<SceneChunk>> GetRootItems(SceneContainer container)
 		{
@@ -260,7 +286,7 @@ namespace AevenScnTool.IO
 		{
 			GameObject go = CreateGameObject(bone);
 			go.transform.SetParent(parent.transform);
-
+			var b = go.AddComponent<Bone>();
 
 			if (BoneAnimationIsTransform(bone.Animation))
 			{
@@ -275,7 +301,7 @@ namespace AevenScnTool.IO
 			{
 				var s4a = go.AddComponent<S4Animations>();
 				s4a.FromBoneAnimation(bone.Animation);
-				go.AddComponent<Bone>().s4Animations = s4a;
+				b.s4Animations = s4a;
 			}
 
 			return go;
@@ -527,19 +553,19 @@ namespace AevenScnTool.IO
 		{
 			if (shader.HasFlag(RenderFlag.Transparent))
 			{
-				return AssetDatabase.LoadAssetAtPath<Material>("Assets/ScnToolByAeven/Editor/Materials/S4_Base_Mat_Transparent.mat");
+				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_Transparent.mat");
 			}
 			if (shader.HasFlag(RenderFlag.Cutout))
 			{
-				return AssetDatabase.LoadAssetAtPath<Material>("Assets/ScnToolByAeven/Editor/Materials/S4_Base_Mat_Cutout.mat");
+				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_Cutout.mat");
 			}
 			if (shader.HasFlag(RenderFlag.NoLight))
 			{
-				return AssetDatabase.LoadAssetAtPath<Material>("Assets/ScnToolByAeven/Editor/Materials/S4_Base_Mat_NoLight.mat");
+				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_NoLight.mat");
 			}
 			else
 			{
-				return AssetDatabase.LoadAssetAtPath<Material>("Assets/ScnToolByAeven/Editor/Materials/S4_Base_Mat_Opaque.mat");
+				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_Opaque.mat");
 			}
 		}
 
@@ -720,6 +746,19 @@ namespace AevenScnTool.IO
 			texture.Apply();
 
 			return (texture);
+		}
+
+		public static ScnData LoadModel(string path)
+		{
+			SceneContainer container = SceneContainer.ReadFrom(path);
+			var go = new GameObject(container.Header.Name);
+			container.fileInfo = new FileInfo(path);
+			ScnData sd = go.AddComponent<ScnData>();
+			sd.folderPath = path;
+
+			BuildFromContainer(container, go);
+
+			return sd;
 		}
 	}
 

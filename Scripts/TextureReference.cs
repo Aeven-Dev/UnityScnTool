@@ -41,7 +41,7 @@ public class TextureReference : MonoBehaviour
         }
 
         textures.Clear();
-        Material base_mat = AssetDatabase.LoadAssetAtPath<Material>("Assets/ScnToolByAeven/Editor/Materials/S4_Base_Mat.mat");
+        Material base_mat = AssetDatabase.LoadAssetAtPath<Material>(ScnToolData.RootPath + "Editor/Materials/S4_Base_Mat.mat");
         for (int i = 0; i < mats.Length; i++)
         {
 			if (mats[i] == base_mat)
@@ -95,7 +95,7 @@ public class TextureReference : MonoBehaviour
         }
 
         Material base_mat = null;
-		base_mat = AssetDatabase.LoadAssetAtPath<Material>("Assets/ScnToolByAeven/Editor/Materials/S4_Base_Mat.mat");
+		base_mat = AssetDatabase.LoadAssetAtPath<Material>(ScnToolData.RootPath + "Editor/Materials/S4_Base_Mat.mat");
 
         List<Material> materials = new List<Material>();
 		for (int i = 0; i < textures.Count; i++)

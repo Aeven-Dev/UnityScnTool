@@ -34,7 +34,7 @@ public class ZoomViewport : VisualElement
 
 	void Init()
 	{
-        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/ScnToolByAeven/Editor/Window/AnimationEditor/ZoomViewport.uxml");
+        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AevenScnTool.IO.ScnFileImporter.RootPath + "Editor/Window/AnimationEditor/ZoomViewport.uxml");
         var template = visualTree.Instantiate();
         template.style.flexGrow = 1f;
         hierarchy.Add(template);

@@ -30,24 +30,51 @@ public class CharacterLoader : EditorWindow
     Dictionary<PaperDoll.Type, List<XmlNode>> female = new();
     Dictionary<PaperDoll.Type, List<XmlNode>> male = new();
 
-    ScnData sceneObj;
     PaperDoll paperdoll;
 
     string rootFolder;
 
     [MenuItem("Window/S4 Scn/CharacterLoader")]
-    public static void ShowExample()
+    public static void Open()
     {
         CharacterLoader wnd = GetWindow<CharacterLoader>();
         wnd.titleContent = new GUIContent("CharacterLoader");
     }
 
+    public static CharacterLoader OpenPaperdoll(PaperDoll pd)
+	{
+        CharacterLoader wnd = GetWindow<CharacterLoader>();
+        wnd.titleContent = new GUIContent("CharacterLoader");
+
+        wnd.paperdoll = pd;
+        wnd.Root.style.left = new StyleLength(new Length(-100, LengthUnit.Percent));
+        wnd.Root.style.display = DisplayStyle.Flex;
+        
+        return wnd;
+    }
+
+    void AttachToPaperDoll()
+	{
+        PaperDoll pd = Selection.activeGameObject?.GetComponent<PaperDoll>();
+
+        if (pd)
+		{
+            paperdoll = pd;
+            RedrawAllItems();
+		}
+	}
+
+    void CreatePaperDoll()
+	{
+
+	}
 
     public void CreateGUI()
-    {        
+    {
+        Debug.Log("CreateGUI");
         // Each editor window contains a root VisualElement object
         VisualElement root = rootVisualElement;
-        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/ScnToolByAeven/Editor/Window/CharacterLoader/CharacterLoader.uxml");
+        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AevenScnTool.IO.ScnFileImporter.RootPath + "Editor/Window/CharacterLoader/CharacterLoader.uxml");
         VisualElement labelFromUXML = visualTree.Instantiate();
         root.Add(labelFromUXML);
 
@@ -71,10 +98,10 @@ public class CharacterLoader : EditorWindow
         };
 
         Button backButton1 = root.Q<Button>("Back1");
-        backButton1.clicked += () => { Root.style.left = new StyleLength(new Length(0, LengthUnit.Percent)); /*And also delete stuff*/ };
+        backButton1.clicked += GoToGenderSelection;
 
         Button backButton2 = root.Q<Button>("Back2");
-        backButton2.clicked += () => { Root.style.left = new StyleLength(new Length(-100, LengthUnit.Percent)); /*And also delete stuff*/ };
+        backButton2.clicked += GoToClotheTypeSelection;
 
         Button headSelection = root.Q<Button>("Head");
         Button faceSelection = root.Q<Button>("Face");
@@ -105,6 +132,14 @@ public class CharacterLoader : EditorWindow
 
     }
 
+    void GoToGenderSelection()
+	{
+        Root.style.left = new StyleLength(new Length(0, LengthUnit.Percent));
+    }
+    void GoToClotheTypeSelection()
+	{
+        Root.style.left = new StyleLength(new Length(-100, LengthUnit.Percent));
+    }
     void SelectS4Folder()
 	{
         string path = EditorUtility.OpenFolderPanel("Select the S4 Client Folder!", "", "");
@@ -141,31 +176,22 @@ public class CharacterLoader : EditorWindow
             {
                 file = icon_image.Value.Replace(".tga", ".dds");
             }
-            ClothesSelector.Add(CreateIcon(file, () => { SelectClotheItem(type, graphic); }));
+            ClothesSelector.Add(CreateIcon(ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(file)), () => { SelectClotheItem(type, graphic); }));
         }
 
         Root.style.left = new StyleLength(new Length(-200, LengthUnit.Percent));
     }
 
-    VisualElement CreateIcon(string icon_name, Action action, int size = 80)
+    VisualElement CreateIcon(Texture2D icon, Action action, int size = 80)
     {
         var item = new Button();
-        if (icon_name == string.Empty)
+        if (icon == null)
         {
             item.style.backgroundColor = Color.gray;
         }
         else
         {
-            if (File.Exists(rootFolder + @"\resources\image\costume\" + icon_name))
-            {
-                Texture2D tex = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(
-                rootFolder + @"\resources\image\costume\" + icon_name));
-                item.style.backgroundImage = tex;
-            }
-            else
-            {
-                item.style.backgroundColor = Color.gray;
-            }
+            item.style.backgroundImage = icon;
         }
         item.style.borderBottomColor = new StyleColor(Color.black);
         item.style.borderTopColor = new StyleColor(Color.black);
@@ -187,17 +213,9 @@ public class CharacterLoader : EditorWindow
 
     void SelectClotheItem(PaperDoll.Type type, XmlNode graphicNode)
     {
-        List<ScnData> parts = new();
         XmlNode to_part_scene_file = graphicNode.Attributes.GetNamedItem("to_part_scene_file");
-        if (to_part_scene_file != null)
-        {
-            string path = rootFolder + $@"\resources\model\character\{type.ToString()}\{to_part_scene_file.Value}";
-            ScnData obj = LoadModel(path);
-            MergeBoneSystem(sceneObj, obj);
-            SetBaseAnimation(obj);
-            parts.Add(obj);
-        }
 
+        List<(string, string, string)> nodes = new();
         int index = 1;
         while (true)
         {
@@ -207,12 +225,7 @@ public class CharacterLoader : EditorWindow
                 XmlNode to_node_parent_node = graphicNode.Attributes.GetNamedItem("to_node_parent_node" + index);
                 XmlNode to_node_animation_part = graphicNode.Attributes.GetNamedItem("to_node_animation_part" + index);
 
-                string path = rootFolder + $@"\resources\model\character\{type}\{to_node_scene_file.Value}";
-                ScnData obj = LoadModel(path);
-                parts.Add(obj);
-                AttachBonesystem(sceneObj, obj, to_node_parent_node.Value);
-
-                SetBaseAnimation(obj);
+                nodes.Add((to_node_scene_file.Value, to_node_parent_node.Value, to_node_animation_part.Value));
                 index++;
             }
             else
@@ -220,40 +233,44 @@ public class CharacterLoader : EditorWindow
                 break;
             }
         }
-
         XmlNode hiding_option = graphicNode.Attributes.GetNamedItem("hiding_option");
-
-
         XmlNode icon_image = graphicNode.Attributes.GetNamedItem("icon_image");
 
-        string file = string.Empty;
-        if (icon_image != null)
-        {
-            file = icon_image.Value.Replace(".tga", ".dds");
-        }
-        PaperDoll.Container cont = new PaperDoll.Container(file, parts);
-
-        paperdoll.GetAttachedParts(type).Add(cont);
+        paperdoll.SelectClotheItem(type, rootFolder, to_part_scene_file.Value, nodes.ToArray(), hiding_option.Value,icon_image.Value);
 
         RedrawItems(type);
     }
 
-    void DeleteClotheItem(List<ScnData> item)
+    void DeleteClotheItem(PaperDoll.Container item)
     {
-        for (int i = 0; i < item.Count; i++)
+        Debug.Log("Deleting " + item.parts.Count + " items");
+        paperdoll.DeleteClotheItem(item);
+        RedrawItems(item.type);
+    }
+
+    void RedrawAllItems()
+	{
+        foreach (var item in Enum.GetValues(typeof(PaperDoll.Type)))
         {
-            DestroyImmediate(item[i]);
+            if ((PaperDoll.Type)item == PaperDoll.Type.NONE)
+            {
+                continue;
+            }
+            RedrawItems((PaperDoll.Type)item);
         }
     }
 
     void RedrawItems(PaperDoll.Type type)
     {
         List<PaperDoll.Container> list = paperdoll.GetAttachedParts(type);
+        Debug.Log(type);
         var scrollview = GetItemList(type);
+        Debug.Log(scrollview);
         scrollview.Clear();
         for (int i = 0; i < list.Count; i++)
         {
-            scrollview.Add(CreateIcon(list[i].iconName, () => { DeleteClotheItem(list[i].parts); }, 40));
+            var parts = list[i];
+            scrollview.Add(CreateIcon(list[i].iconName, () => { DeleteClotheItem(parts); }, 40));
         }
     }
 
@@ -317,7 +334,7 @@ public class CharacterLoader : EditorWindow
                 continue;
             }
 
-            PaperDoll.Type type = GetType(doc.DocumentElement.ChildNodes[i].Attributes.GetNamedItem("item_key").Value.Substring(0,3));
+            PaperDoll.Type type = PaperDoll.GetType(doc.DocumentElement.ChildNodes[i].Attributes.GetNamedItem("item_key").Value.Substring(0,3));
 
             string gender = genderNode.Value;
             switch (gender)
@@ -335,18 +352,6 @@ public class CharacterLoader : EditorWindow
                     break;
             }
         }
-    }
-
-    PaperDoll.Type GetType(string id_string)
-	{
-		if (int.TryParse(id_string, out int id))
-		{
-            if(Enum.IsDefined(typeof(PaperDoll.Type), id))
-			{
-                return (PaperDoll.Type)id;
-			}
-		}
-        return PaperDoll.Type.NONE;
     }
 
     ScrollView GetItemList(PaperDoll.Type type)
@@ -389,15 +394,23 @@ public class CharacterLoader : EditorWindow
 
     void SpawnBiped(bool isGirl)
     {
-        sceneObj = LoadModel(rootFolder + $@"\resources\model\character\{(isGirl ? "female" : "male")}_bip.scn");
-        paperdoll = sceneObj.gameObject.AddComponent<PaperDoll>();
-        paperdoll.isGirl = isGirl;
-        if (false)
+		if ( paperdoll != null && paperdoll.isGirl == isGirl)
 		{
-            //load the other bip with newer animations
-            ScnData extraNimations = LoadModel(rootFolder + $@"\resources\model\character\bip_{(paperdoll.isGirl ? "female" : "male")}\{(paperdoll.isGirl ? "female" : "male")}_bip_0000.scn");
-        }
+            paperdoll.ClearPaperdoll();
+		}
+		else
+        {
+            ClearBiped();
 
+            var sceneObj = ScnFileImporter.LoadModel(rootFolder + $@"\resources\model\character\{(isGirl ? "female" : "male")}_bip.scn");
+            paperdoll = sceneObj.gameObject.AddComponent<PaperDoll>();
+            paperdoll.isGirl = isGirl;
+            if (false)
+            {
+                //load the other bip with newer animations
+                ScnData extrAnimations = ScnFileImporter.LoadModel(rootFolder + $@"\resources\model\character\bip_{(paperdoll.isGirl ? "female" : "male")}\{(paperdoll.isGirl ? "female" : "male")}_bip_0000.scn");
+            }
+        }
         //Play Base Animation
         if (paperdoll.isGirl)
         {
@@ -419,52 +432,19 @@ public class CharacterLoader : EditorWindow
             SelectClotheItem(PaperDoll.Type.foot, male[PaperDoll.Type.foot][0].SelectSingleNode("./child::graphic"));
         }
 
-        SetBaseAnimation(sceneObj);
+        paperdoll.SetBaseAnimation();
     }
 
-    ScnData LoadModel(string path)
+    void ClearBiped()
 	{
-        SceneContainer container = SceneContainer.ReadFrom(path);
-        var go = new GameObject(container.Header.Name);
-        container.fileInfo = new FileInfo(path);
-        ScnData sd = go.AddComponent<ScnData>();
-        sd.folderPath = path;
-
-        ScnFileImporter.BuildFromContainer(container, go);
-
-        return sd;
-    }
-
-    void AttachBonesystem(ScnData attachTo, ScnData addon, string attachPoint)
-	{
-        addon.transform.SetParent(FindChild(attachTo.transform, attachPoint));
-        addon.transform.localPosition = Vector3.zero;
-        addon.transform.localRotation = Quaternion.identity;
-        addon.transform.localScale = Vector3.one;
-    }
-
-    void MergeBoneSystem(ScnData attachTo, ScnData addon)
-	{
-        //Getting the mesh to be skinned to the biped
-        //I'll asume that under the addon Scn there's an object called BONESYSTEM
-		foreach (Transform item in addon.transform.GetChild(0))
+		if (paperdoll != null)
 		{
-            var smr = item.GetComponent<SkinnedMeshRenderer>();
-            if (smr)
-            {
-                smr.rootBone = attachTo.transform.Find("Bip01");
-                List<Transform> newBones = new List<Transform>();
-                for (int i = 0; i < smr.bones.Length; i++)
-                {
-                    Transform b = FindChild(attachTo.transform, smr.bones[i].name);
-                    newBones.Add(b);
-                }
+            paperdoll.ClearPaperdoll();
+            DestroyImmediate(paperdoll.gameObject);
 
-                smr.bones = newBones.ToArray();
-            }
-		}
-    }
-
+            paperdoll = null;
+        }
+	}
 
     public Transform FindChild(Transform root, string name)
     {
@@ -482,39 +462,5 @@ public class CharacterLoader : EditorWindow
 			}
         }
         return null;
-    }
-
-    void SetBaseAnimation(ScnData scn)
-    {
-        S4Animations[] parts = scn.GetComponentsInChildren<S4Animations>();
-        foreach (var part in parts)
-        {
-            TransformKeyData tkd = null;
-
-            for (int i = 0; i < part.animations.Count; i++)
-            {
-                if (string.Equals(part.animations[i].Name, "BASE", StringComparison.OrdinalIgnoreCase))
-                {
-                    tkd = part.animations[i].TransformKeyData;
-                    break;
-                }
-            }
-            
-            if (tkd == null)
-            {
-                if (part.animations.Count > 0)
-                {
-                    tkd = part.animations[0].TransformKeyData;
-                }
-				else
-                {
-                    continue;
-                }
-            }
-            part.transform.localPosition = tkd.SamplePosition(0);
-            part.transform.localRotation = tkd.SampleRotation(0);
-            part.transform.localScale = tkd.SampleScale(0);
-
-        }
     }
 }

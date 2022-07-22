@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UIElements;
 
 public class UVAnimEditor : VisualElement
@@ -33,6 +34,8 @@ public class UVAnimEditor : VisualElement
     VisualElement R_C_S;
     VisualElement R_C_T;
 
+    SelectionElement selectionRectangle;
+
     FloatField scale_1;
     FloatField scale_2;
     Button SetScale_1;
@@ -54,7 +57,7 @@ public class UVAnimEditor : VisualElement
     public void Init()
     {
         //Init------------------------------
-        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/ScnToolByAeven/Editor/Window/AnimationEditor/UVAnimEditor.uxml");
+        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AevenScnTool.IO.ScnFileImporter.RootPath + "Editor/Window/AnimationEditor/UVAnimEditor.uxml");
         visualTree.CloneTree(this);
 
         GetGUIReferences();
@@ -253,11 +256,11 @@ public class UVAnimEditor : VisualElement
 
     void KeyAll()
     {
-        Debug.Log("Keying all");
 		foreach (var pair in uvList)
 		{
             S4Animation sa = thing[pair.Key];
-            Debug.Log(sa.KeyUVs(keyframeController.frameController.currentFrame, pair.Value));
+            sa.KeyUVs(keyframeController.frameController.currentFrame, pair.Value);
+            //Debug.Log();
 		}
     }
 
@@ -330,68 +333,13 @@ public class UVAnimEditor : VisualElement
 
     void SetSelectionLogic()
 	{
-        VisualElement selection = new VisualElement();
-        Vector2 initialPos = Vector2.zero;
-        zoomViewport.contentContainer.RegisterCallback<MouseDownEvent>(e => {
-			if (e.button != 0)
-			{
-                return;
-			}
-            selection.style.left = e.localMousePosition.x;
-            selection.style.top = e.localMousePosition.y;
-            selection.style.width = 0;
-            selection.style.height = 0;
-
-            zoomViewport.contentContainer.CaptureMouse();
-            
-            selection.style.position = Position.Absolute;
-            initialPos = e.localMousePosition;
-
-            selection.style.borderBottomWidth = 1f;
-            selection.style.borderTopWidth = 1f;
-            selection.style.borderLeftWidth = 1f;
-            selection.style.borderRightWidth = 1f;
-
-            selection.style.borderBottomColor = Color.gray;
-            selection.style.borderTopColor = Color.gray;
-            selection.style.borderLeftColor = Color.gray;
-            selection.style.borderRightColor = Color.gray;
-
-            zoomViewport.Add(selection);
-            selection.BringToFront();
-
-        });
-        zoomViewport.contentContainer.RegisterCallback<MouseMoveEvent>(e => {
-            
-			if (e.button != 0)
-			{
-                return;
-			}
-            if (zoomViewport.contentContainer.HasMouseCapture())
-            {
-                Vector2 min = new Vector2(Mathf.Min(initialPos.x, e.localMousePosition.x), Mathf.Min(initialPos.y, e.localMousePosition.y));
-                Vector2 max = new Vector2(Mathf.Max(initialPos.x, e.localMousePosition.x), Mathf.Max(initialPos.y, e.localMousePosition.y));
-
-                selection.style.left = min.x;
-                selection.style.top = min.y;
-                selection.style.width = max.x - min.x;
-                selection.style.height = max.y - min.y;
-            }
-        });
-        zoomViewport.contentContainer.RegisterCallback<MouseUpEvent>(e => {
-            if (e.button != 0)
-            {
-                return;
-            }
-            Vector2 min = new Vector2(Mathf.Min(initialPos.x, e.localMousePosition.x), Mathf.Min(initialPos.y, e.localMousePosition.y));
-            Vector2 max = new Vector2(Mathf.Max(initialPos.x, e.localMousePosition.x), Mathf.Max(initialPos.y, e.localMousePosition.y));
-            zoomViewport.contentContainer.ReleaseMouse();
-            zoomViewport.Remove(selection);
-
-
-            SelectRect(min, max);
-        });
+        selectionRectangle = new SelectionElement(zoomViewport.contentContainer, SelectRect);
+        zoomViewport.contentContainer.RegisterCallback<MouseDownEvent>(selectionRectangle.SelectionDown);
+        zoomViewport.contentContainer.RegisterCallback<MouseMoveEvent>(selectionRectangle.SelectionMove);
+        zoomViewport.contentContainer.RegisterCallback<MouseUpEvent>(selectionRectangle.SelectionUp);
     }
+
+    
 
     void SelectRect(Vector2 min, Vector2 max)
     {
@@ -568,66 +516,78 @@ class UVControl : VisualElement
     public int index;
 }
 
-/*
-    void CheckSelectedObject()
-    {
-        if (Selection.activeGameObject)
-        {
-            if (Selection.activeGameObject.GetComponent<S4Animations>())
-            {
-                if (Selection.activeGameObject.GetComponent<MeshRenderer>())
-                {
-                    attach.SetEnabled(true);
-                }
-				else if (Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>())
-                {
-                    attach.SetEnabled(true);
-                }
-            }
-        }
-        else
-        {
-            attach.SetEnabled(false);
-        }
-    }
-
-    private void OnSelectionChange()
-    {
-        CheckSelectedObject();
-    }
-
-    private void OnHierarchyChange()
-    {
-        if (s4a == null)
-        {
-            Detach();
-        }
-    }
-void Attach()
+class SelectionElement : VisualElement
+{
+    Vector2 initialPos = Vector2.zero;
+    UnityEvent<Vector2,Vector2> callback;
+    VisualElement targetParent;
+    public SelectionElement(VisualElement targetParent, UnityAction<Vector2, Vector2> callback)
 	{
-        s4a = Selection.activeGameObject.GetComponent<S4Animations>();
-        var mf = Selection.activeGameObject.GetComponent<MeshFilter>();
-        if (mf) mesh = mf.mesh;
-		else
-		{
-            var smr = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
-            if (smr) mesh = smr.sharedMesh;
-			else
-			{
-                Debug.LogError("Whoopsie! For some reason this object doesnt have a mesh in it! How weird");
-			}
+        this.targetParent = targetParent;
+        this.callback.AddListener(callback);
+	}
+
+    public void SelectionDown(MouseDownEvent e)
+    {
+        if (e.button != 0)
+        {
+            return;
         }
-        attach.style.display = DisplayStyle.None;
-        detach.style.display = DisplayStyle.Flex;
+        style.left = e.localMousePosition.x;
+        style.top = e.localMousePosition.y;
+        style.width = 0;
+        style.height = 0;
 
-        editor.SetMesh(mesh);
+        targetParent.CaptureMouse();
+
+        style.position = Position.Absolute;
+        initialPos = e.localMousePosition;
+
+        style.borderBottomWidth = 1f;
+        style.borderTopWidth = 1f;
+        style.borderLeftWidth = 1f;
+        style.borderRightWidth = 1f;
+
+        style.borderBottomColor = Color.gray;
+        style.borderTopColor = Color.gray;
+        style.borderLeftColor = Color.gray;
+        style.borderRightColor = Color.gray;
+
+        targetParent.Add(this);
+        BringToFront();
     }
 
-    void Detach()
+    public void SelectionMove(MouseMoveEvent e)
 	{
-        detach.style.display = DisplayStyle.None;
-        attach.style.display = DisplayStyle.Flex;
+        if (e.button != 0)
+        {
+            return;
+        }
+        if (targetParent.HasMouseCapture())
+        {
+            Vector2 min = new Vector2(Mathf.Min(initialPos.x, e.localMousePosition.x), Mathf.Min(initialPos.y, e.localMousePosition.y));
+            Vector2 max = new Vector2(Mathf.Max(initialPos.x, e.localMousePosition.x), Mathf.Max(initialPos.y, e.localMousePosition.y));
 
-        animationIndex = -1;
+            style.left = min.x;
+            style.top = min.y;
+            style.width = max.x - min.x;
+            style.height = max.y - min.y;
+        }
     }
- */
+
+    public void SelectionUp(MouseUpEvent e)
+	{
+        if (e.button != 0)
+        {
+            return;
+        }
+        Vector2 min = new Vector2(Mathf.Min(initialPos.x, e.localMousePosition.x), Mathf.Min(initialPos.y, e.localMousePosition.y));
+        Vector2 max = new Vector2(Mathf.Max(initialPos.x, e.localMousePosition.x), Mathf.Max(initialPos.y, e.localMousePosition.y));
+        targetParent.ReleaseMouse();
+        targetParent.Remove(this);
+
+
+        callback.Invoke(min, max);
+    }
+}
+
