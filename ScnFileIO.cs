@@ -114,7 +114,6 @@ namespace AevenScnTool.IO
 				if (item.EndsWith("ScnFileIO.cs"))
 				{
 					rootPath = item.Replace("ScnFileIO.cs", "");
-					Debug.Log(rootPath);
 					return;
 				}
 			}

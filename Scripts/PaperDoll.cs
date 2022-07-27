@@ -35,16 +35,16 @@ public class PaperDoll : MonoBehaviour
     }
 
 
-    public bool isGirl;
+    [HideInInspector]public bool isGirl;
 
-    public List<Container> attachedHeads = new List<Container>();
-    public List<Container> attachedFaces = new List<Container>();
-    public List<Container> attachedShirts = new List<Container>();
-    public List<Container> attachedPants = new List<Container>();
-    public List<Container> attachedGloves = new List<Container>();
-    public List<Container> attachedShoes = new List<Container>();
-    public List<Container> attachedAccesories = new List<Container>();
-    public List<Container> attachedPets = new List<Container>();
+    [HideInInspector]public List<Container> attachedHeads = new List<Container>();
+    [HideInInspector]public List<Container> attachedFaces = new List<Container>();
+    [HideInInspector]public List<Container> attachedShirts = new List<Container>();
+    [HideInInspector]public List<Container> attachedPants = new List<Container>();
+    [HideInInspector]public List<Container> attachedGloves = new List<Container>();
+    [HideInInspector]public List<Container> attachedShoes = new List<Container>();
+    [HideInInspector]public List<Container> attachedAccesories = new List<Container>();
+    [HideInInspector] public List<Container> attachedPets = new List<Container>();
 
     public List<Container> GetAttachedParts(Type part)
 	{
@@ -109,13 +109,17 @@ public class PaperDoll : MonoBehaviour
             SetBaseAnimation();
         }
 
-
-        string file = string.Empty;
-        if (icon_image != string.Empty)
+        Texture2D tex = null;
+        if (icon_image != null && icon_image != string.Empty)
         {
-            file = icon_image.Replace(".tga", ".dds");
+            var file = icon_image.Replace(".tga", ".dds");
+            string path = rootFolder + $@"\resources\image\costume\{file}";
+			if (File.Exists(path))
+            {
+                tex = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(path));
+            }
         }
-        Container cont = new Container(ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(file)), parts, type);
+        Container cont = new Container(tex, parts, type);
 
         GetAttachedParts(type).Add(cont);
 
@@ -227,27 +231,28 @@ public class PaperDoll : MonoBehaviour
         return null;
     }
 
+    [System.Serializable]
     public struct Container
 	{
         public Type type;
         public List<ScnData> parts;
-        public Texture2D iconName;
+        public Texture2D icon;
 
-        public Container(Texture2D iconName, Type type)
+        public Container(Texture2D icon, Type type)
         {
-            this.iconName = iconName;
+            this.icon = icon;
             parts = new List<ScnData>();
             this.type = type;
         }
-        public Container(Texture2D iconName, List<ScnData> parts, Type type)
+        public Container(Texture2D icon, List<ScnData> parts, Type type)
         {
-            this.iconName = iconName;
+            this.icon = icon;
             this.parts = parts;
             this.type = type;
         }
-        public Container(Texture2D iconName, ScnData part, Type type)
+        public Container(Texture2D icon, ScnData part, Type type)
         {
-            this.iconName = iconName;
+            this.icon = icon;
             this.parts = new List<ScnData>();
             parts.Add(part);
             this.type = type;

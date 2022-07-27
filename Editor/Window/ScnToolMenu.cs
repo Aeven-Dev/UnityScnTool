@@ -301,7 +301,7 @@ namespace AevenScnTool.Menus
 			}
 		}
 
-		[MenuItem("Window/S4 Scn/Scn IO <3")]
+		[MenuItem("Window/S4 Scn/Scn IO <3",priority = 0)]
 		public static void OpenWindow()
 		{
 			GetWindow(typeof(ScnToolMenu));

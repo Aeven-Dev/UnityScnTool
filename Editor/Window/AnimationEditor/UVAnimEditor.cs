@@ -524,6 +524,7 @@ class SelectionElement : VisualElement
     public SelectionElement(VisualElement targetParent, UnityAction<Vector2, Vector2> callback)
 	{
         this.targetParent = targetParent;
+        this.callback = new UnityEvent<Vector2, Vector2>();
         this.callback.AddListener(callback);
 	}
 

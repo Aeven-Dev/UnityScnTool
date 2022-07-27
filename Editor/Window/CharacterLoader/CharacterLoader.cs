@@ -32,7 +32,7 @@ public class CharacterLoader : EditorWindow
 
     PaperDoll paperdoll;
 
-    string rootFolder;
+    string rootFolder = string.Empty;
 
     [MenuItem("Window/S4 Scn/CharacterLoader")]
     public static void Open()
@@ -47,8 +47,9 @@ public class CharacterLoader : EditorWindow
         wnd.titleContent = new GUIContent("CharacterLoader");
 
         wnd.paperdoll = pd;
-        wnd.Root.style.left = new StyleLength(new Length(-100, LengthUnit.Percent));
+        wnd.GoToClotheTypeSelection();
         wnd.Root.style.display = DisplayStyle.Flex;
+        wnd.RedrawAllItems();
         
         return wnd;
     }
@@ -71,7 +72,6 @@ public class CharacterLoader : EditorWindow
 
     public void CreateGUI()
     {
-        Debug.Log("CreateGUI");
         // Each editor window contains a root VisualElement object
         VisualElement root = rootVisualElement;
         var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AevenScnTool.IO.ScnFileImporter.RootPath + "Editor/Window/CharacterLoader/CharacterLoader.uxml");
@@ -147,19 +147,25 @@ public class CharacterLoader : EditorWindow
         {
             return;
         }
-        rootFolder = path;
 
-        ReadFile();
-
+		if (!ReadFile(path))
+		{
+            EditorUtility.DisplayDialog("Goodness!", "I couldnt find a item.x7 in a xml folder in that S4 client! Maybe the file is missing or it could be that you extracted the resources diferently!", "D:");
+            return;
+        }
 
         Root.style.display = DisplayStyle.Flex;
-
-
         folder_text.text = path;
+        rootFolder = path;
     }
 
     void SelectClothes(PaperDoll.Type type)
     {
+		if (rootFolder == string.Empty)
+		{
+            EditorUtility.DisplayDialog("Oooopsie!", "Haha, you have to select an s4 client folder first, silly!", "Alright! :)");
+            return;
+        }
         ClothesSelector.Clear();
         List<XmlNode> items = new List<XmlNode>();
         items.AddRange(unisex[type]);
@@ -171,12 +177,17 @@ public class CharacterLoader : EditorWindow
             XmlNode graphic = items[i].SelectSingleNode("./child::graphic");
             XmlNode icon_image = graphic.Attributes.GetNamedItem("icon_image");
 
-            string file = string.Empty;
-            if (icon_image != null)
+            Texture2D tex = null;
+            if (icon_image != null && icon_image != null)
             {
-                file = icon_image.Value.Replace(".tga", ".dds");
+                var file = icon_image.Value.Replace(".tga", ".dds");
+                string path = rootFolder + $@"\resources\image\costume\{file}";
+                if (File.Exists(path))
+                {
+                    tex = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(path));
+                }
             }
-            ClothesSelector.Add(CreateIcon(ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(file)), () => { SelectClotheItem(type, graphic); }));
+            ClothesSelector.Add(CreateIcon(tex, () => { SelectClotheItem(type, graphic); }));
         }
 
         Root.style.left = new StyleLength(new Length(-200, LengthUnit.Percent));
@@ -236,14 +247,13 @@ public class CharacterLoader : EditorWindow
         XmlNode hiding_option = graphicNode.Attributes.GetNamedItem("hiding_option");
         XmlNode icon_image = graphicNode.Attributes.GetNamedItem("icon_image");
 
-        paperdoll.SelectClotheItem(type, rootFolder, to_part_scene_file.Value, nodes.ToArray(), hiding_option.Value,icon_image.Value);
+        paperdoll.SelectClotheItem(type, rootFolder, to_part_scene_file?.Value, nodes.ToArray(), hiding_option?.Value,icon_image?.Value);
 
         RedrawItems(type);
     }
 
     void DeleteClotheItem(PaperDoll.Container item)
     {
-        Debug.Log("Deleting " + item.parts.Count + " items");
         paperdoll.DeleteClotheItem(item);
         RedrawItems(item.type);
     }
@@ -263,21 +273,23 @@ public class CharacterLoader : EditorWindow
     void RedrawItems(PaperDoll.Type type)
     {
         List<PaperDoll.Container> list = paperdoll.GetAttachedParts(type);
-        Debug.Log(type);
         var scrollview = GetItemList(type);
-        Debug.Log(scrollview);
         scrollview.Clear();
         for (int i = 0; i < list.Count; i++)
         {
             var parts = list[i];
-            scrollview.Add(CreateIcon(list[i].iconName, () => { DeleteClotheItem(parts); }, 40));
+            scrollview.Add(CreateIcon(list[i].icon, () => { DeleteClotheItem(parts); }, 40));
         }
     }
 
-    void ReadFile()
+    bool ReadFile(string folder)
     {
         XmlDocument doc = new XmlDocument();
-        doc.Load(rootFolder + "\\xml\\item.x7");
+		if (!File.Exists(folder + "\\xml\\item.x7"))
+		{
+            return false;
+		}
+        doc.Load(folder + "\\xml\\item.x7");
 
         unisex[PaperDoll.Type.hair] = new List<XmlNode>();
         unisex[PaperDoll.Type.face]= new List<XmlNode>();
@@ -352,6 +364,8 @@ public class CharacterLoader : EditorWindow
                     break;
             }
         }
+
+        return true;
     }
 
     ScrollView GetItemList(PaperDoll.Type type)
