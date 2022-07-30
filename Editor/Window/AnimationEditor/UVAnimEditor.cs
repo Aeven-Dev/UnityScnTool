@@ -31,8 +31,9 @@ public class UVAnimEditor : VisualElement
     VisualElement texture;
     VisualElement pointContainer;
 
-    VisualElement R_C_S;
-    VisualElement R_C_T;
+    VisualElement R_S;
+    VisualElement R_C;
+    VisualElement R_P;
 
     SelectionElement selectionRectangle;
 
@@ -40,6 +41,8 @@ public class UVAnimEditor : VisualElement
     FloatField scale_2;
     Button SetScale_1;
     Button SetScale_2;
+    Button SelectAllButton;
+    Button SelectNoneButton;
 
     SliderInt frameSlider;
 
@@ -75,12 +78,16 @@ public class UVAnimEditor : VisualElement
         viewport = this.Q("Viewport");
         texture = this.Q("Texture");
         pointContainer = this.Q("PointContainer");
-        R_C_S = this.Q("R_C_S");
-        R_C_T = this.Q("R_C_T");
+        R_S = this.Q("R_C_S");
+        R_C = this.Q("R_C_T");
         scale_1 = this.Q<FloatField>("Scale_Selection");
         scale_2 = this.Q<FloatField>("Scale_Center");
         SetScale_1 = this.Q<Button>("SetScaleSelection");
         SetScale_2 = this.Q<Button>("SetScaleCenter");
+
+
+        //SelectAllButton = this.Q<Button>("SelectAllButton");
+        //SelectNoneButton = this.Q<Button>("SelectNoneButton");
     }
 
     void SetCallBacks()
@@ -111,7 +118,6 @@ public class UVAnimEditor : VisualElement
         texture.style.width = zp;
         texture.style.height = zp;
 
-        //texture.style.top = new StyleLength(new Length((vPos * zoomInfluence), LengthUnit.Percent));
         texture.style.left = new StyleLength(new Length((zoomPercentage / 2f) - (hMin * zoomViewport.zoom), LengthUnit.Percent));
         texture.style.top = new StyleLength(new Length(50f + (vPos * zoomInfluence), LengthUnit.Percent));
         float offset = -(zoomPercentage / 4f);
@@ -254,6 +260,7 @@ public class UVAnimEditor : VisualElement
         editor.SetUVs(uvList);
     }
 
+
     void KeyAll()
     {
 		foreach (var pair in uvList)
@@ -266,8 +273,14 @@ public class UVAnimEditor : VisualElement
 
     void KeySel()
     {
-        
+        foreach (var pair in uvList)
+        {
+            S4Animation sa = thing[pair.Key];
+            sa.KeyUVs(keyframeController.frameController.currentFrame, pair.Value);
+            //Debug.Log();
+        }
     }
+
 
     void GenerateControlPoints(List<Mesh> meshes)
     {
@@ -286,39 +299,8 @@ public class UVAnimEditor : VisualElement
 
         UVControl CreateDot(Vector2 pos, Mesh mesh, int index )
 		{
-            var dot = new UVControl();
-            dot.style.position = Position.Absolute;
-            dot.style.width = 6f;
-            dot.style.height = 6f;
-            dot.style.translate = new StyleTranslate(new Translate(-3, -3, 0f));
-            dot.style.backgroundColor = Color.red;
-
-            dot.style.left = new StyleLength(new Length(pos.x * pointContainer.resolvedStyle.width, LengthUnit.Pixel));
-            dot.style.top = new StyleLength(new Length(pos.y * pointContainer.resolvedStyle.height, LengthUnit.Pixel));
-
-            dot.mesh = mesh;
-            dot.index = index;
-
-            dot.RegisterCallback<MouseDownEvent>(_ => { dot.CaptureMouse(); });
-            dot.RegisterCallback<MouseUpEvent>(_ => { dot.ReleaseMouse(); });
-			dot.RegisterCallback<MouseMoveEvent>(e =>
-			{
-				if (keyframeController.IsPlaying)
-				{
-                    return;
-				}
-				if (dot.HasMouseCapture())
-                {
-                    float newX = dot.resolvedStyle.left + e.mouseDelta.x;
-                    float newY = dot.resolvedStyle.top + e.mouseDelta.y;
-                    dot.style.left = new StyleLength(new Length(newX, LengthUnit.Pixel));
-                    dot.style.top = new StyleLength(new Length(newY, LengthUnit.Pixel));
-
-                    Vector2 pos = new Vector2(newX / pointContainer.resolvedStyle.width, newY / pointContainer.resolvedStyle.height);
-
-                    SetOneUV( mesh, index, pos);
-                }
-            });
+            var dot = new UVControl(mesh, index, new Vector2(pos.x * pointContainer.resolvedStyle.width, pos.y * pointContainer.resolvedStyle.height));
+            dot.onMove.AddListener((m,i,p)=> { SetOneUV(m, i, new Vector2(p.x / pointContainer.resolvedStyle.width, p.y / pointContainer.resolvedStyle.height)); });
 
             return dot;
 		}
@@ -331,15 +313,17 @@ public class UVAnimEditor : VisualElement
 
     }
 
+
     void SetSelectionLogic()
 	{
         selectionRectangle = new SelectionElement(zoomViewport.contentContainer, SelectRect);
         zoomViewport.contentContainer.RegisterCallback<MouseDownEvent>(selectionRectangle.SelectionDown);
         zoomViewport.contentContainer.RegisterCallback<MouseMoveEvent>(selectionRectangle.SelectionMove);
         zoomViewport.contentContainer.RegisterCallback<MouseUpEvent>(selectionRectangle.SelectionUp);
-    }
 
-    
+        SelectAllButton.clicked += SelectAll;
+        SelectNoneButton.clicked += SelectNone;
+    }
 
     void SelectRect(Vector2 min, Vector2 max)
     {
@@ -364,6 +348,31 @@ public class UVAnimEditor : VisualElement
 			}
 		}
 	}
+
+    void SelectAll()
+    {
+        selectedPoints.Clear();
+        foreach (var item1 in controllPoints)
+        {
+            foreach (var item2 in item1.Value)
+            {
+                selectedPoints.Add(item2);
+                item2.style.backgroundColor = Color.yellow;
+            }
+        }
+    }
+
+    void SelectNone()
+    {
+        selectedPoints.Clear();
+        foreach (var item1 in controllPoints)
+        {
+            foreach (var item2 in item1.Value)
+            {
+                item2.style.backgroundColor = Color.red;
+            }
+        }
+    }
 
     void SetMoveSelectionLogic()
 	{
@@ -416,19 +425,19 @@ public class UVAnimEditor : VisualElement
 
     void SetRotationCallbacks()
     {
-        ((Button)R_C_S[0]).clicked += () => RotateSelected(-90, CenterOfSelected());
-        ((Button)R_C_S[1]).clicked += () => RotateSelected(-10, CenterOfSelected());
-        ((Button)R_C_S[2]).clicked += () => RotateSelected(-1, CenterOfSelected());
-        ((Button)R_C_S[3]).clicked += () => RotateSelected(1, CenterOfSelected());
-        ((Button)R_C_S[4]).clicked += () => RotateSelected(10, CenterOfSelected());
-        ((Button)R_C_S[5]).clicked += () => RotateSelected(90, CenterOfSelected());
+        ((Button)R_S[0]).clicked += () => RotateSelected(-90, CenterOfSelected());
+        ((Button)R_S[1]).clicked += () => RotateSelected(-10, CenterOfSelected());
+        ((Button)R_S[2]).clicked += () => RotateSelected(-1, CenterOfSelected());
+        ((Button)R_S[3]).clicked += () => RotateSelected(1, CenterOfSelected());
+        ((Button)R_S[4]).clicked += () => RotateSelected(10, CenterOfSelected());
+        ((Button)R_S[5]).clicked += () => RotateSelected(90, CenterOfSelected());
 
-        ((Button)R_C_T[0]).clicked += () => RotateSelected(-90, Center());
-        ((Button)R_C_T[1]).clicked += () => RotateSelected(-10, Center());
-        ((Button)R_C_T[2]).clicked += () => RotateSelected(-1, Center());
-        ((Button)R_C_T[3]).clicked += () => RotateSelected(1, Center());
-        ((Button)R_C_T[4]).clicked += () => RotateSelected(10, Center());
-        ((Button)R_C_T[5]).clicked += () => RotateSelected(90, Center());
+        ((Button)R_C[0]).clicked += () => RotateSelected(-90, Center());
+        ((Button)R_C[1]).clicked += () => RotateSelected(-10, Center());
+        ((Button)R_C[2]).clicked += () => RotateSelected(-1, Center());
+        ((Button)R_C[3]).clicked += () => RotateSelected(1, Center());
+        ((Button)R_C[4]).clicked += () => RotateSelected(10, Center());
+        ((Button)R_C[5]).clicked += () => RotateSelected(90, Center());
     }
 
     void SetScaleCallbacks()
@@ -514,6 +523,41 @@ class UVControl : VisualElement
 {
     public Mesh mesh;
     public int index;
+
+    public UnityEvent<Mesh, int, Vector2> onMove;
+
+    public UVControl(Mesh _mesh, int _index, Vector2 position)
+	{
+        onMove = new UnityEvent<Mesh, int, Vector2>();
+        style.position = Position.Absolute;
+        style.width = 6f;
+        style.height = 6f;
+        style.translate = new StyleTranslate(new Translate(-3, -3, 0f));
+        style.backgroundColor = Color.red;
+
+        style.left = new StyleLength(new Length(position.x, LengthUnit.Pixel));
+        style.top = new StyleLength(new Length(position.y, LengthUnit.Pixel));
+
+        mesh = _mesh;
+        index = _index;
+
+        RegisterCallback<MouseDownEvent>(_ => { this.CaptureMouse(); });
+        RegisterCallback<MouseUpEvent>(_ => { this.ReleaseMouse(); });
+        RegisterCallback<MouseMoveEvent>(e =>
+        {
+            if (this.HasMouseCapture())
+            {
+                float newX = resolvedStyle.left + e.mouseDelta.x;
+                float newY = resolvedStyle.top + e.mouseDelta.y;
+                style.left = new StyleLength(new Length(newX, LengthUnit.Pixel));
+                style.top = new StyleLength(new Length(newY, LengthUnit.Pixel));
+
+                Vector2 pos = new Vector2(newX , newY );
+
+                onMove.Invoke(mesh, index, pos);
+            }
+        });
+    }
 }
 
 class SelectionElement : VisualElement

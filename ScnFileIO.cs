@@ -481,7 +481,14 @@ namespace AevenScnTool.IO
 
 					Material mat_x = new Material(mat);
 
-					string mainTex = di.FullName + "\\" + texEntry.FileName.Replace("tga", "dds");
+					string mainTex = di.FullName + "\\" + texEntry.FileName.Replace(".tga", ".dds");
+
+					var ic = Path.GetInvalidPathChars();
+					foreach (var item in ic)
+					{
+						mainTex = mainTex.Replace(item,'?');
+					}
+
 					if (File.Exists(mainTex))
 					{
 						mat_x.mainTexture = ParseTextureDXT(File.ReadAllBytes(mainTex));
@@ -489,13 +496,25 @@ namespace AevenScnTool.IO
 					}
 					else
 					{
+						Debug.Log($"Gosh! Texture {mainTex} doesnt exist!");
+
+						for (int j = 0; j < mainTex.Length; j++)
+						{
+							if (Path.GetInvalidPathChars().Contains(mainTex[j]))
+							{
+								Debug.Log(j);
+							}
+							
+						}
+						File.OpenRead(mainTex);
 						mat_x.mainTexture = Texture2D.whiteTexture;
 					}
 
-					string sideTex = di.FullName + "\\" + texEntry.FileName2.Replace("tga", "dds");
+					string sideTex = string.Empty;
 					bool normal = false;
-					if (sideTex != string.Empty)
+					if (texEntry.FileName2 != string.Empty)
 					{
+						sideTex = di.FullName + "\\" + texEntry.FileName2.Replace("tga", "dds");
 						if (File.Exists(sideTex))
 						{
 							Texture2D st = ParseTextureDXT(File.ReadAllBytes(sideTex));

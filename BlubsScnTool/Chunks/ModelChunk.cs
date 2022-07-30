@@ -1,4 +1,5 @@
 ﻿using BlubLib.IO;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -333,7 +334,7 @@ namespace NetsphereScnTool.Scene.Chunks
                 {
                     var textureData = new TextureEntry
                     {
-                        FileName = r.ReadCString(1024),
+                        FileName = ReadString(r,1024),
                         FileName2 = ""
                     };
 
@@ -347,6 +348,23 @@ namespace NetsphereScnTool.Scene.Chunks
                 }
             }
         }
+        string ReadString(BinaryReader r, int length)
+		{
+            List<char> chars = new();
+            long position = r.BaseStream.Position;
+			for (int i = 0; i < length; i++)
+			{
+                var c = r.ReadChar();
+				if (Convert.ToByte(c) == byte.Parse("0"))
+				{
+                    break;
+				}
+                chars.Add(c);
+            }
+            r.BaseStream.Seek(position + 1024, SeekOrigin.Begin);
+            return new string(chars.ToArray());
+		}
+
     }
 
     public struct TextureEntry
