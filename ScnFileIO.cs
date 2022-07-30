@@ -480,34 +480,22 @@ namespace AevenScnTool.IO
 					mesh.SetTriangles(tris, texEntry.FaceOffset * 3, texEntry.FaceCount * 3, i);
 
 					Material mat_x = new Material(mat);
-
-					string mainTex = di.FullName + "\\" + texEntry.FileName.Replace(".tga", ".dds");
-
-					var ic = Path.GetInvalidPathChars();
-					foreach (var item in ic)
+					string mainTex = string.Empty;
+					if (texEntry.FileName != string.Empty)
 					{
-						mainTex = mainTex.Replace(item,'?');
-					}
+						mainTex = di.FullName + "\\" + texEntry.FileName.Replace(".tga", ".dds");
 
-					if (File.Exists(mainTex))
-					{
-						mat_x.mainTexture = ParseTextureDXT(File.ReadAllBytes(mainTex));
-						mat_x.mainTexture.name = texEntry.FileName.Replace("tga", "dds");
-					}
-					else
-					{
-						Debug.Log($"Gosh! Texture {mainTex} doesnt exist!");
-
-						for (int j = 0; j < mainTex.Length; j++)
+						if (File.Exists(mainTex))
 						{
-							if (Path.GetInvalidPathChars().Contains(mainTex[j]))
-							{
-								Debug.Log(j);
-							}
-							
+							mat_x.mainTexture = ParseTextureDXT(File.ReadAllBytes(mainTex));
+							mat_x.mainTexture.name = texEntry.FileName.Replace("tga", "dds");
 						}
-						File.OpenRead(mainTex);
-						mat_x.mainTexture = Texture2D.whiteTexture;
+						else
+						{
+							Debug.Log($"Gosh! Texture {mainTex} doesnt exist!");
+
+							mat_x.mainTexture = Texture2D.whiteTexture;
+						}
 					}
 
 					string sideTex = string.Empty;
