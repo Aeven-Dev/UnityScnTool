@@ -126,7 +126,6 @@ public class ScnToolData : ScriptableObject
 			if (item.EndsWith("ScnFileIO.cs"))
 			{
 				rootPath = item.Replace("ScnFileIO.cs", "");
-				Debug.Log(rootPath);
 				return;
 			}
 		}

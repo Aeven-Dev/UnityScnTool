@@ -93,20 +93,14 @@ namespace AevenScnTool.Menus
 			{
 				Open();
 			}
-			GUI.enabled = ScnIsSelected();
-			if (GUILayout.Button(new GUIContent("Open To... :D", "Opens a scn file into the SceneData root object of the selected object!"), GUILayout.Width(width)))
+			if (GUILayout.Button(new GUIContent("Append... :D", "Opens a scn file into the SceneData root object of the selected object!"), GUILayout.Width(width)))
 			{
-				OpenTo();
+				Append();
 			}
-			GUI.enabled = true;
 			EditorGUILayout.EndHorizontal();
 
 			EditorGUILayout.BeginHorizontal();
-			if (GUILayout.Button(new GUIContent("Save... :3", "Saves the SceneData root objects to their respective scn files!"), GUILayout.Width(width)))
-			{
-				SaveAll();
-			}
-			if (GUILayout.Button(new GUIContent("Save To... :3", "Saves the SceneData root objects to a the specified file!"), GUILayout.Width(width)))
+			if (GUILayout.Button(new GUIContent("Save... :3", "Saves the SceneData root objects to a the specified file!"), GUILayout.Width(position.width)))
 			{
 				SaveCurrent();
 			}
@@ -135,19 +129,12 @@ namespace AevenScnTool.Menus
 			{
 				Open();
 			}
-			GUI.enabled = ScnIsSelected();
-			if (GUILayout.Button(new GUIContent("Open To... :D",
-				"Opens a scn file into the SceneData root object of the selected object!")))
+			if (GUILayout.Button(new GUIContent("Append... :D",
+				"Opens a scn file into into a window where you can select what objects to import!")))
 			{
-				OpenTo();
+				Append();
 			}
-			GUI.enabled = true;
 			if (GUILayout.Button(new GUIContent("Save... :3",
-				"Saves the SceneData root objects to their respective scn files!")))
-			{
-				SaveAll();
-			}
-			if (GUILayout.Button(new GUIContent("Save To... :3",
 				"Saves the SceneData root objects to a the specified file!")))
 			{
 				SaveCurrent();
@@ -213,7 +200,7 @@ namespace AevenScnTool.Menus
 			EditorGUILayout.EndHorizontal();
 		}
 
-		private static void Open()
+		private static void Append()
 		{
 			string fileName = EditorUtility.OpenFilePanel("Select your scn file!", ScnToolData.Instance.s4_folder_path, "scn");
 			if (fileName == string.Empty) return;
@@ -226,7 +213,7 @@ namespace AevenScnTool.Menus
 
 			SelectImport.Open(container);
 		}
-		private static void OpenTo()
+		private static void Open()
 		{
 			string fileName = EditorUtility.OpenFilePanel("Select your scn file!", ScnToolData.Instance.s4_folder_path, "scn");
 			if (fileName == string.Empty) return;
@@ -234,32 +221,13 @@ namespace AevenScnTool.Menus
 			FileInfo fi = new FileInfo(fileName);
 			if (fi.Exists == false) return;
 			//Open scn file
-			SceneContainer container = SceneContainer.ReadFrom(fileName);
-			Debug.Log(container.Header.Name);
-			container.fileInfo = fi;
 
-			ScnData sd = Selection.activeGameObject.GetComponent<ScnData>();
-
-			SelectImport.OpenTo(container, sd);
+			ScnFileImporter.LoadModel(fileName);
 		}
 
 		private static void SaveCurrent()
 		{
 			SelectExport.Open();
-		}
-
-		private static void SaveAll()
-		{
-			ScnData[] sceneDatas = FindObjectsOfType<ScnData>();
-			foreach (ScnData sd in sceneDatas)
-			{
-				List<Transform> go_list = new List<Transform>();
-				go_list.AddRange(sd.GetComponentsInChildren<Transform>());
-
-				SceneContainer container = ScnFileExporter.CreateContainerFromScenes(new FileInfo(sd.folderPath), new ScnData[] { sd });
-
-				container.Write(sd.folderPath + "\\" + sd.name);
-			}
 		}
 
 		static void SetScene(ScnData scn)
