@@ -14,21 +14,35 @@ public class CharacterLoader : EditorWindow
 
     VisualElement Root;
     Label folder_text;
-    ScrollView ClothesSelector;
+    ScrollView ItemSelector;
 
 
-    ScrollView headlist;
+    VisualElement clothesTab;
+    VisualElement weaponsTab;
+    Button switchToClothesTab;
+    Button switchToWeaponsTab;
+
+    ScrollView hairlist;
     ScrollView facelist;
-    ScrollView shirtlist;
+    ScrollView bodylist;
     ScrollView pantslist;
-    ScrollView gloveslist;
-    ScrollView bootslist;
+    ScrollView handslist;
+    ScrollView feetlist;
     ScrollView accesorylist;
     ScrollView petlist;
 
-    Dictionary<PaperDoll.Type, List<XmlNode>> unisex = new();
-    Dictionary<PaperDoll.Type, List<XmlNode>> female = new();
-    Dictionary<PaperDoll.Type, List<XmlNode>> male = new();
+    ScrollView meleelist;
+    ScrollView rifflelist;
+    ScrollView sniperlist;
+    ScrollView throwablelist;
+    ScrollView instalationlist;
+    ScrollView mindlist;
+
+    Dictionary<PaperDoll.Type, List<Item>> unisex = new();
+    Dictionary<PaperDoll.Type, List<Item>> female = new();
+    Dictionary<PaperDoll.Type, List<Item>> male = new();
+
+    Dictionary<PaperDoll.Type, List<Item>> weapons = new();
 
     PaperDoll paperdoll;
 
@@ -81,8 +95,8 @@ public class CharacterLoader : EditorWindow
         Root = root.Q("Root");
         folder_text = root.Q<Label>("Folder_Text");
         root.Q<Button>("Folder").clicked += SelectS4Folder;
-        ClothesSelector = root.Q<ScrollView>("ClothesSelector");
-        ClothesSelector.contentContainer.style.flexWrap = Wrap.Wrap;
+        ItemSelector = root.Q<ScrollView>("ClothesSelector");
+        ItemSelector.contentContainer.style.flexWrap = Wrap.Wrap;
 
         Button boyButton = root.Q<Button>("Boy");
         Button girlButton = root.Q<Button>("Girl");
@@ -112,14 +126,21 @@ public class CharacterLoader : EditorWindow
         Button accesorySelection = root.Q<Button>("Accesory");
         Button petSelection = root.Q<Button>("Pet");
 
-        headlist = root.Q<ScrollView>("HeadList");
+        hairlist = root.Q<ScrollView>("HeadList");
         facelist = root.Q<ScrollView>("FaceList");
-        shirtlist = root.Q<ScrollView>("ShirtList");
+        bodylist = root.Q<ScrollView>("ShirtList");
         pantslist = root.Q<ScrollView>("PantsList");
-        gloveslist = root.Q<ScrollView>("GlovesList");
-        bootslist = root.Q<ScrollView>("BootsList");
+        handslist = root.Q<ScrollView>("GlovesList");
+        feetlist = root.Q<ScrollView>("BootsList");
         accesorylist = root.Q<ScrollView>("AccesoryList");
         petlist = root.Q<ScrollView>("PetList");
+
+        meleelist = root.Q<ScrollView>("MeleeList");
+        rifflelist = root.Q<ScrollView>("RiffleList");
+        sniperlist = root.Q<ScrollView>("SniperList");
+        instalationlist = root.Q<ScrollView>("InstalationList");
+        throwablelist = root.Q<ScrollView>("ThrowableList");
+        mindlist = root.Q<ScrollView>("MindList");
 
         headSelection.clicked += () => { SelectClothes(PaperDoll.Type.hair); };
         faceSelection.clicked += () => { SelectClothes(PaperDoll.Type.face); };
@@ -129,6 +150,21 @@ public class CharacterLoader : EditorWindow
         bootsSelection.clicked += () => { SelectClothes(PaperDoll.Type.foot); };
         accesorySelection.clicked += () => { SelectClothes(PaperDoll.Type.acc); };
         petSelection.clicked += () => { SelectClothes(PaperDoll.Type.pet); };
+
+
+        Button meleeSelection = root.Q<Button>("Melee");
+        Button riffleSelection = root.Q<Button>("Riffle");
+        Button sniperSelection = root.Q<Button>("Sniper");
+        Button instalationSelection = root.Q<Button>("Instalation");
+        Button throwableSelection = root.Q<Button>("Throwable");
+        Button mindSelection = root.Q<Button>("Mind");
+
+        meleeSelection.clicked += () => { SelectWeapons(PaperDoll.Type.melee); };
+        riffleSelection.clicked += () => { SelectWeapons(PaperDoll.Type.riffle); };
+        sniperSelection.clicked += () => { SelectWeapons(PaperDoll.Type.sniper); };
+        instalationSelection.clicked += () => { SelectWeapons(PaperDoll.Type.instalation); };
+        throwableSelection.clicked += () => { SelectWeapons(PaperDoll.Type.throwable); };
+        mindSelection.clicked += () => { SelectWeapons(PaperDoll.Type.mind); };
 
     }
 
@@ -166,28 +202,57 @@ public class CharacterLoader : EditorWindow
             EditorUtility.DisplayDialog("Oooopsie!", "Haha, you have to select an s4 client folder first, silly!", "Alright! :)");
             return;
         }
-        ClothesSelector.Clear();
-        List<XmlNode> items = new List<XmlNode>();
+        ItemSelector.Clear();
+        List<Item> items = new();
         items.AddRange(unisex[type]);
         items.AddRange(paperdoll.isGirl ? female[type] : male[type]);
 
 
         for (int i = 0; i < items.Count; i++)
         {
-            XmlNode graphic = items[i].SelectSingleNode("./child::graphic");
-            XmlNode icon_image = graphic.Attributes.GetNamedItem("icon_image");
-
+            Item item = items[i];
             Texture2D tex = null;
-            if (icon_image != null && icon_image != null)
+            if (item.icon_image_name != null && item.icon_image_name != string.Empty)
             {
-                var file = icon_image.Value.Replace(".tga", ".dds");
+                var file = item.icon_image_name.Replace(".tga", ".dds");
                 string path = rootFolder + $@"\resources\image\costume\{file}";
                 if (File.Exists(path))
                 {
                     tex = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(path));
                 }
             }
-            ClothesSelector.Add(CreateIcon(tex, () => { SelectClotheItem(type, graphic); }));
+            ItemSelector.Add(CreateIcon(tex, () => { SelectClotheItem(type, item); }));
+        }
+
+        Root.style.left = new StyleLength(new Length(-200, LengthUnit.Percent));
+    }
+
+    void SelectWeapons(PaperDoll.Type type)
+	{
+        if (rootFolder == string.Empty)
+        {
+            EditorUtility.DisplayDialog("Oooopsie!", "Haha, you have to select an s4 client folder first, silly!", "Alright! :)");
+            return;
+        }
+        ItemSelector.Clear();
+
+        var w = weapons[type];
+
+        for (int i = 0; i < w.Count; i++)
+        {
+            var item = w[i];
+
+            Texture2D tex = null;
+            if (item.icon_image_name != null && item.icon_image_name != string.Empty)
+            {
+                var file = item.icon_image_name.Replace(".tga", ".dds");
+                string path = rootFolder + $@"\resources\image\costume\{file}";
+                if (File.Exists(path))
+                {
+                    tex = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(path));
+                }
+            }
+            ItemSelector.Add(CreateIcon(tex, () => { SelectWeaponItem(type, item); }));
         }
 
         Root.style.left = new StyleLength(new Length(-200, LengthUnit.Percent));
@@ -222,32 +287,10 @@ public class CharacterLoader : EditorWindow
         return item;
     }
 
-    void SelectClotheItem(PaperDoll.Type type, XmlNode graphicNode)
+    void SelectClotheItem(PaperDoll.Type type, Item item)
     {
-        XmlNode to_part_scene_file = graphicNode.Attributes.GetNamedItem("to_part_scene_file");
 
-        List<(string, string, string)> nodes = new();
-        int index = 1;
-        while (true)
-        {
-            XmlNode to_node_scene_file = graphicNode.Attributes.GetNamedItem("to_node_scene_file" + index);
-            if (to_node_scene_file != null)
-            {
-                XmlNode to_node_parent_node = graphicNode.Attributes.GetNamedItem("to_node_parent_node" + index);
-                XmlNode to_node_animation_part = graphicNode.Attributes.GetNamedItem("to_node_animation_part" + index);
-
-                nodes.Add((to_node_scene_file.Value, to_node_parent_node.Value, to_node_animation_part.Value));
-                index++;
-            }
-            else
-            {
-                break;
-            }
-        }
-        XmlNode hiding_option = graphicNode.Attributes.GetNamedItem("hiding_option");
-        XmlNode icon_image = graphicNode.Attributes.GetNamedItem("icon_image");
-
-        paperdoll.SelectClotheItem(type, rootFolder, to_part_scene_file?.Value, nodes.ToArray(), hiding_option?.Value,icon_image?.Value);
+        paperdoll.SelectClotheItem(type, rootFolder, item.mainPart, item.nodes, item.hiding_option, item.icon_image_name);
 
         RedrawItems(type);
     }
@@ -282,97 +325,192 @@ public class CharacterLoader : EditorWindow
         }
     }
 
+    void SelectWeaponItem(PaperDoll.Type type, Item item)
+	{
+
+        paperdoll.SelectWeapon(type, rootFolder, item.nodes, item.icon_image_name);
+	}
+
     bool ReadFile(string folder)
     {
-        XmlDocument doc = new XmlDocument();
-		if (!File.Exists(folder + "\\xml\\item.x7"))
-		{
-            return false;
-		}
-        doc.Load(folder + "\\xml\\item.x7");
-
-        unisex[PaperDoll.Type.hair] = new List<XmlNode>();
-        unisex[PaperDoll.Type.face]= new List<XmlNode>();
-        unisex[PaperDoll.Type.body]= new List<XmlNode>();
-        unisex[PaperDoll.Type.leg]=new List<XmlNode>();
-        unisex[PaperDoll.Type.hand]= new List<XmlNode>();
-        unisex[PaperDoll.Type.foot]= new List<XmlNode>();
-        unisex[PaperDoll.Type.acc]=new List<XmlNode>();
-        unisex[PaperDoll.Type.pet]=new List<XmlNode>();
-        unisex[PaperDoll.Type.NONE]= new List<XmlNode>();
-
-        female[PaperDoll.Type.hair] = new List<XmlNode>();
-        female[PaperDoll.Type.face]= new List<XmlNode>();
-        female[PaperDoll.Type.body]= new List<XmlNode>();
-        female[PaperDoll.Type.leg]=new List<XmlNode>();
-        female[PaperDoll.Type.hand]= new List<XmlNode>();
-        female[PaperDoll.Type.foot]= new List<XmlNode>();
-        female[PaperDoll.Type.acc]=new List<XmlNode>();
-        female[PaperDoll.Type.pet]=new List<XmlNode>();
-        female[PaperDoll.Type.NONE] = new List<XmlNode>();
-
-        male[PaperDoll.Type.hair] = new List<XmlNode>();
-        male[PaperDoll.Type.face]= new List<XmlNode>();
-        male[PaperDoll.Type.body]= new List<XmlNode>();
-        male[PaperDoll.Type.leg]=new List<XmlNode>();
-        male[PaperDoll.Type.hand]= new List<XmlNode>();
-        male[PaperDoll.Type.foot]= new List<XmlNode>();
-        male[PaperDoll.Type.acc]=new List<XmlNode>();
-        male[PaperDoll.Type.pet]=new List<XmlNode>();
-        male[PaperDoll.Type.NONE] = new List<XmlNode>();
-
-        for (int i = 0; i < doc.DocumentElement.ChildNodes.Count; i++)
+        XmlDocument item_doc = new XmlDocument();
+        if (!File.Exists(folder + "\\xml\\item.x7"))
         {
-            XmlNode graphic = doc.DocumentElement.ChildNodes[i].SelectSingleNode("./child::graphic");
-            XmlNode baseNode = doc.DocumentElement.ChildNodes[i].SelectSingleNode("./child::base");
+            return false;
+        }
+        item_doc.Load(folder + "\\xml\\item.x7");
+
+        XmlDocument _eu_weapon_doc = new XmlDocument();
+        if (!File.Exists(folder + "\\xml\\_eu_weapon.x7"))
+        {
+            return false;
+        }
+        _eu_weapon_doc.Load(folder + "\\xml\\_eu_weapon.x7");
+
+        XmlDocument weapon_attach_doc = new XmlDocument();
+        if (!File.Exists(folder + "\\xml\\weapon_attach.x7"))
+        {
+            return false;
+        }
+        weapon_attach_doc.Load(folder + "\\xml\\weapon_attach.x7");
+
+        InitLists();
+
+        for (int i = 0; i < item_doc.DocumentElement.ChildNodes.Count; i++)
+        {
+            var child = item_doc.DocumentElement.ChildNodes[i];
+            var graphic = child.SelectSingleNode("./child::graphic");
+            var baseNode = child.SelectSingleNode("./child::base");
             if (graphic == null)
             {
                 continue;
             }
-            XmlNode node = graphic.Attributes.GetNamedItem("to_node_scene_file1");
-            XmlNode part = graphic.Attributes.GetNamedItem("to_part_scene_file");
-
-            if (node == null && part == null)
-            {
-                continue;
-            }
+            var node = graphic.Attributes.GetNamedItem("to_node_scene_file1");
+            var part = graphic.Attributes.GetNamedItem("to_part_scene_file");
             if (baseNode == null)
             {
                 continue;
             }
-            XmlNode genderNode = baseNode.Attributes.GetNamedItem("sex");
-            if (genderNode == null)
+            if (node == null && part == null)
             {
-                continue;
+                //might be a weapon?
+                string item_key = child.Attributes.GetNamedItem("item_key").Value;
+                PaperDoll.Type type = PaperDoll.GetType(item_key.Substring(0, 3));
+
+				if (weapons.ContainsKey(type))
+                {
+                    var weapon = _eu_weapon_doc.DocumentElement.SelectSingleNode($"./child::weapon[@item_key='{item_key}']");
+                    var scene = weapon.SelectSingleNode("./child::scene");
+
+                    List<string> values = new();
+                    for (int w = 1; true; w++)
+                    {
+                        var val = scene.Attributes.GetNamedItem("value" + w);
+						if (val != null)
+						{
+                            values.Add(val.Value);
+						}
+						else
+						{
+                            break;
+						}
+                    }
+
+                    string t = weapon.SelectSingleNode("./child::ability").Attributes.GetNamedItem("type").Value;
+
+                    List<(string,string,string)> nodes = new();
+                    for (int a = 0; a < values.Count; a++)
+					{
+                        var thing = weapon_attach_doc.DocumentElement.SelectSingleNode($"./child::weapon[@type='{t}' and sceneIndex='{a}']'");
+                        var aa = thing.Attributes.GetNamedItem("attackAttach").Value;
+                        var ia = thing.Attributes.GetNamedItem("idleAttach").Value;
+
+                        nodes.Add((values[a], aa, ia));
+                    }
+                    //Goodness gracious, there's a shortage of names!
+                    var item = new Item()
+                    {
+                        item_key = item_key,
+                        nodes = nodes.ToArray(),
+                        icon_image_name = graphic.Attributes.GetNamedItem("icon_image")?.Value,
+                    };
+                    weapons[type].Add(item);
+                }
             }
+			else
+			{
+                var genderNode = baseNode.Attributes.GetNamedItem("sex");
+                if (genderNode == null)
+                {
+                    continue;
+                }
 
-            PaperDoll.Type type = PaperDoll.GetType(doc.DocumentElement.ChildNodes[i].Attributes.GetNamedItem("item_key").Value.Substring(0,3));
+                PaperDoll.Type type = PaperDoll.GetType(child.Attributes.GetNamedItem("item_key").Value.Substring(0, 3));
+                List<(string, string, string)> nodes = new();
+				for (int p = 1; true; p++)
+                {
+                    var n = (graphic.Attributes.GetNamedItem("to_node_scene_file" + p),
+                            graphic.Attributes.GetNamedItem("to_node_parent_node" + p),
+                            graphic.Attributes.GetNamedItem("to_node_animation_part" + p));
+					if (n != (null,null,null))
+                        nodes.Add((n.Item1.Value, n.Item2.Value, n.Item3.Value));
+					else
+                        break;
+                }
 
-            string gender = genderNode.Value;
-            switch (gender)
-            {
-                case "unisex":
-                    unisex[type].Add(doc.DocumentElement.ChildNodes[i]);
-                    break;
-                case "woman":
-                    female[type].Add(doc.DocumentElement.ChildNodes[i]);
-                    break;
-                case "man":
-                    male[type].Add(doc.DocumentElement.ChildNodes[i]);
-                    break;
-                default:
-                    break;
+                var item = new Item() {
+                    item_key = child.Attributes.GetNamedItem("item_key").Value,
+                    mainPart = part.Value,
+                    nodes = nodes.ToArray(),
+                    hiding_option = graphic.Attributes.GetNamedItem("hiding_option")?.Value,
+                    icon_image_name = graphic.Attributes.GetNamedItem("icon_image")?.Value,
+                };
+                string gender = genderNode.Value;
+                switch (gender)
+                {
+                    case "unisex":
+                        unisex[type].Add(item);
+                        break;
+                    case "woman":
+                        female[type].Add(item);
+                        break;
+                    case "man":
+                        male[type].Add(item);
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 
         return true;
     }
 
+    void InitLists()
+	{
+        unisex[PaperDoll.Type.hair] = new List<Item>();
+        unisex[PaperDoll.Type.face] = new List<Item>();
+        unisex[PaperDoll.Type.body] = new List<Item>();
+        unisex[PaperDoll.Type.leg] = new List<Item>();
+        unisex[PaperDoll.Type.hand] = new List<Item>();
+        unisex[PaperDoll.Type.foot] = new List<Item>();
+        unisex[PaperDoll.Type.acc] = new List<Item>();
+        unisex[PaperDoll.Type.pet] = new List<Item>();
+        unisex[PaperDoll.Type.NONE] = new List<Item>();
+
+        female[PaperDoll.Type.hair] = new List<Item>();
+        female[PaperDoll.Type.face] = new List<Item>();
+        female[PaperDoll.Type.body] = new List<Item>();
+        female[PaperDoll.Type.leg] = new List<Item>();
+        female[PaperDoll.Type.hand] = new List<Item>();
+        female[PaperDoll.Type.foot] = new List<Item>();
+        female[PaperDoll.Type.acc] = new List<Item>();
+        female[PaperDoll.Type.pet] = new List<Item>();
+        female[PaperDoll.Type.NONE] = new List<Item>();
+
+        male[PaperDoll.Type.hair] = new List<Item>();
+        male[PaperDoll.Type.face] = new List<Item>();
+        male[PaperDoll.Type.body] = new List<Item>();
+        male[PaperDoll.Type.leg] = new List<Item>();
+        male[PaperDoll.Type.hand] = new List<Item>();
+        male[PaperDoll.Type.foot] = new List<Item>();
+        male[PaperDoll.Type.acc] = new List<Item>();
+        male[PaperDoll.Type.pet] = new List<Item>();
+        male[PaperDoll.Type.NONE] = new List<Item>();
+
+        weapons[PaperDoll.Type.melee] = new List<Item>();
+        weapons[PaperDoll.Type.riffle] = new List<Item>();
+        weapons[PaperDoll.Type.sniper] = new List<Item>();
+        weapons[PaperDoll.Type.throwable] = new List<Item>();
+        weapons[PaperDoll.Type.instalation] = new List<Item>();
+        weapons[PaperDoll.Type.mind] = new List<Item>();
+    }
+
     ScrollView GetItemList(PaperDoll.Type type)
     {
         if (type == PaperDoll.Type.hair)
         {
-            return headlist;
+            return hairlist;
         }
         if (type == PaperDoll.Type.face)
         {
@@ -380,7 +518,7 @@ public class CharacterLoader : EditorWindow
         }
         if (type == PaperDoll.Type.body)
         {
-            return shirtlist;
+            return bodylist;
         }
         if (type == PaperDoll.Type.leg)
         {
@@ -388,11 +526,11 @@ public class CharacterLoader : EditorWindow
         }
         if (type == PaperDoll.Type.hand)
         {
-            return gloveslist;
+            return handslist;
         }
         if (type == PaperDoll.Type.foot)
         {
-            return bootslist;
+            return feetlist;
         }
         if (type == PaperDoll.Type.acc)
         {
@@ -428,22 +566,22 @@ public class CharacterLoader : EditorWindow
         //Play Base Animation
         if (paperdoll.isGirl)
         {
-            SelectClotheItem(PaperDoll.Type.hair, female[PaperDoll.Type.hair][0].SelectSingleNode("./child::graphic"));
-            SelectClotheItem(PaperDoll.Type.body, female[PaperDoll.Type.body][0].SelectSingleNode("./child::graphic"));
-            SelectClotheItem(PaperDoll.Type.leg, female[PaperDoll.Type.leg][2].SelectSingleNode("./child::graphic"));
-            SelectClotheItem(PaperDoll.Type.face, female[PaperDoll.Type.face][0].SelectSingleNode("./child::graphic"));
-            SelectClotheItem(PaperDoll.Type.hand, female[PaperDoll.Type.hand][0].SelectSingleNode("./child::graphic"));
-            SelectClotheItem(PaperDoll.Type.foot, female[PaperDoll.Type.foot][0].SelectSingleNode("./child::graphic"));
+            SelectClotheItem(PaperDoll.Type.hair, female[PaperDoll.Type.hair][0]);
+            SelectClotheItem(PaperDoll.Type.body, female[PaperDoll.Type.body][0]);
+            SelectClotheItem(PaperDoll.Type.leg, female[PaperDoll.Type.leg][2]);
+            SelectClotheItem(PaperDoll.Type.face, female[PaperDoll.Type.face][0]);
+            SelectClotheItem(PaperDoll.Type.hand, female[PaperDoll.Type.hand][0]);
+            SelectClotheItem(PaperDoll.Type.foot, female[PaperDoll.Type.foot][0]);
         }
 		else
 		{
 
-            SelectClotheItem(PaperDoll.Type.hair, male[PaperDoll.Type.hair][0].SelectSingleNode("./child::graphic"));
-            SelectClotheItem(PaperDoll.Type.body, male[PaperDoll.Type.body][0].SelectSingleNode("./child::graphic"));
-            SelectClotheItem(PaperDoll.Type.leg, male[PaperDoll.Type.leg][0].SelectSingleNode("./child::graphic"));
-            SelectClotheItem(PaperDoll.Type.face, male[PaperDoll.Type.face][0].SelectSingleNode("./child::graphic"));
-            SelectClotheItem(PaperDoll.Type.hand, male[PaperDoll.Type.hand][0].SelectSingleNode("./child::graphic"));
-            SelectClotheItem(PaperDoll.Type.foot, male[PaperDoll.Type.foot][0].SelectSingleNode("./child::graphic"));
+            SelectClotheItem(PaperDoll.Type.hair, male[PaperDoll.Type.hair][0]);
+            SelectClotheItem(PaperDoll.Type.body, male[PaperDoll.Type.body][0]);
+            SelectClotheItem(PaperDoll.Type.leg,  male[PaperDoll.Type.leg ][0]);
+            SelectClotheItem(PaperDoll.Type.face, male[PaperDoll.Type.face][0]);
+            SelectClotheItem(PaperDoll.Type.hand, male[PaperDoll.Type.hand][0]);
+            SelectClotheItem(PaperDoll.Type.foot, male[PaperDoll.Type.foot][0]);
         }
 
         paperdoll.SetBaseAnimation();
@@ -477,4 +615,28 @@ public class CharacterLoader : EditorWindow
         }
         return null;
     }
+
+    void SwitchToClothesTab()
+    {
+        clothesTab.style.display =  DisplayStyle.Flex;
+        weaponsTab.style.display = DisplayStyle.None;
+        switchToClothesTab.SetEnabled(false);
+        switchToWeaponsTab.SetEnabled(true);
+    }
+    void SwitchToWeaponsTab()
+    {
+        clothesTab.style.display = DisplayStyle.None;
+        weaponsTab.style.display = DisplayStyle.Flex;
+        switchToClothesTab.SetEnabled(true);
+        switchToWeaponsTab.SetEnabled(false);
+    }
+}
+
+struct Item
+{
+    public string item_key;
+    public string mainPart;
+    public (string, string, string)[] nodes;
+    public string hiding_option;
+    public string icon_image_name;
 }

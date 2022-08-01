@@ -110,7 +110,7 @@ namespace AevenScnTool.Menus
                 sceneObj.AddComponent<ScnData>().folderPath = container.fileInfo.Directory.FullName;
             }
 
-            ScnFileImporter.BuildFromContainer(newContainer, sceneObj);
+            ScnFileImporter.BuildFromContainer(newContainer, sceneObj, ScnToolMenu.identityMatrix);
 
             sceneObj = null;
             Close();

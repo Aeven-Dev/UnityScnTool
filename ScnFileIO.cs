@@ -91,14 +91,14 @@ namespace AevenScnTool.IO
 			}
 		}
 		*/
-		public static void BuildFromContainer(SceneContainer container, GameObject sceneObj)
+		public static void BuildFromContainer(SceneContainer container, GameObject sceneObj, bool identityMatrix = false)
 		{
 			List < TreeItem < SceneChunk >> rootItems = GetRootItems(container);
 
 			createdObjects.Clear();
 			foreach (var item in rootItems)
 			{
-				BuildTreeItem(item, container, sceneObj);
+				BuildTreeItem(item, container, sceneObj, identityMatrix);
 			}
 		}
 
@@ -170,22 +170,22 @@ namespace AevenScnTool.IO
 			return items;
 		}
 
-		static void BuildTreeItem(TreeItem<SceneChunk> treeItem, SceneContainer container, GameObject parent)
+		static void BuildTreeItem(TreeItem<SceneChunk> treeItem, SceneContainer container, GameObject parent, bool identityMatrix)
 		{
-			GameObject go = BuildFromChunk(treeItem, container.fileInfo.Directory, parent);
+			GameObject go = BuildFromChunk(treeItem, container.fileInfo.Directory, parent, identityMatrix);
 			createdObjects.Add(treeItem.item, go);
 			foreach (var child in treeItem.childs)
 			{
-				BuildTreeItem(child, container, go);
+				BuildTreeItem(child, container, go, identityMatrix);
 			}
 		}
 
-		static GameObject BuildFromChunk(TreeItem<SceneChunk> treeItem, DirectoryInfo di, GameObject parent)
+		static GameObject BuildFromChunk(TreeItem<SceneChunk> treeItem, DirectoryInfo di, GameObject parent, bool identityMatrix)
 		{
 			return treeItem.item.ChunkType switch
 			{
 				ChunkType.Box => CreateBox(treeItem.item as BoxChunk, parent),
-				ChunkType.ModelData => CreateModel(treeItem.item as ModelChunk, di, parent),
+				ChunkType.ModelData => CreateModel(treeItem.item as ModelChunk, di, parent, identityMatrix),
 				ChunkType.Bone => CreateBone(treeItem.item as BoneChunk, parent),
 				ChunkType.SkyDirect1 => CreateSkyDirect1(treeItem.item as SkyDirect1Chunk, parent),
 				ChunkType.BoneSystem => CreateBoneSystem(treeItem.item as BoneSystemChunk, parent),
@@ -195,13 +195,16 @@ namespace AevenScnTool.IO
 		}
 
 
-		static GameObject CreateModel(ModelChunk model, DirectoryInfo di, GameObject parent)
+		static GameObject CreateModel(ModelChunk model, DirectoryInfo di, GameObject parent, bool identityMatrix)
 		{
 			GameObject go = CreateGameObject(model);
 			go.transform.SetParent(parent.transform);
-			go.transform.localPosition = model.Matrix.GetPosition();
-			go.transform.localRotation = model.Matrix.rotation;
-			go.transform.localScale = model.Matrix.lossyScale;
+			if (identityMatrix)
+			{
+				go.transform.position = Vector3.zero;
+				go.transform.rotation = Quaternion.identity;
+				go.transform.localScale = Vector3.one;
+			}
 
 			Mesh mesh = CreateMesh(model);
 
@@ -754,7 +757,7 @@ namespace AevenScnTool.IO
 			return (texture);
 		}
 
-		public static ScnData LoadModel(string path)
+		public static ScnData LoadModel(string path, bool identityMatrix = false)
 		{
 			SceneContainer container = SceneContainer.ReadFrom(path);
 			var go = new GameObject(container.Header.Name);
@@ -762,7 +765,7 @@ namespace AevenScnTool.IO
 			ScnData sd = go.AddComponent<ScnData>();
 			sd.folderPath = path;
 
-			BuildFromContainer(container, go);
+			BuildFromContainer(container, go, identityMatrix);
 
 			return sd;
 		}

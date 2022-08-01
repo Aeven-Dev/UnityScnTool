@@ -15,6 +15,7 @@ namespace AevenScnTool.Menus
 {
 	public class ScnToolMenu : EditorWindow
 	{
+		public static bool identityMatrix = false;
 		bool bottomFoldeout = false;
 
 		private void OnSelectionChange()
@@ -99,6 +100,12 @@ namespace AevenScnTool.Menus
 			}
 			EditorGUILayout.EndHorizontal();
 
+			var old = EditorGUIUtility.labelWidth;
+			EditorGUIUtility.labelWidth = 200;
+			identityMatrix = !EditorGUILayout.Toggle("Click me if you open official files!", !identityMatrix);
+			identityMatrix = EditorGUILayout.Toggle("Click me if you open custom files!" , identityMatrix);
+			EditorGUIUtility.labelWidth = old;
+
 			EditorGUILayout.BeginHorizontal();
 			if (GUILayout.Button(new GUIContent("Save... :3", "Saves the SceneData root objects to a the specified file!"), GUILayout.Width(position.width)))
 			{
@@ -134,6 +141,9 @@ namespace AevenScnTool.Menus
 			{
 				Append();
 			}
+
+
+
 			if (GUILayout.Button(new GUIContent("Save... :3",
 				"Saves the SceneData root objects to a the specified file!")))
 			{
@@ -222,7 +232,7 @@ namespace AevenScnTool.Menus
 			if (fi.Exists == false) return;
 			//Open scn file
 
-			ScnFileImporter.LoadModel(fileName);
+			ScnFileImporter.LoadModel(fileName, identityMatrix);
 		}
 
 		private static void SaveCurrent()

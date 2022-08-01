@@ -18,6 +18,14 @@ public class PaperDoll : MonoBehaviour
         foot,
         acc,
         pet,
+
+        melee = 200,
+        riffle,
+        sniper,
+        instalation,
+        throwable,
+        mind,
+
         NONE
     }
 
@@ -37,51 +45,43 @@ public class PaperDoll : MonoBehaviour
 
     [HideInInspector]public bool isGirl;
 
-    [HideInInspector]public List<Container> attachedHeads = new List<Container>();
+    [HideInInspector]public List<Container> attachedHair = new List<Container>();
     [HideInInspector]public List<Container> attachedFaces = new List<Container>();
-    [HideInInspector]public List<Container> attachedShirts = new List<Container>();
-    [HideInInspector]public List<Container> attachedPants = new List<Container>();
-    [HideInInspector]public List<Container> attachedGloves = new List<Container>();
-    [HideInInspector]public List<Container> attachedShoes = new List<Container>();
+    [HideInInspector]public List<Container> attachedBodies = new List<Container>();
+    [HideInInspector]public List<Container> attachedLegs = new List<Container>();
+    [HideInInspector]public List<Container> attachedHands = new List<Container>();
+    [HideInInspector]public List<Container> attachedFeet = new List<Container>();
     [HideInInspector]public List<Container> attachedAccesories = new List<Container>();
     [HideInInspector] public List<Container> attachedPets = new List<Container>();
 
+    [HideInInspector] public List<Container> attachedMelee = new List<Container>();
+    [HideInInspector] public List<Container> attachedRiffle = new List<Container>();
+    [HideInInspector] public List<Container> attachedSniper = new List<Container>();
+    [HideInInspector] public List<Container> attachedInstalation = new List<Container>();
+    [HideInInspector] public List<Container> attachedThrowable = new List<Container>();
+    [HideInInspector] public List<Container> attachedMind = new List<Container>();
+
     public List<Container> GetAttachedParts(Type part)
 	{
-        if (part == Type.hair)
-        {
-            return attachedHeads;
-        }
-        if (part == Type.face)
-        {
-            return attachedFaces;
-        }
-        if (part == Type.body)
-        {
-            return attachedShirts;
-        }
-        if (part == Type.leg)
-        {
-            return attachedPants;
-        }
-        if (part == Type.hand)
-        {
-            return attachedGloves;
-        }
-        if (part == Type.foot)
-        {
-            return attachedShoes;
-        }
-        if (part == Type.acc)
-        {
-            return attachedAccesories;
-        }
-        if (part == Type.pet)
-        {
-            return attachedPets;
-        }
-        return null;
-    }
+		return part switch
+		{
+			Type.hair           => attachedHair,
+			Type.face           => attachedFaces,
+			Type.body           => attachedBodies,
+			Type.leg            => attachedLegs,
+			Type.hand           => attachedHands,
+			Type.foot           => attachedFeet,
+			Type.acc            => attachedAccesories,
+			Type.pet            => attachedPets,
+			Type.melee          => attachedMelee,
+			Type.riffle         => attachedRiffle,
+			Type.sniper         => attachedSniper,
+			Type.instalation    => attachedInstalation,
+			Type.throwable      => attachedThrowable,
+			Type.mind           => attachedMind,
+			_                   => null
+		};
+	}
 
     public void SelectClotheItem(Type type, string rootFolder, string to_part_scene_file, (string,string,string)[] nodes, string hiding_option, string icon_image)
     {
@@ -124,6 +124,34 @@ public class PaperDoll : MonoBehaviour
         GetAttachedParts(type).Add(cont);
 
     }
+
+    public void SelectWeapon(Type type, string rootFolder, (string scnFile,string attackAttach,string idleAttach)[] values, string icon_image)
+	{
+        List<ScnData> parts = new(values.Length);
+		for (int i = 0; i < values.Length; i++)
+		{
+            string path = rootFolder + $@"\resources\model\weapon\{values[i].scnFile}";
+            ScnData obj = ScnFileImporter.LoadModel(path); 
+            parts.Add(obj);
+            AttachBonesystem(GetComponent<ScnData>(), obj, values[i].idleAttach);
+
+            Texture2D tex = null;
+            if (icon_image != null && icon_image != string.Empty)
+            {
+                var file = icon_image.Replace(".tga", ".dds");
+                string p = rootFolder + $@"\resources\image\weapon\{file}";
+                if (File.Exists(p))
+                {
+                    tex = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(p));
+                }
+            }
+
+            Container cont = new(tex, parts, type);
+
+            GetAttachedParts(type).Add(cont);
+        }
+    }
+
     public void DeleteClotheItem(Container item)
     {
         for (int i = 0; i < item.parts.Count; i++)
