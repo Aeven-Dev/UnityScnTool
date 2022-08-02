@@ -103,10 +103,20 @@ public class CharacterLoader : EditorWindow
 
 
         boyButton.clicked += () => {
+            if (rootFolder == null || rootFolder == string.Empty)
+            {
+                EditorUtility.DisplayDialog("Oooopsie!", "Haha, you have to select an s4 client folder first, silly!", "Alright! :)");
+                return;
+            }
             SpawnBiped(false);
             Root.style.left = new StyleLength(new Length(-100, LengthUnit.Percent));
         };
         girlButton.clicked += () => {
+			if (rootFolder == null || rootFolder == string.Empty)
+			{
+                EditorUtility.DisplayDialog("Oooopsie!", "Haha, you have to select an s4 client folder first, silly!", "Alright! :)");
+                return;
+            }
             SpawnBiped(true);
             Root.style.left = new StyleLength(new Length(-100, LengthUnit.Percent));//and also spawn stuff
         };
@@ -144,6 +154,8 @@ public class CharacterLoader : EditorWindow
 
         switchToClothesTab = root.Q<Button>("SwitchToClothesTab");
         switchToWeaponsTab = root.Q<Button>("SwitchToWeaponsTab");
+        switchToClothesTab.SetEnabled(false);
+        switchToClothesTab.style.backgroundColor = Color.HSVToRGB(0, 0, 0.3f);
 
         switchToClothesTab.clicked += SwitchToClothesTab;
         switchToWeaponsTab.clicked += SwitchToWeaponsTab;
@@ -642,6 +654,12 @@ public class CharacterLoader : EditorWindow
         weaponsTab.style.display = DisplayStyle.None;
         switchToClothesTab.SetEnabled(false);
         switchToWeaponsTab.SetEnabled(true);
+
+        switchToWeaponsTab.style.marginTop = 10;
+        switchToClothesTab.style.marginTop = 0;
+
+        switchToClothesTab.style.backgroundColor = Color.HSVToRGB(0,0, 0.3f);
+        switchToWeaponsTab.style.backgroundColor = Color.HSVToRGB(0, 0, 0.23f);
     }
     void SwitchToWeaponsTab()
     {
@@ -649,6 +667,12 @@ public class CharacterLoader : EditorWindow
         weaponsTab.style.display = DisplayStyle.Flex;
         switchToClothesTab.SetEnabled(true);
         switchToWeaponsTab.SetEnabled(false);
+
+        switchToWeaponsTab.style.marginTop = 0;
+        switchToClothesTab.style.marginTop = 10;
+
+        switchToClothesTab.style.backgroundColor = Color.HSVToRGB(0, 0, 0.23f);
+        switchToWeaponsTab.style.backgroundColor = Color.HSVToRGB(0, 0, 0.3f);
     }
 }
 

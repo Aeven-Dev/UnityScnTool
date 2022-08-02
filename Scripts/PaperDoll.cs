@@ -133,7 +133,7 @@ public class PaperDoll : MonoBehaviour
             string path = rootFolder + $@"\resources\model\weapon\{values[i].scnFile}";
             ScnData obj = ScnFileImporter.LoadModel(path); 
             parts.Add(obj);
-            AttachBonesystem(GetComponent<ScnData>(), obj, values[i].idleAttach);
+            AttachBonesystem(GetComponent<ScnData>(), obj, values[i].attackAttach);
 
             Texture2D tex = null;
             if (icon_image != null && icon_image != string.Empty)
