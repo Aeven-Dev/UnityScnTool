@@ -142,6 +142,15 @@ public class CharacterLoader : EditorWindow
         throwablelist = root.Q<ScrollView>("ThrowableList");
         mindlist = root.Q<ScrollView>("MindList");
 
+        switchToClothesTab = root.Q<Button>("SwitchToClothesTab");
+        switchToWeaponsTab = root.Q<Button>("SwitchToWeaponsTab");
+
+        switchToClothesTab.clicked += SwitchToClothesTab;
+        switchToWeaponsTab.clicked += SwitchToWeaponsTab;
+
+        clothesTab = root.Q("ClothesTab");
+        weaponsTab = root.Q("WeaponsTab");
+
         headSelection.clicked += () => { SelectClothes(PaperDoll.Type.hair); };
         faceSelection.clicked += () => { SelectClothes(PaperDoll.Type.face); };
         shirtSelection.clicked += () => { SelectClothes(PaperDoll.Type.body); };
@@ -380,6 +389,10 @@ public class CharacterLoader : EditorWindow
 				if (weapons.ContainsKey(type))
                 {
                     var weapon = _eu_weapon_doc.DocumentElement.SelectSingleNode($"./child::weapon[@item_key='{item_key}']");
+					if (weapon == null)
+					{
+                        continue;
+					}
                     var scene = weapon.SelectSingleNode("./child::scene");
 
                     List<string> values = new();
@@ -401,9 +414,13 @@ public class CharacterLoader : EditorWindow
                     List<(string,string,string)> nodes = new();
                     for (int a = 0; a < values.Count; a++)
 					{
-                        var thing = weapon_attach_doc.DocumentElement.SelectSingleNode($"./child::weapon[@type='{t}' and sceneIndex='{a}']'");
-                        var aa = thing.Attributes.GetNamedItem("attackAttach").Value;
-                        var ia = thing.Attributes.GetNamedItem("idleAttach").Value;
+                        var thing = weapon_attach_doc.DocumentElement.SelectSingleNode($"./child::weapon[@type='{t}' and @sceneIndex='{a}']");
+						if ( thing == null)
+						{
+                            continue;
+						}
+                        var aa = thing.Attributes.GetNamedItem("attackAttach")?.Value;
+                        var ia = thing.Attributes.GetNamedItem("idleAttach")?.Value;
 
                         nodes.Add((values[a], aa, ia));
                     }
@@ -429,19 +446,22 @@ public class CharacterLoader : EditorWindow
                 List<(string, string, string)> nodes = new();
 				for (int p = 1; true; p++)
                 {
-                    var n = (graphic.Attributes.GetNamedItem("to_node_scene_file" + p),
-                            graphic.Attributes.GetNamedItem("to_node_parent_node" + p),
-                            graphic.Attributes.GetNamedItem("to_node_animation_part" + p));
-					if (n != (null,null,null))
-                        nodes.Add((n.Item1.Value, n.Item2.Value, n.Item3.Value));
-					else
-                        break;
+                    var s = graphic.Attributes.GetNamedItem("to_node_scene_file" + p);
+					if (s == null) break;
+					
+                    var pa = graphic.Attributes.GetNamedItem("to_node_parent_node" + p);
+					if (pa == null) break;
+					
+                    var a = graphic.Attributes.GetNamedItem("to_node_animation_part" + p);
+                    if (a == null) break;
+
+                    nodes.Add((s.Value, pa.Value, a.Value));
                 }
 
                 var item = new Item() {
-                    item_key = child.Attributes.GetNamedItem("item_key").Value,
-                    mainPart = part.Value,
-                    nodes = nodes.ToArray(),
+                    item_key = child.Attributes.GetNamedItem("item_key")?.Value,
+                    mainPart = part?.Value,
+                    nodes = nodes?.ToArray(),
                     hiding_option = graphic.Attributes.GetNamedItem("hiding_option")?.Value,
                     icon_image_name = graphic.Attributes.GetNamedItem("icon_image")?.Value,
                 };

@@ -86,8 +86,8 @@ public class UVAnimEditor : VisualElement
         SetScale_2 = this.Q<Button>("SetScaleCenter");
 
 
-        //SelectAllButton = this.Q<Button>("SelectAllButton");
-        //SelectNoneButton = this.Q<Button>("SelectNoneButton");
+        SelectAllButton = this.Q<Button>("SelectAllButton");
+        SelectNoneButton = this.Q<Button>("SelectNoneButton");
     }
 
     void SetCallBacks()

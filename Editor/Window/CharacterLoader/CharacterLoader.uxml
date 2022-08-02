@@ -1,9 +1,9 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <ui:VisualElement style="flex-direction: row; border-bottom-color: rgb(88, 88, 88); border-bottom-width: 1px;">
         <ui:Button text="S4 Client Folder" display-tooltip-when-elided="true" name="Folder" />
         <ui:Label display-tooltip-when-elided="true" name="Folder_Text" style="flex-grow: 1;" />
     </ui:VisualElement>
-    <ui:VisualElement name="Root" style="flex-direction: row; left: 0; transition-property: left; transition-duration: 0.25s; transition-timing-function: ease; transition-delay: 0s; flex-grow: 1; min-height: auto; min-width: auto; max-width: none; height: 100%; visibility: visible; display: none;">
+    <ui:VisualElement name="Root" style="flex-direction: row; left: 0; transition-property: left; transition-duration: 0.25s; transition-timing-function: ease; transition-delay: 0s; flex-grow: 1; min-height: auto; min-width: auto; max-width: none; height: 100%; visibility: visible; display: flex;">
         <ui:VisualElement style="position: absolute; left: 0; width: 100%; height: auto; overflow: hidden; display: flex;">
             <ui:VisualElement style="background-image: url(&apos;project://database/Assets/ScnToolByAeven/Editor/Window/CharacterLoader/professor%20oak.jpg?fileID=2800000&amp;guid=72619383bf846bf44ae88c93253fefb5&amp;type=3#professor oak&apos;); width: 75%; height: 250px; max-width: none; max-height: none; left: 12.5%; -unity-background-scale-mode: scale-to-fit;" />
             <ui:VisualElement style="flex-direction: row; justify-content: center; align-items: center; height: 75px;">
@@ -11,39 +11,71 @@
                 <ui:Button text="A Pretty Girl!" display-tooltip-when-elided="true" name="Girl" style="height: 100%; width: 80px;" />
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement style="width: 100%; flex-grow: 1; position: absolute; height: 541px; overflow: hidden; left: 100%; flex-basis: auto;">
+        <ui:VisualElement style="width: 100%; flex-grow: 1; position: absolute; height: auto; overflow: hidden; left: 100%; flex-basis: auto;">
             <ui:Button text="Delete and go back" display-tooltip-when-elided="true" name="Back1" style="height: 60px;" />
-            <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
-                <ui:Button text="Head" display-tooltip-when-elided="true" name="Head" style="min-height: auto; min-width: 60px;" />
-                <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="HeadList" style="flex-grow: 1;" />
+            <ui:VisualElement style="flex-direction: row; flex-grow: 0; height: 25px;">
+                <ui:Button text="Clothes" display-tooltip-when-elided="true" name="SwitchToClothesTab" style="flex-grow: 1; border-bottom-right-radius: 0; border-bottom-left-radius: 0; border-top-left-radius: 25px; border-left-width: 1px; background-color: rgba(88, 88, 88, 0); border-bottom-color: rgba(123, 174, 250, 0);" />
+                <ui:Button text="Weapons" display-tooltip-when-elided="true" name="SwitchToWeaponsTab" style="flex-grow: 1; border-bottom-right-radius: 0; border-bottom-left-radius: 0; border-top-left-radius: 3px; border-left-width: 1px; background-color: rgba(88, 88, 88, 0); border-bottom-color: rgba(123, 174, 250, 0); border-top-right-radius: 25px;" />
             </ui:VisualElement>
-            <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
-                <ui:Button text="Face" display-tooltip-when-elided="true" name="Face" style="min-height: auto; min-width: 60px;" />
-                <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="FaceList" style="flex-grow: 1;" />
+            <ui:VisualElement name="ClothesTab" style="flex-grow: 0; border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; display: flex;">
+                <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
+                    <ui:Button text="Head" display-tooltip-when-elided="true" name="Head" style="min-height: auto; min-width: 60px;" />
+                    <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="HeadList" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
+                    <ui:Button text="Face" display-tooltip-when-elided="true" name="Face" style="min-height: auto; min-width: 60px;" />
+                    <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="FaceList" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
+                    <ui:Button text="Shirt" display-tooltip-when-elided="true" name="Shirt" style="min-height: auto; min-width: 60px;" />
+                    <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="ShirtList" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
+                    <ui:Button text="Pants" display-tooltip-when-elided="true" name="Pants" style="min-height: auto; min-width: 60px;" />
+                    <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="PantsList" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
+                    <ui:Button text="Gloves" display-tooltip-when-elided="true" name="Gloves" style="min-height: auto; min-width: 60px;" />
+                    <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="GlovesList" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
+                    <ui:Button text="Boots" display-tooltip-when-elided="true" name="Boots" style="min-height: auto; min-width: 60px;" />
+                    <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="BootsList" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
+                    <ui:Button text="Accesory" display-tooltip-when-elided="true" name="Accesory" style="min-height: auto; min-width: 60px; padding-left: 0; padding-right: 0;" />
+                    <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="AccesoryList" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
+                    <ui:Button text="Pet" display-tooltip-when-elided="true" name="Pet" style="min-height: auto; min-width: 60px;" />
+                    <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="PetList" style="flex-grow: 1;" />
+                </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
-                <ui:Button text="Shirt" display-tooltip-when-elided="true" name="Shirt" style="min-height: auto; min-width: 60px;" />
-                <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="ShirtList" style="flex-grow: 1;" />
-            </ui:VisualElement>
-            <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
-                <ui:Button text="Pants" display-tooltip-when-elided="true" name="Pants" style="min-height: auto; min-width: 60px;" />
-                <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="PantsList" style="flex-grow: 1;" />
-            </ui:VisualElement>
-            <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
-                <ui:Button text="Gloves" display-tooltip-when-elided="true" name="Gloves" style="min-height: auto; min-width: 60px;" />
-                <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="GlovesList" style="flex-grow: 1;" />
-            </ui:VisualElement>
-            <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
-                <ui:Button text="Boots" display-tooltip-when-elided="true" name="Boots" style="min-height: auto; min-width: 60px;" />
-                <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="BootsList" style="flex-grow: 1;" />
-            </ui:VisualElement>
-            <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
-                <ui:Button text="Accesory" display-tooltip-when-elided="true" name="Accesory" style="min-height: auto; min-width: 60px; padding-left: 0; padding-right: 0;" />
-                <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="AccesoryList" style="flex-grow: 1;" />
-            </ui:VisualElement>
-            <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
-                <ui:Button text="Pet" display-tooltip-when-elided="true" name="Pet" style="min-height: auto; min-width: 60px;" />
-                <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="PetList" style="flex-grow: 1;" />
+            <ui:VisualElement name="WeaponsTab" style="display: none;">
+                <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
+                    <ui:Button text="Face" display-tooltip-when-elided="true" name="Melee" style="min-height: auto; min-width: 60px;" />
+                    <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="MeleeList" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
+                    <ui:Button text="Shirt" display-tooltip-when-elided="true" name="Riffle" style="min-height: auto; min-width: 60px;" />
+                    <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="RiffleList" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
+                    <ui:Button text="Pants" display-tooltip-when-elided="true" name="Sniper" style="min-height: auto; min-width: 60px;" />
+                    <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="SniperList" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
+                    <ui:Button text="Gloves" display-tooltip-when-elided="true" name="Instalation" style="min-height: auto; min-width: 60px;" />
+                    <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="InstalationList" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
+                    <ui:Button text="Boots" display-tooltip-when-elided="true" name="Throwable" style="min-height: auto; min-width: 60px;" />
+                    <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="ThrowableList" style="flex-grow: 1;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-direction: row; min-height: 60px; height: 60px;">
+                    <ui:Button text="Accesory" display-tooltip-when-elided="true" name="Mind" style="min-height: auto; min-width: 60px; padding-left: 0; padding-right: 0;" />
+                    <ui:ScrollView horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="Hidden" mode="Horizontal" name="MindList" style="flex-grow: 1;" />
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement style="width: 100%; left: 200%; position: absolute; height: auto; flex-grow: 0; flex-direction: column; overflow: hidden; bottom: auto; right: auto; top: auto;">

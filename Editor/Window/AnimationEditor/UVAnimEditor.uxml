@@ -42,6 +42,8 @@
                 <ui:Button text="Set Scale!" display-tooltip-when-elided="true" name="SetScaleCenter" />
                 <uie:FloatField value="2" is-delayed="true" name="Scale_Center" style="flex-grow: 1;" />
             </ui:VisualElement>
+            <ui:Button text="Select All! OuO" display-tooltip-when-elided="true" name="SelectAllButton" />
+            <ui:Button text="Deselect all! :x" display-tooltip-when-elided="true" name="SelectNoneButton" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
