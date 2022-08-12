@@ -54,7 +54,7 @@ public class KeyframeController : VisualElement
     {
         frameController = new FrameController();
         // Import UXML
-        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AevenScnTool.IO.ScnFileImporter.RootPath + "Editor/Window/AnimationEditor/KeyframeController.uxml");
+        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AevenScnTool.ScnToolData.RootPath + "Editor/Window/AnimationEditor/KeyframeController.uxml");
         Add(visualTree.Instantiate());
 
         GetGUIReferences();

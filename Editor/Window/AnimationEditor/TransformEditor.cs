@@ -49,7 +49,7 @@ public class TransformEditor : VisualElement
     public void Init()
     {
         // Import UXML
-        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AevenScnTool.IO.ScnFileImporter.RootPath + "Editor/Window/AnimationEditor/TransformEditor.uxml");
+        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AevenScnTool.ScnToolData.RootPath + "Editor/Window/AnimationEditor/TransformEditor.uxml");
         visualTree.CloneTree(this);
 
         GetGUIReferences();

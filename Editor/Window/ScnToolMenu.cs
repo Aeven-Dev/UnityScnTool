@@ -50,11 +50,7 @@ namespace AevenScnTool.Menus
 				MapInfoWindow.Init();
 			}
 
-			ScnToolData.Instance.scale = EditorGUILayout.FloatField("Scale!", ScnToolData.Instance.scale);
-			if (ScnToolData.Instance.scale <= 0f)
-			{
-				ScnToolData.Instance.scale = 0.0001f;
-			}
+			
 
 			bottomFoldeout = EditorGUILayout.BeginFoldoutHeaderGroup(bottomFoldeout, "Settings!");
 			if (bottomFoldeout)
@@ -102,8 +98,14 @@ namespace AevenScnTool.Menus
 
 			var old = EditorGUIUtility.labelWidth;
 			EditorGUIUtility.labelWidth = 200;
-			identityMatrix = !EditorGUILayout.Toggle("Click me if you open official files!", !identityMatrix);
-			identityMatrix = EditorGUILayout.Toggle("Click me if you open custom files!" , identityMatrix);
+			if (EditorGUILayout.Toggle("Click me if you open official files!", !identityMatrix))
+			{
+				identityMatrix = false;
+			}
+			if (EditorGUILayout.Toggle("Click me if you open custom files!", identityMatrix))
+			{
+				identityMatrix = true;
+			}
 			EditorGUIUtility.labelWidth = old;
 
 			EditorGUILayout.BeginHorizontal();
@@ -166,6 +168,12 @@ namespace AevenScnTool.Menus
 
 		void WideBottom()
 		{
+			ScnToolData.Instance.scale = EditorGUILayout.FloatField("Scale!", ScnToolData.Instance.scale);
+			if (ScnToolData.Instance.scale <= 0f)
+			{
+				ScnToolData.Instance.scale = 0.0001f;
+			}
+
 			EditorGUILayout.BeginHorizontal();
 			//EditorGUILayout.LabelField("Path to S4 Folder", GUILayout.Width(170));
 			ScnToolData.Instance.s4_folder_path = EditorGUILayout.DelayedTextField("S4 Folder", ScnToolData.Instance.s4_folder_path);
@@ -188,6 +196,12 @@ namespace AevenScnTool.Menus
 
 		void SlimBottom()
 		{
+			ScnToolData.Instance.scale = EditorGUILayout.FloatField("Scale!", ScnToolData.Instance.scale);
+			if (ScnToolData.Instance.scale <= 0f)
+			{
+				ScnToolData.Instance.scale = 0.0001f;
+			}
+
 			EditorGUILayout.LabelField("Path to S4 Folder");
 
 			ScnToolData.Instance.s4_folder_path = EditorGUILayout.DelayedTextField(ScnToolData.Instance.s4_folder_path);

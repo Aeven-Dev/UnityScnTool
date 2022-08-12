@@ -152,7 +152,7 @@ public class PaperDoll : MonoBehaviour
         }
     }
 
-    public void DeleteClotheItem(Container item)
+    public void DeleteItem(Container item)
     {
         for (int i = 0; i < item.parts.Count; i++)
         {
@@ -202,7 +202,7 @@ public class PaperDoll : MonoBehaviour
             var parts = GetAttachedParts((Type)item);
 			for (int i = 0; i < parts.Count; i++)
 			{
-                DeleteClotheItem(parts[i]);
+                DeleteItem(parts[i]);
 			}
         }
     }

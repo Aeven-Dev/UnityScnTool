@@ -16,15 +16,6 @@ namespace AevenScnTool.IO
 {
 	public static class ScnFileImporter
 	{
-		static string rootPath = null;
-		public static string RootPath { get {
-				if (rootPath == null)
-				{
-					GetRootPath();
-				}
-				return rootPath;
-			} }
-
 		public static Dictionary<string, Material> MainMaterials = new Dictionary<string, Material>();
 		public static Dictionary<string, Material> SideMaterials = new Dictionary<string, Material>();
 		static Dictionary<SceneChunk, GameObject> createdObjects = new Dictionary<SceneChunk, GameObject>();
@@ -102,22 +93,6 @@ namespace AevenScnTool.IO
 			}
 		}
 
-		static void GetRootPath()
-		{
-			if (rootPath != null)
-			{
-				return;
-			}
-			var files = AssetDatabase.FindAssets("t:script").Select(AssetDatabase.GUIDToAssetPath);
-			foreach (var item in files)
-			{
-				if (item.EndsWith("ScnFileIO.cs"))
-				{
-					rootPath = item.Replace("ScnFileIO.cs", "");
-					return;
-				}
-			}
-		}
 
 		static List<TreeItem<SceneChunk>> GetRootItems(SceneContainer container)
 		{
@@ -235,7 +210,7 @@ namespace AevenScnTool.IO
 			{
 				if (model.Animation.Count != 0)
 				{
-					go.transform.localPosition = model.Animation[0].TransformKeyData2.TransformKey.Translation;
+					go.transform.localPosition = model.Animation[0].TransformKeyData2.TransformKey.Translation / ScnToolData.Instance.scale;
 					go.transform.localRotation = model.Animation[0].TransformKeyData2.TransformKey.Rotation;
 					go.transform.localScale = model.Animation[0].TransformKeyData2.TransformKey.Scale;
 				}
@@ -252,11 +227,11 @@ namespace AevenScnTool.IO
 		{
 			GameObject go = CreateGameObject(box);
 			go.transform.SetParent(parent.transform);
-			go.transform.localPosition = box.Matrix.GetPosition();
+			go.transform.localPosition = box.Matrix.GetPosition() / ScnToolData.Instance.scale;
 			go.transform.localRotation = box.Matrix.rotation;
 			go.transform.localScale = box.Matrix.lossyScale;
 			
-			go.AddComponent<BoxCollider>().size = box.Size;
+			go.AddComponent<BoxCollider>().size = box.Size / ScnToolData.Instance.scale;
 			if (go.name.Contains("jump_dir") || go.name.Contains("jump_char"))
 			{
 				go.AddComponent<Jumppad>();
@@ -294,9 +269,13 @@ namespace AevenScnTool.IO
 			{
 				if (bone.Animation.Count != 0)
 				{
-					go.transform.position = bone.Animation[0].TransformKeyData.TransformKey.Translation;
-					go.transform.rotation = bone.Animation[0].TransformKeyData.TransformKey.Rotation;
+					go.transform.localPosition = bone.Animation[0].TransformKeyData.TransformKey.Translation / ScnToolData.Instance.scale;
+					go.transform.localRotation = bone.Animation[0].TransformKeyData.TransformKey.Rotation;
 					go.transform.localScale = bone.Animation[0].TransformKeyData.TransformKey.Scale;
+				}
+				else
+				{
+					Debug.Log("whoopsie!", go);
 				}
 			}
 			else
@@ -327,8 +306,8 @@ namespace AevenScnTool.IO
 			Vector3[] points = new Vector3[shape.Unk.Count * 2];
 			for (int i = 0; i < shape.Unk.Count; i++)
 			{
-				points[i * 2] = shape.Unk[i].Item1;
-				points[i * 2 + 1] = shape.Unk[i].Item2;
+				points[i * 2] = shape.Unk[i].Item1 / ScnToolData.Instance.scale;
+				points[i * 2 + 1] = shape.Unk[i].Item2 / ScnToolData.Instance.scale;
 			}
 			lr.useWorldSpace = false;
 			lr.SetPositions(points);
@@ -353,7 +332,7 @@ namespace AevenScnTool.IO
 		{
 			GameObject go = new GameObject(chunk.Name);
 			Undo.RegisterCreatedObjectUndo(go, "Created go");
-			go.transform.position = chunk.Matrix.GetPosition();
+			go.transform.position = chunk.Matrix.GetPosition() / ScnToolData.Instance.scale;
 			go.transform.rotation = chunk.Matrix.rotation;
 			go.transform.localScale = chunk.Matrix.lossyScale;
 
@@ -365,7 +344,15 @@ namespace AevenScnTool.IO
 		{
 			Mesh mesh = new Mesh();
 
-			mesh.vertices = model.Mesh.Vertices.ToArray().Clone() as Vector3[];
+			var verts = model.Mesh.Vertices.ToArray().Clone() as Vector3[];
+
+			for (int i = 0; i < verts.Length; i++)
+			{
+				verts[i] = verts[i] / ScnToolData.Instance.scale; 
+			}
+
+			mesh.vertices = verts;
+
 			mesh.normals = model.Mesh.Normals.ToArray().Clone() as Vector3[];
 			mesh.tangents = model.Mesh.TangentsArray().Clone() as Vector4[];
 			mesh.uv = model.Mesh.UV.ToArray().Clone() as Vector2[];
@@ -562,19 +549,19 @@ namespace AevenScnTool.IO
 		{
 			if (shader.HasFlag(RenderFlag.Transparent))
 			{
-				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_Transparent.mat");
+				return AssetDatabase.LoadAssetAtPath<Material>(ScnToolData.RootPath + "Editor/Materials/S4_Base_Mat_Transparent.mat");
 			}
 			if (shader.HasFlag(RenderFlag.Cutout))
 			{
-				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_Cutout.mat");
+				return AssetDatabase.LoadAssetAtPath<Material>(ScnToolData.RootPath + "Editor/Materials/S4_Base_Mat_Cutout.mat");
 			}
 			if (shader.HasFlag(RenderFlag.NoLight))
 			{
-				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_NoLight.mat");
+				return AssetDatabase.LoadAssetAtPath<Material>(ScnToolData.RootPath + "Editor/Materials/S4_Base_Mat_NoLight.mat");
 			}
 			else
 			{
-				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_Opaque.mat");
+				return AssetDatabase.LoadAssetAtPath<Material>(ScnToolData.RootPath + "Editor/Materials/S4_Base_Mat_Opaque.mat");
 			}
 		}
 
@@ -597,7 +584,10 @@ namespace AevenScnTool.IO
 			}
 
 			mc.cookingOptions = MeshColliderCookingOptions.EnableMeshCleaning;
-			mc.sharedMesh = mesh;
+			if (mesh.vertices.Length > 0)
+			{
+				mc.sharedMesh = mesh;
+			}
 		}
 
 		static bool ModelAnimationIsTransform(List<ModelAnimation> anims)
@@ -864,14 +854,14 @@ namespace AevenScnTool.IO
 			}
 			b.SubName = parent != null ? parent.Name : container.Header.Name;
 
-			Vector3 position = bone.transform.localPosition;
+			Vector3 position = bone.transform.localPosition * ScnToolData.Instance.scale;
 			Quaternion rotation = bone.transform.localRotation;
 			Vector3 scale = bone.transform.localScale;
 			if (parent == null)
 			{
 				position = bone.transform.position * ScnToolData.Instance.scale;
 				rotation = bone.transform.rotation;
-				scale = bone.transform.lossyScale * ScnToolData.Instance.scale;
+				scale = bone.transform.lossyScale;
 			}
 
 			b.Matrix = Matrix4x4.TRS(
@@ -917,7 +907,7 @@ namespace AevenScnTool.IO
 			boneSys.Matrix = Matrix4x4.TRS(
 				rootBone.transform.position * ScnToolData.Instance.scale,
 				rootBone.transform.rotation,
-				rootBone.transform.lossyScale * ScnToolData.Instance.scale);
+				rootBone.transform.lossyScale);
 
 			return boneSys;
 		}
@@ -970,7 +960,7 @@ namespace AevenScnTool.IO
 				model.Matrix = Matrix4x4.TRS(
 					transform.position * ScnToolData.Instance.scale,
 					transform.rotation,
-					transform.lossyScale * ScnToolData.Instance.scale);
+					transform.lossyScale);
 				model.Shader = RenderFlag.None;
 				model.Animation = new List<ModelAnimation>();
 				model.Animation.Add(new ModelAnimation());
@@ -980,7 +970,7 @@ namespace AevenScnTool.IO
 
 				model.Animation[0].TransformKeyData2.TransformKey.Translation = transform.position * ScnToolData.Instance.scale;
 				model.Animation[0].TransformKeyData2.TransformKey.Rotation = transform.rotation;
-				model.Animation[0].TransformKeyData2.TransformKey.Scale = transform.lossyScale * ScnToolData.Instance.scale;
+				model.Animation[0].TransformKeyData2.TransformKey.Scale = transform.lossyScale;
 
 				SetMesh(model.Mesh, mesh);
 
@@ -996,7 +986,7 @@ namespace AevenScnTool.IO
 				}
 				model.SubName = parentChunk != null? parentChunk.Name : container.Header.Name;
 				model.Matrix = Matrix4x4.TRS(
-					transform.localPosition,
+					transform.localPosition * ScnToolData.Instance.scale,
 					transform.localRotation,
 					transform.localScale);
 
@@ -1011,7 +1001,7 @@ namespace AevenScnTool.IO
 				ma.TransformKeyData2 = new TransformKeyData2();
 				ma.Name = ScnToolData.Instance.main_animation_name;
 				ma.TransformKeyData2.TransformKey = new TransformKey();
-				ma.TransformKeyData2.TransformKey.Translation = transform.localPosition;
+				ma.TransformKeyData2.TransformKey.Translation = transform.localPosition * ScnToolData.Instance.scale;
 				ma.TransformKeyData2.TransformKey.Rotation = transform.localRotation;
 				ma.TransformKeyData2.TransformKey.Scale = transform.localScale;
 				model.Animation.Add(ma);
@@ -1144,7 +1134,6 @@ namespace AevenScnTool.IO
 				else
 				{
 					model.Animation[0].TransformKeyData2.TransformKey.Translation *= ScnToolData.Instance.scale;
-					model.Animation[0].TransformKeyData2.TransformKey.Scale *= ScnToolData.Instance.scale;
 				}
 			}
 			else
@@ -1165,7 +1154,14 @@ namespace AevenScnTool.IO
 
 		static BoxChunk CreateBoxChunk(BoxCollider bc, SceneContainer container, SceneChunk parentChunk)
 		{
-			BoxChunk box = MakeChunk<BoxChunk>(container, bc.name);
+			string boxName = bc.name;
+			var pd = bc.GetComponent<PointDrawer>();
+			if (pd)
+			{
+
+			}
+
+			BoxChunk box = MakeChunk<BoxChunk>(container, boxName);
 			while (ValidateName(box.Name) == false)
 			{
 				box.Name = box.Name + ScnToolData.GetRandomName();
@@ -1176,8 +1172,8 @@ namespace AevenScnTool.IO
 				if (parentChunk.ChunkType == ChunkType.Bone || parentChunk.ChunkType == ChunkType.Box)
 				{
 					box.SubName = parentChunk.Name;
-					box.Matrix = Matrix4x4.TRS(bc.transform.localPosition, bc.transform.localRotation, bc.transform.localScale);
-					box.Size = bc.size;
+					box.Matrix = Matrix4x4.TRS(bc.transform.localPosition * ScnToolData.Instance.scale, bc.transform.localRotation, bc.transform.localScale);
+					box.Size = bc.size * ScnToolData.Instance.scale;
 					return box;
 				}
 			}
@@ -1219,7 +1215,7 @@ namespace AevenScnTool.IO
 		{
 			Vector3 position = transform.position * ScnToolData.Instance.scale;
 			Quaternion rotation = transform.rotation;
-			Vector3 scale = transform.lossyScale * ScnToolData.Instance.scale;
+			Vector3 scale = transform.lossyScale;
 			chunk.SubName = container.Header.Name;
 			if (parentChunk != null)
 			{
@@ -1233,7 +1229,7 @@ namespace AevenScnTool.IO
 					Transform oldParent = transform.transform.parent;
 					transform.transform.SetParent(relativeParent, true);
 
-					position = transform.transform.localPosition;
+					position = transform.transform.localPosition * ScnToolData.Instance.scale;
 					rotation = transform.transform.localRotation;
 					scale = transform.transform.localScale;
 
@@ -1248,7 +1244,13 @@ namespace AevenScnTool.IO
 
 		static void SetMesh(MeshData meshData, Mesh mesh, bool flipUvVertical = false, bool flipUvHorizontal = false)
 		{
-			meshData.Vertices = new List<Vector3>(mesh.vertices);
+			var verts = new List<Vector3>(mesh.vertices);
+			for (int i = 0; i < verts.Count; i++)
+			{
+				verts[i] *= ScnToolData.Instance.scale;
+			}
+
+			meshData.Vertices = verts;
 			meshData.Normals = new List<Vector3>(mesh.normals);
 			meshData.UV = new List<Vector2>(mesh.uv);
 			meshData.UV2 = new List<Vector2>(mesh.uv2);

@@ -60,7 +60,7 @@ public class UVAnimEditor : VisualElement
     public void Init()
     {
         //Init------------------------------
-        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AevenScnTool.IO.ScnFileImporter.RootPath + "Editor/Window/AnimationEditor/UVAnimEditor.uxml");
+        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AevenScnTool.ScnToolData.RootPath + "Editor/Window/AnimationEditor/UVAnimEditor.uxml");
         visualTree.CloneTree(this);
 
         GetGUIReferences();

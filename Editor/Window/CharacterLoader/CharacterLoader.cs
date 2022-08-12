@@ -25,7 +25,7 @@ public class CharacterLoader : EditorWindow
     ScrollView hairlist;
     ScrollView facelist;
     ScrollView bodylist;
-    ScrollView pantslist;
+    ScrollView legslist;
     ScrollView handslist;
     ScrollView feetlist;
     ScrollView accesorylist;
@@ -45,6 +45,10 @@ public class CharacterLoader : EditorWindow
     Dictionary<PaperDoll.Type, List<Item>> weapons = new();
 
     PaperDoll paperdoll;
+
+    ItemFile item_file;
+    WeaponFile weapon_file;
+    WeaponAttachFile weapon_attach_file;
 
     string rootFolder = string.Empty;
 
@@ -88,7 +92,7 @@ public class CharacterLoader : EditorWindow
     {
         // Each editor window contains a root VisualElement object
         VisualElement root = rootVisualElement;
-        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AevenScnTool.IO.ScnFileImporter.RootPath + "Editor/Window/CharacterLoader/CharacterLoader.uxml");
+        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AevenScnTool.ScnToolData.RootPath + "Editor/Window/CharacterLoader/CharacterLoader.uxml");
         VisualElement labelFromUXML = visualTree.Instantiate();
         root.Add(labelFromUXML);
 
@@ -139,7 +143,7 @@ public class CharacterLoader : EditorWindow
         hairlist = root.Q<ScrollView>("HeadList");
         facelist = root.Q<ScrollView>("FaceList");
         bodylist = root.Q<ScrollView>("ShirtList");
-        pantslist = root.Q<ScrollView>("PantsList");
+        legslist = root.Q<ScrollView>("PantsList");
         handslist = root.Q<ScrollView>("GlovesList");
         feetlist = root.Q<ScrollView>("BootsList");
         accesorylist = root.Q<ScrollView>("AccesoryList");
@@ -205,7 +209,7 @@ public class CharacterLoader : EditorWindow
             return;
         }
 
-		if (!ReadFile(path))
+		if (!ReadFiles(path))
 		{
             EditorUtility.DisplayDialog("Goodness!", "I couldnt find a item.x7 in a xml folder in that S4 client! Maybe the file is missing or it could be that you extracted the resources diferently!", "D:");
             return;
@@ -233,9 +237,9 @@ public class CharacterLoader : EditorWindow
         {
             Item item = items[i];
             Texture2D tex = null;
-            if (item.icon_image_name != null && item.icon_image_name != string.Empty)
+            if (item.graphic.icon_image != null && item.graphic.icon_image != string.Empty)
             {
-                var file = item.icon_image_name.Replace(".tga", ".dds");
+                var file = item.graphic.icon_image.Replace(".tga", ".dds");
                 string path = rootFolder + $@"\resources\image\costume\{file}";
                 if (File.Exists(path))
                 {
@@ -264,9 +268,9 @@ public class CharacterLoader : EditorWindow
             var item = w[i];
 
             Texture2D tex = null;
-            if (item.icon_image_name != null && item.icon_image_name != string.Empty)
+            if (item.graphic.icon_image != null && item.graphic.icon_image != string.Empty)
             {
-                var file = item.icon_image_name.Replace(".tga", ".dds");
+                var file = item.graphic.icon_image.Replace(".tga", ".dds");
                 string path = rootFolder + $@"\resources\image\costume\{file}";
                 if (File.Exists(path))
                 {
@@ -311,19 +315,33 @@ public class CharacterLoader : EditorWindow
     void SelectClotheItem(PaperDoll.Type type, Item item)
     {
 
-        paperdoll.SelectClotheItem(type, rootFolder, item.mainPart, item.nodes, item.hiding_option, item.icon_image_name);
+        paperdoll.SelectClotheItem(type, rootFolder, item.graphic.to_part_scene_file, item.graphic.nodes, item.graphic.hiding_option, item.graphic.icon_image);
 
         RedrawItems(type);
     }
 
-    void DeleteClotheItem(PaperDoll.Container item)
+    void SelectWeaponItem(PaperDoll.Type type, Item item)
+	{
+        var weap = weapon_file.GetWeapon(item.item_key);
+        var attach = weapon_attach_file.GetWeaponAttach(weap.ability.type);
+        (string, string, string)[] values = new (string, string, string)[weap.scene.values.Length];
+		for (int i = 0; i < weap.scene.values.Length; i++)
+		{
+            var a = attach.Find(x => x.sceneIndex == i.ToString());
+            values[i] = (weap.scene.values[i], a.attackAttach, a.idleAttach);
+		}
+        paperdoll.SelectWeapon(type, rootFolder, values, item.graphic.icon_image);
+	}
+
+
+    void DeleteItem(PaperDoll.Container item)
     {
-        paperdoll.DeleteClotheItem(item);
+        paperdoll.DeleteItem(item);
         RedrawItems(item.type);
     }
 
     void RedrawAllItems()
-	{
+    {
         foreach (var item in Enum.GetValues(typeof(PaperDoll.Type)))
         {
             if ((PaperDoll.Type)item == PaperDoll.Type.NONE)
@@ -342,17 +360,13 @@ public class CharacterLoader : EditorWindow
         for (int i = 0; i < list.Count; i++)
         {
             var parts = list[i];
-            scrollview.Add(CreateIcon(list[i].icon, () => { DeleteClotheItem(parts); }, 40));
+            scrollview.Add(CreateIcon(list[i].icon, () => { DeleteItem(parts); }, 40));
         }
     }
 
-    void SelectWeaponItem(PaperDoll.Type type, Item item)
-	{
 
-        paperdoll.SelectWeapon(type, rootFolder, item.nodes, item.icon_image_name);
-	}
 
-    bool ReadFile(string folder)
+    bool ReadFiles(string folder)
     {
         XmlDocument item_doc = new XmlDocument();
         if (!File.Exists(folder + "\\xml\\item.x7"))
@@ -377,108 +391,139 @@ public class CharacterLoader : EditorWindow
 
         InitLists();
 
+        item_file = new() { items = new() };
         for (int i = 0; i < item_doc.DocumentElement.ChildNodes.Count; i++)
         {
             var child = item_doc.DocumentElement.ChildNodes[i];
+            var it = new Item(){item_key = child.Attributes.GetNamedItem("item_key")?.Value};
+
             var graphic = child.SelectSingleNode("./child::graphic");
-            var baseNode = child.SelectSingleNode("./child::base");
-            if (graphic == null)
+            if (graphic != null)
             {
-                continue;
-            }
-            var node = graphic.Attributes.GetNamedItem("to_node_scene_file1");
-            var part = graphic.Attributes.GetNamedItem("to_part_scene_file");
-            if (baseNode == null)
-            {
-                continue;
-            }
-            if (node == null && part == null)
-            {
-                //might be a weapon?
-                string item_key = child.Attributes.GetNamedItem("item_key").Value;
-                PaperDoll.Type type = PaperDoll.GetType(item_key.Substring(0, 3));
-
-				if (weapons.ContainsKey(type))
-                {
-                    var weapon = _eu_weapon_doc.DocumentElement.SelectSingleNode($"./child::weapon[@item_key='{item_key}']");
-					if (weapon == null)
-					{
-                        continue;
-					}
-                    var scene = weapon.SelectSingleNode("./child::scene");
-
-                    List<string> values = new();
-                    for (int w = 1; true; w++)
-                    {
-                        var val = scene.Attributes.GetNamedItem("value" + w);
-						if (val != null)
-						{
-                            values.Add(val.Value);
-						}
-						else
-						{
-                            break;
-						}
-                    }
-
-                    string t = weapon.SelectSingleNode("./child::ability").Attributes.GetNamedItem("type").Value;
-
-                    List<(string,string,string)> nodes = new();
-                    for (int a = 0; a < values.Count; a++)
-					{
-                        var thing = weapon_attach_doc.DocumentElement.SelectSingleNode($"./child::weapon[@type='{t}' and @sceneIndex='{a}']");
-						if ( thing == null)
-						{
-                            continue;
-						}
-                        var aa = thing.Attributes.GetNamedItem("attackAttach")?.Value;
-                        var ia = thing.Attributes.GetNamedItem("idleAttach")?.Value;
-
-                        nodes.Add((values[a], aa, ia));
-                    }
-                    //Goodness gracious, there's a shortage of names!
-                    var item = new Item()
-                    {
-                        item_key = item_key,
-                        nodes = nodes.ToArray(),
-                        icon_image_name = graphic.Attributes.GetNamedItem("icon_image")?.Value,
-                    };
-                    weapons[type].Add(item);
-                }
-            }
-			else
-			{
-                var genderNode = baseNode.Attributes.GetNamedItem("sex");
-                if (genderNode == null)
-                {
-                    continue;
-                }
-
-                PaperDoll.Type type = PaperDoll.GetType(child.Attributes.GetNamedItem("item_key").Value.Substring(0, 3));
                 List<(string, string, string)> nodes = new();
-				for (int p = 1; true; p++)
+                for (int p = 1; true; p++)
                 {
                     var s = graphic.Attributes.GetNamedItem("to_node_scene_file" + p);
-					if (s == null) break;
-					
+                    if (s == null) break;
+
                     var pa = graphic.Attributes.GetNamedItem("to_node_parent_node" + p);
-					if (pa == null) break;
-					
+                    if (pa == null) break;
+
                     var a = graphic.Attributes.GetNamedItem("to_node_animation_part" + p);
                     if (a == null) break;
 
                     nodes.Add((s.Value, pa.Value, a.Value));
                 }
 
-                var item = new Item() {
-                    item_key = child.Attributes.GetNamedItem("item_key")?.Value,
-                    mainPart = part?.Value,
-                    nodes = nodes?.ToArray(),
-                    hiding_option = graphic.Attributes.GetNamedItem("hiding_option")?.Value,
-                    icon_image_name = graphic.Attributes.GetNamedItem("icon_image")?.Value,
+                it.graphic = new Item.Graphic()
+                {
+                    to_part_scene_file = graphic.Attributes.GetNamedItem("to_part_scene_file")?.Value,
+                    nodes = nodes.ToArray(),
+                    icon_image = graphic.Attributes.GetNamedItem("icon_image")?.Value,
+                    hiding_option = graphic.Attributes.GetNamedItem("hiding_option")?.Value
                 };
-                string gender = genderNode.Value;
-                switch (gender)
+            }
+                
+            var baseNode = child.SelectSingleNode("./child::base");
+            if (baseNode != null)
+            {
+                it.@base = new Item.Base()
+                {
+                    name = baseNode.Attributes.GetNamedItem("name")?.Value,
+                    name_key = baseNode.Attributes.GetNamedItem("name_key")?.Value,
+                    atribute_comment_key = baseNode.Attributes.GetNamedItem("atribute_comment_key")?.Value,
+                    feature_comment_key = baseNode.Attributes.GetNamedItem("feature_comment_key")?.Value,
+                    sex = baseNode.Attributes.GetNamedItem("sex")?.Value,
+
+                };
+            }
+        }
+
+        weapon_file = new() { weapons = new()};
+        for (int i = 0; i < _eu_weapon_doc.DocumentElement.ChildNodes.Count; i++)
+        {
+            var child = _eu_weapon_doc.DocumentElement.ChildNodes[i];
+            var weapon = new Weapon() { item_key = child.Attributes.GetNamedItem("item_key")?.Value };
+
+            var ability = child.SelectSingleNode("./child::ability");
+            if (ability != null)
+            {
+                weapon.ability = new()
+                {
+                    type = ability.Attributes.GetNamedItem("type")?.Value,
+                    category = ability.Attributes.GetNamedItem("category")?.Value,
+                    rate_of_fire = ability.Attributes.GetNamedItem("rate_of_fire")?.Value,
+                    power = ability.Attributes.GetNamedItem("power")?.Value,
+                    move_speed_rate = ability.Attributes.GetNamedItem("move_speed_rate")?.Value,
+                    attack_move_speed_rate = ability.Attributes.GetNamedItem("attack_move_speed_rate")?.Value,
+                    magazine_capacity = ability.Attributes.GetNamedItem("magazine_capacity")?.Value,
+                    cracked_magazine_capacity = ability.Attributes.GetNamedItem("cracked_magazine_capacity")?.Value,
+                    max_ammo = ability.Attributes.GetNamedItem("max_ammo")?.Value,
+                    max_ammo_limit = ability.Attributes.GetNamedItem("max_ammo_limit")?.Value,
+                    accuracy = ability.Attributes.GetNamedItem("accuracy")?.Value,
+                    range = ability.Attributes.GetNamedItem("range")?.Value,
+                };
+            }
+            var scene = child.SelectSingleNode("./child::scene");
+            if (scene != null)
+            {
+                List<string> values = new();
+                for (int p = 1; true; p++)
+                {
+                    var s = scene.Attributes.GetNamedItem("value" + p);
+                    if (s == null) break;
+
+                    values.Add(s.Value);
+                }
+                weapon.scene = new() { values = values.ToArray() };
+            }
+            var resources = child.SelectSingleNode("./child::resources");
+            if (resources != null)
+            {
+                weapon.resources = new()
+                {
+                    crosshair_file = resources.Attributes.GetNamedItem("crosshair_file")?.Value,
+                    crosshair_zoomin_file = resources.Attributes.GetNamedItem("crosshair_zoomin_file")?.Value,
+                    reload_sound_file = resources.Attributes.GetNamedItem("reload_sound_file")?.Value,
+                    slot_image_file = resources.Attributes.GetNamedItem("slot_image_file")?.Value
+                };
+            }
+            weapon_file.weapons.Add(weapon);
+        }
+
+        weapon_attach_file = new() { weapon_attachments = new()};
+        for (int i = 0; i < weapon_attach_doc.DocumentElement.ChildNodes.Count; i++)
+        {
+            var child = weapon_attach_doc.DocumentElement.ChildNodes[i];
+            var weapon_attach = new WeaponAttach()
+            {
+                type = child.Attributes.GetNamedItem("type")?.Value,
+                sceneIndex = child.Attributes.GetNamedItem("sceneIndex")?.Value,
+                attackAttach = child.Attributes.GetNamedItem("attackAttach")?.Value,
+                link = child.Attributes.GetNamedItem("link")?.Value,
+                idleAttach = child.Attributes.GetNamedItem("idleAttach")?.Value
+            };
+
+            weapon_attach_file.weapon_attachments.Add(weapon_attach);
+        }
+
+		foreach (var item in item_file.items)
+		{
+            PaperDoll.Type type = PaperDoll.GetType(item.item_key.Substring(0, 3));
+			if (type == PaperDoll.Type.NONE)
+			{
+                continue;
+			}
+            if (item.item_key.StartsWith("2"))
+            {
+                if (weapons.ContainsKey(type))
+                {
+                    weapons[type].Add(item);
+                }
+            }
+            else
+            {
+                switch (item.@base.sex)
                 {
                     case "unisex":
                         unisex[type].Add(item);
@@ -540,39 +585,24 @@ public class CharacterLoader : EditorWindow
 
     ScrollView GetItemList(PaperDoll.Type type)
     {
-        if (type == PaperDoll.Type.hair)
+        return type switch
         {
-            return hairlist;
-        }
-        if (type == PaperDoll.Type.face)
-        {
-            return facelist;
-        }
-        if (type == PaperDoll.Type.body)
-        {
-            return bodylist;
-        }
-        if (type == PaperDoll.Type.leg)
-        {
-            return pantslist;
-        }
-        if (type == PaperDoll.Type.hand)
-        {
-            return handslist;
-        }
-        if (type == PaperDoll.Type.foot)
-        {
-            return feetlist;
-        }
-        if (type == PaperDoll.Type.acc)
-        {
-            return accesorylist;
-        }
-        if (type == PaperDoll.Type.pet)
-        {
-            return petlist;
-        }
-        return null;
+            PaperDoll.Type.hair => hairlist,
+            PaperDoll.Type.face => facelist,
+            PaperDoll.Type.body => bodylist,
+            PaperDoll.Type.leg => legslist,
+            PaperDoll.Type.hand => handslist,
+            PaperDoll.Type.foot => feetlist,
+            PaperDoll.Type.acc => accesorylist,
+            PaperDoll.Type.pet => petlist,
+            PaperDoll.Type.melee => meleelist,
+            PaperDoll.Type.riffle => rifflelist,
+            PaperDoll.Type.sniper => sniperlist,
+            PaperDoll.Type.instalation => instalationlist,
+            PaperDoll.Type.throwable => throwablelist,
+            PaperDoll.Type.mind => mindlist,
+            _ => null
+        };
     }
 
 
@@ -660,6 +690,8 @@ public class CharacterLoader : EditorWindow
 
         switchToClothesTab.style.backgroundColor = Color.HSVToRGB(0,0, 0.3f);
         switchToWeaponsTab.style.backgroundColor = Color.HSVToRGB(0, 0, 0.23f);
+        switchToWeaponsTab.style.borderBottomWidth = 1;
+        switchToClothesTab.style.borderBottomWidth = 0;
     }
     void SwitchToWeaponsTab()
     {
@@ -673,14 +705,102 @@ public class CharacterLoader : EditorWindow
 
         switchToClothesTab.style.backgroundColor = Color.HSVToRGB(0, 0, 0.23f);
         switchToWeaponsTab.style.backgroundColor = Color.HSVToRGB(0, 0, 0.3f);
+
+        switchToWeaponsTab.style.borderBottomWidth = 0;
+        switchToClothesTab.style.borderBottomWidth = 1;
     }
+}
+
+class ItemFile
+{
+    public List<Item> items;
+
+}
+
+class WeaponFile
+{
+    public List<Weapon> weapons;
+
+    public Weapon GetWeapon(string item_key)
+	{
+        return weapons.Find(x => x.item_key == item_key);
+	}
+}
+
+class WeaponAttachFile
+{
+    public List<WeaponAttach> weapon_attachments;
+
+    public List<WeaponAttach> GetWeaponAttach(string type)
+	{
+        return weapon_attachments.FindAll(x => x.type == type);
+	}
 }
 
 struct Item
 {
     public string item_key;
-    public string mainPart;
-    public (string, string, string)[] nodes;
-    public string hiding_option;
-    public string icon_image_name;
+    public Base @base;
+    public Graphic graphic;
+
+    public struct Base
+	{
+        public string name;
+        public string name_key;
+        public string atribute_comment_key;
+        public string feature_comment_key;
+        public string sex;
+    }
+
+    public struct Graphic
+	{
+        public string icon_image;
+        public string to_part_scene_file;
+        public (string to_node_scene_file, string to_node_parent_node, string to_node_animation_part)[] nodes;
+        public string hiding_option;
+    }
+}
+
+struct Weapon
+{
+    public string item_key;
+    public Ability ability;
+    public Scene scene;
+    public Resources resources;
+    public struct Ability
+    {
+        public string type;
+        public string category;
+        public string rate_of_fire;
+        public string power;
+        public string move_speed_rate;
+        public string attack_move_speed_rate;
+        public string magazine_capacity;
+        public string cracked_magazine_capacity;
+        public string max_ammo;
+        public string max_ammo_limit;
+        public string accuracy;
+        public string range;
+    }
+    public struct Scene
+	{
+        public string[] values;
+	}
+    public struct Resources
+    {
+        public string reload_sound_file;
+        public string slot_image_file;
+        public string crosshair_file;
+        public string crosshair_zoomin_file;
+
+    }
+}
+
+struct WeaponAttach
+{
+    public string type;
+    public string sceneIndex;
+    public string attackAttach;
+    public string link;
+    public string idleAttach;
 }

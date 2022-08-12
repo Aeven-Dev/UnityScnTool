@@ -33,7 +33,7 @@ public class Bone : MonoBehaviour
 	private void OnDrawGizmos()
 	{
 		Gizmos.color = Color.white;
-		Gizmos.DrawSphere(transform.position, 1f);
+		Gizmos.DrawSphere(transform.position, .01f);
 		if (parentBone)
 		{
 			Gizmos.DrawLine(transform.position, parentBone.transform.position);
