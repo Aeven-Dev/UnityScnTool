@@ -183,7 +183,7 @@ namespace AevenScnTool.IO
 
 			Mesh mesh = CreateMesh(model);
 
-			Material mat = GetMatFromShader(model.Shader);
+			Material mat = ScnToolData.GetMatFromShader(model.Shader);
 
 			TextureReference tr = go.AddComponent<TextureReference>();
 			tr.renderFlags = model.Shader;
@@ -302,6 +302,7 @@ namespace AevenScnTool.IO
 			go.transform.SetParent(parent.transform);
 
 			LineRenderer lr = go.AddComponent<LineRenderer>();
+			lr.widthMultiplier = 0.01f;
 
 			Vector3[] points = new Vector3[shape.Unk.Count * 2];
 			for (int i = 0; i < shape.Unk.Count; i++)
@@ -443,7 +444,7 @@ namespace AevenScnTool.IO
 
 		static Material[] SetFaceData(Mesh mesh, ModelChunk model, DirectoryInfo di, TextureReference tr)
 		{
-			Material mat = GetMatFromShader(model.Shader);
+			Material mat = ScnToolData.GetMatFromShader(model.Shader);
 
 			Material[] mats = new Material[model.TextureData.Textures.Count];
 
@@ -545,25 +546,7 @@ namespace AevenScnTool.IO
 			return bones.Count - 1;
 		}
 
-		static Material GetMatFromShader(RenderFlag shader)
-		{
-			if (shader.HasFlag(RenderFlag.Transparent))
-			{
-				return AssetDatabase.LoadAssetAtPath<Material>(ScnToolData.RootPath + "Editor/Materials/S4_Base_Mat_Transparent.mat");
-			}
-			if (shader.HasFlag(RenderFlag.Cutout))
-			{
-				return AssetDatabase.LoadAssetAtPath<Material>(ScnToolData.RootPath + "Editor/Materials/S4_Base_Mat_Cutout.mat");
-			}
-			if (shader.HasFlag(RenderFlag.NoLight))
-			{
-				return AssetDatabase.LoadAssetAtPath<Material>(ScnToolData.RootPath + "Editor/Materials/S4_Base_Mat_NoLight.mat");
-			}
-			else
-			{
-				return AssetDatabase.LoadAssetAtPath<Material>(ScnToolData.RootPath + "Editor/Materials/S4_Base_Mat_Opaque.mat");
-			}
-		}
+		
 
 		static void SetOctMesh(GameObject go, ModelChunk model, Mesh mesh)
 		{
@@ -670,7 +653,7 @@ namespace AevenScnTool.IO
 			Material mainMat;
 			if (!MainMaterials.TryGetValue(mainMatName, out mainMat))
 			{
-				Material mat = GetMatFromShader(shader);
+				Material mat = ScnToolData.GetMatFromShader(shader);
 				mainMat = new Material(mat);
 				if (File.Exists(mainTexturePath))
 				{
@@ -688,7 +671,7 @@ namespace AevenScnTool.IO
 			Material sideMat;
 			if (!SideMaterials.TryGetValue(sideMatName, out sideMat))
 			{
-				Material mat = GetMatFromShader(shader);
+				Material mat = ScnToolData.GetMatFromShader(shader);
 				sideMat = new Material(mat);
 				if (File.Exists(sideTexturePath))
 				{
@@ -972,7 +955,7 @@ namespace AevenScnTool.IO
 				model.Animation[0].TransformKeyData2.TransformKey.Rotation = transform.rotation;
 				model.Animation[0].TransformKeyData2.TransformKey.Scale = transform.lossyScale;
 
-				SetMesh(model.Mesh, mesh);
+				SetMesh(model.Mesh, mesh, obj: cd.gameObject);
 
 				return model;
 			}
@@ -991,7 +974,7 @@ namespace AevenScnTool.IO
 					transform.localScale);
 
 				model.Shader = RenderFlag.None;
-				SetMesh(model.Mesh, mesh);
+				SetMesh(model.Mesh, mesh, obj: cd.gameObject);
 
 				model.TextureData.Version = 0.2000000029802322f;
 				model.TextureData.ExtraUV = (mesh.uv2.Length != 0) ? (uint)1 : (uint)0;
@@ -1025,7 +1008,7 @@ namespace AevenScnTool.IO
 
 			if (pbm)
 			{
-				mesh = GetMeshFromPBM(pbm, false);
+				mesh = GetMeshFromPBM(pbm, true);
 			}
 			else if (mf)
 			{
@@ -1041,12 +1024,15 @@ namespace AevenScnTool.IO
 			if (tr)
 			{
 				model.Shader = tr.renderFlags;
-				SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal);
+				SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal, mr.gameObject);
 			}
 			else
 			{
 				model.Shader = RenderFlag.None;
-				SetMesh(model.Mesh, mesh, false, false);
+				SetMesh(model.Mesh, mesh, false, false, mr.gameObject);
+
+				
+
 				Debug.LogError("Goodness me! You have a mesh without a texture reference! That will make the mesh have so much problems!", mr.gameObject);
 			}
 
@@ -1095,7 +1081,7 @@ namespace AevenScnTool.IO
 			TextureReference tr = smr.GetComponent<TextureReference>();
 
 			model.Shader = tr.renderFlags;
-			SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal);
+			SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal, smr.gameObject);
 
 			SetTextureData(model.TextureData, mesh, tr);
 
@@ -1242,8 +1228,18 @@ namespace AevenScnTool.IO
 			return (position,rotation,scale);
 		}
 
-		static void SetMesh(MeshData meshData, Mesh mesh, bool flipUvVertical = false, bool flipUvHorizontal = false)
+		static void SetMesh(MeshData meshData, Mesh mesh, bool flipUvVertical = false, bool flipUvHorizontal = false, UnityEngine.Object obj = null)
 		{
+			if ( mesh == null)
+			{
+				meshData.Vertices = new List<Vector3>();
+				meshData.Normals = new List<Vector3>();
+				meshData.UV = new List<Vector2>();
+				meshData.UV2 = new List<Vector2>();
+				Debug.Log("Goodness me! this object has an empty mesh!", obj);
+
+				return;
+			}
 			var verts = new List<Vector3>(mesh.vertices);
 			for (int i = 0; i < verts.Count; i++)
 			{
@@ -1253,6 +1249,7 @@ namespace AevenScnTool.IO
 			meshData.Vertices = verts;
 			meshData.Normals = new List<Vector3>(mesh.normals);
 			meshData.UV = new List<Vector2>(mesh.uv);
+
 			meshData.UV2 = new List<Vector2>(mesh.uv2);
 			if (ScnToolData.Instance.uv_flipVertical ^ flipUvVertical)
 			{
@@ -1288,7 +1285,21 @@ namespace AevenScnTool.IO
 				if (textures.textures[i] != null)
 				{
 					if (textures.textures[i].mainTexturePath != string.Empty) te.FileName = new FileInfo(textures.textures[i].mainTexturePath).Name;
-					if (textures.textures[i].sideTexturePath != string.Empty) te.FileName2 = new FileInfo(textures.textures[i].sideTexturePath).Name;
+					if (textures.textures[i].sideTexturePath != string.Empty)
+					{
+						te.FileName2 = new FileInfo(textures.textures[i].sideTexturePath).Name;
+					}
+					else
+					{
+						var mr = textures.GetComponent<MeshRenderer>();
+						if (mr.lightmapIndex != -1)
+						{
+
+							var lm = LightmapSettings.lightmaps[mr.lightmapIndex];
+							te.FileName2 = lm.lightmapColor.name + ".tga";
+						}
+						
+					}
 				}
 				//Set normal texture too
 				if (i >= mesh.subMeshCount)
@@ -1348,7 +1359,6 @@ namespace AevenScnTool.IO
 			void SetMeshValues(ProBuilderMesh pbm, Mesh mesh, bool hasLightmap)
 			{
 				Vertex[] verts = pbm.GetVertices();
-
 				Vector3[] vertices = new Vector3[verts.Length];
 				Vector3[] normals = new Vector3[verts.Length];
 				Vector2[] uv = new Vector2[verts.Length];

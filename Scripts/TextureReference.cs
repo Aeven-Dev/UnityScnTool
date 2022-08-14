@@ -97,7 +97,7 @@ namespace AevenScnTool
             }
 
             Material base_mat = null;
-            base_mat = AssetDatabase.LoadAssetAtPath<Material>(ScnToolData.RootPath + "Editor/Materials/S4_Base_Mat.mat");
+            base_mat = ScnToolData.GetMatFromShader(renderFlags);
 
             List<Material> materials = new List<Material>();
             for (int i = 0; i < textures.Count; i++)

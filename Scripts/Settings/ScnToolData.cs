@@ -29,75 +29,24 @@ namespace AevenScnTool
 		public bool uv_flipHorizontal = false;
 
 		public Material base_mat;
-		Material GetMatFromShader(RenderFlag shader)
+		public static Material GetMatFromShader(RenderFlag shader)
 		{
-
-
-			/*
-			if (shader.HasFlag(NetsphereScnTool.Scene.Shader.None))
+			if (shader.HasFlag(RenderFlag.Transparent))
 			{
-
+				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_Transparent.mat");
 			}
-			if (shader.HasFlag(NetsphereScnTool.Scene.Shader.NoLight))
+			if (shader.HasFlag(RenderFlag.Cutout))
 			{
-
+				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_Cutout.mat");
 			}
-			if (shader.HasFlag(NetsphereScnTool.Scene.Shader.Transparent))
+			if (shader.HasFlag(RenderFlag.NoLight))
 			{
-
+				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_NoLight.mat");
 			}
-			if (shader.HasFlag(NetsphereScnTool.Scene.Shader.Cutout))
+			else
 			{
-
+				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_Opaque.mat");
 			}
-			if (shader.HasFlag(NetsphereScnTool.Scene.Shader.NoCulling))
-			{
-
-			}
-			if (shader.HasFlag(NetsphereScnTool.Scene.Shader.Billboard))
-			{
-
-			}
-			if (shader.HasFlag(NetsphereScnTool.Scene.Shader.Flare))
-			{
-
-			}
-			if (shader.HasFlag(NetsphereScnTool.Scene.Shader.ZWriteOff))
-			{
-
-			}
-			if (shader.HasFlag(NetsphereScnTool.Scene.Shader.Shader))
-			{
-
-			}
-			if (shader.HasFlag(NetsphereScnTool.Scene.Shader.NoFog))
-			{
-
-			}
-			if (shader.HasFlag(NetsphereScnTool.Scene.Shader.NoMipmap))
-			{
-
-			}
-			if (shader.HasFlag(NetsphereScnTool.Scene.Shader.Shadow))
-			{
-
-			}
-			if (shader.HasFlag(NetsphereScnTool.Scene.Shader.Water))
-			{
-
-			}
-			if (shader.HasFlag(NetsphereScnTool.Scene.Shader.Distortion))
-			{
-
-			}
-			if (shader.HasFlag(NetsphereScnTool.Scene.Shader.Dark))
-			{
-
-			}
-			*/
-
-
-			return base_mat;
 		}
 
 		static ScnToolData instance;

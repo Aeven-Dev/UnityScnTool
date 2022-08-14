@@ -163,7 +163,6 @@ namespace AevenScnTool.Menus
 			{
 				SetAllOpenScenes();
 			}
-
 		}
 
 		void WideBottom()
