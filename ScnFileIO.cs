@@ -1008,7 +1008,7 @@ namespace AevenScnTool.IO
 
 			if (pbm)
 			{
-				mesh = GetMeshFromPBM(pbm, true);
+				mesh = GetMeshFromPBM(pbm, false);
 			}
 			else if (mf)
 			{
