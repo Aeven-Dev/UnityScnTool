@@ -192,10 +192,14 @@ public class UVAnimEditor : VisualElement
             if (mf)
             {
                 Mesh mesh = mf.sharedMesh;
+				if (item.Value == null)
+				{
+                    bones.Remove(item.Key);
+                    continue;
+				}
                 Vector2[] uvs = item.Value.SampleUVs(frame);
 				if (uvs == null)
 				{
-
                     uvList[mesh] = mesh.uv;
                 }
 				else

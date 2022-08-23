@@ -12,12 +12,18 @@ namespace AevenScnTool.Menus
     public class SelectExport : EditorWindow
     {
         Vector2 scrollPos = Vector2.zero;
-        SelectableItem[] scenesInHierarchy;
+        SelectableItem[] scenesInHierarchy = null;
+
+        bool saveLightmaps = false;
 
         void OnGUI()
         {
-            GUILayout.Label("Select the scenes to compile! <3", EditorStyles.boldLabel);
-            scrollPos = EditorGUILayout.BeginScrollView(scrollPos, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUI.skin.box, GUILayout.MinHeight(position.height - 70f));
+			if (scenesInHierarchy == null)
+			{
+                Close();
+			}
+			GUILayout.Label("Select the scenes to compile! <3", EditorStyles.boldLabel);
+            scrollPos = EditorGUILayout.BeginScrollView(scrollPos, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUI.skin.box, GUILayout.MinHeight(position.height - 105f));
 
             DrawItems();
 
@@ -47,6 +53,11 @@ namespace AevenScnTool.Menus
                 }
             }
             GUILayout.EndHorizontal();
+
+            GUILayout.Space(10);
+            saveLightmaps = GUILayout.Toggle(saveLightmaps, "Save Lightmaps too!");
+            GUILayout.Space(10);
+
 
             if (GUILayout.Button("Export! <3"))
             {
@@ -125,6 +136,15 @@ namespace AevenScnTool.Menus
 
             SceneContainer container = ScnFileExporter.CreateContainerFromScenes(fileInfo, scnData.ToArray());
             container.Write(fileInfo.FullName);
+
+			if (saveLightmaps)
+			{
+                foreach (var tex in ScnFileExporter.lightmaps)
+                {
+                    var bytes = ScnFileExporter.WriteTextureDXT(tex);
+                    File.WriteAllBytes(fileInfo.Directory.FullName + "\\" + tex.name + ".dds", bytes);
+                }
+            }
 
             Close();
         }

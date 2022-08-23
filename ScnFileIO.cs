@@ -19,6 +19,7 @@ namespace AevenScnTool.IO
 		public static Dictionary<string, Material> MainMaterials = new Dictionary<string, Material>();
 		public static Dictionary<string, Material> SideMaterials = new Dictionary<string, Material>();
 		static Dictionary<SceneChunk, GameObject> createdObjects = new Dictionary<SceneChunk, GameObject>();
+
 /*
 		public static void BuildFromContainer2(SceneContainer container, GameObject sceneObj)
 		{
@@ -205,15 +206,24 @@ namespace AevenScnTool.IO
 				mr.materials = mats;
 				mf.mesh = mesh;
 			}
-
-			if (ModelAnimationIsTransform(model.Animation))
+			int isAnim = ModelAnimationIsTransform(model.Animation);
+			if (isAnim == 1)
 			{
-				if (model.Animation.Count != 0)
-				{
-					go.transform.localPosition = model.Animation[0].TransformKeyData2.TransformKey.Translation / ScnToolData.Instance.scale;
-					go.transform.localRotation = model.Animation[0].TransformKeyData2.TransformKey.Rotation;
-					go.transform.localScale = model.Animation[0].TransformKeyData2.TransformKey.Scale;
-				}
+				go.transform.localPosition = model.Animation[0].TransformKeyData2.TransformKey.Translation / ScnToolData.Instance.scale;
+				go.transform.localRotation = model.Animation[0].TransformKeyData2.TransformKey.Rotation;
+				go.transform.localScale = model.Animation[0].TransformKeyData2.TransformKey.Scale;
+			}
+			else if (isAnim == 2)
+			{
+				go.transform.localPosition = model.Animation[0].TransformKeyData2.TransformKey.Translation / ScnToolData.Instance.scale;
+				go.transform.localRotation = model.Animation[0].TransformKeyData2.TransformKey.Rotation;
+				go.transform.localScale = model.Animation[0].TransformKeyData2.TransformKey.Scale;
+
+				go.AddComponent<S4Animations>().FromModelAnimation(model.Animation);
+			}
+			else if (isAnim == -1)
+			{
+				//We do Nothing!!
 			}
 			else
 			{
@@ -265,18 +275,26 @@ namespace AevenScnTool.IO
 			go.transform.SetParent(parent.transform);
 			var b = go.AddComponent<Bone>();
 
-			if (BoneAnimationIsTransform(bone.Animation))
+			int isAnim = BoneAnimationIsTransform(bone.Animation);
+			if (isAnim == 1)
 			{
-				if (bone.Animation.Count != 0)
-				{
-					go.transform.localPosition = bone.Animation[0].TransformKeyData.TransformKey.Translation / ScnToolData.Instance.scale;
-					go.transform.localRotation = bone.Animation[0].TransformKeyData.TransformKey.Rotation;
-					go.transform.localScale = bone.Animation[0].TransformKeyData.TransformKey.Scale;
-				}
-				else
-				{
-					Debug.Log("whoopsie!", go);
-				}
+				go.transform.localPosition = bone.Animation[0].TransformKeyData.TransformKey.Translation / ScnToolData.Instance.scale;
+				go.transform.localRotation = bone.Animation[0].TransformKeyData.TransformKey.Rotation;
+				go.transform.localScale = bone.Animation[0].TransformKeyData.TransformKey.Scale;
+			}
+			else if (isAnim == 2)
+			{
+				go.transform.localPosition = bone.Animation[0].TransformKeyData.TransformKey.Translation / ScnToolData.Instance.scale;
+				go.transform.localRotation = bone.Animation[0].TransformKeyData.TransformKey.Rotation;
+				go.transform.localScale = bone.Animation[0].TransformKeyData.TransformKey.Scale;
+
+				var s4a = go.AddComponent<S4Animations>();
+				s4a.FromBoneAnimation(bone.Animation);
+				b.s4Animations = s4a;
+			}
+			else if (isAnim == -1)
+			{
+				//We do Nothing!!
 			}
 			else
 			{
@@ -573,76 +591,76 @@ namespace AevenScnTool.IO
 			}
 		}
 
-		static bool ModelAnimationIsTransform(List<ModelAnimation> anims)
+		static int ModelAnimationIsTransform(List<ModelAnimation> anims)
 		{
 			if (anims.Count == 0)
 			{
-				return true;
+				return -1;
 			}
 			else if (anims.Count > 1)
 			{
-				return false;
+				return 0;
 			}
 			else if (anims.Count == 1)
 			{
 				var anim = anims[0];
 				if (anim.TransformKeyData2.TransformKey.TKey.Count != 0)
 				{
-					return false;
+					return 0;
 				}
 				if (anim.TransformKeyData2.TransformKey.RKey.Count != 0)
 				{
-					return false;
+					return 0;
 				}
 				if (anim.TransformKeyData2.TransformKey.SKey.Count != 0)
 				{
-					return false;
+					return 0;
 				}
 				if (anim.TransformKeyData2.FloatKeys.Count != 0)
 				{
-					return false;
+					return 2;
 				}
 				if (anim.TransformKeyData2.MorphKeys.Count != 0)
 				{
-					return false;
+					return 0;
 				}
-				return true;
+				return 1;
 			}
-			return false;
+			return 0;
 		}
 
-		static bool BoneAnimationIsTransform(List<BoneAnimation> anims)
+		static int BoneAnimationIsTransform(List<BoneAnimation> anims)
 		{
 			if (anims.Count == 0)
 			{
-				return true;
+				return -1;
 			}
 			else if (anims.Count > 1)
 			{
-				return false;
+				return 0;
 			}
 			else if (anims.Count == 1)
 			{
 				var anim = anims[0];
 				if (anim.TransformKeyData.TransformKey.TKey.Count != 0)
 				{
-					return false;
+					return 0;
 				}
 				if (anim.TransformKeyData.TransformKey.RKey.Count != 0)
 				{
-					return false;
+					return 0;
 				}
 				if (anim.TransformKeyData.TransformKey.SKey.Count != 0)
 				{
-					return false;
+					return 0;
 				}
 				if (anim.TransformKeyData.FloatKeys.Count != 0)
 				{
-					return false;
+					return 2;
 				}
-				return true;
+				return 1;
 			}
-			return false;
+			return 0;
 		}
 
 		static (Material, Material) LoadMaterials(string mainTexturePath, string sideTexturePath, RenderFlag shader, bool isNormal = false)
@@ -730,6 +748,8 @@ namespace AevenScnTool.IO
 			return (texture);
 		}
 
+
+
 		public static ScnData LoadModel(string path, bool identityMatrix = false)
 		{
 			SceneContainer container = SceneContainer.ReadFrom(path);
@@ -755,9 +775,12 @@ namespace AevenScnTool.IO
 	{
 		static List<string> usedNames = new List<string>();
 
+		public static List<Texture2D> lightmaps = new List<Texture2D>();
+
 		public static SceneContainer CreateContainerFromScenes(FileInfo fileInfo, ScnData[] scenes)
 		{
-			usedNames = new();
+			usedNames.Clear();
+			lightmaps.Clear();
 			SceneContainer container = new SceneContainer();
 			container.Header.Name = fileInfo.Name;
 			foreach (var scene in scenes)
@@ -1006,9 +1029,28 @@ namespace AevenScnTool.IO
 			ProBuilderMesh pbm = mr.GetComponent<ProBuilderMesh>();
 			Mesh mesh;
 
+			TextureReference tr = mr.GetComponent<TextureReference>();
 			if (pbm)
 			{
-				mesh = GetMeshFromPBM(pbm, false);
+				bool lightmap = false;
+				foreach (var item in tr.textures)
+				{
+					if (item.sideTexturePath != "" && !item.normal)
+					{
+						lightmap = true;
+					}
+				}
+
+				if (lightmap == false)
+				{
+					if (mr.receiveGI == ReceiveGI.Lightmaps)
+					{
+						lightmap = true;
+					}
+					
+				}
+
+				mesh = GetMeshFromPBM(pbm, lightmap);
 			}
 			else if (mf)
 			{
@@ -1020,7 +1062,6 @@ namespace AevenScnTool.IO
 				Debug.LogWarning("Boy Oh boy! Girl Oh Girl! My Sweet summerchild, you're lacking a MeshFilter or a ProBuilderMesh! That's so crazy! How did this happen? anyway, make sure this object is fine!", mr);
 			}
 
-			TextureReference tr = mr.GetComponent<TextureReference>();
 			if (tr)
 			{
 				model.Shader = tr.renderFlags;
@@ -1034,6 +1075,14 @@ namespace AevenScnTool.IO
 				
 
 				Debug.LogError("Goodness me! You have a mesh without a texture reference! That will make the mesh have so much problems!", mr.gameObject);
+			}
+			if (mr.additionalVertexStreams != null && mr.additionalVertexStreams.uv2.Length == model.Mesh.UV.Count)//should be using lightmap uvs
+			{
+				model.Mesh.UV2 = new List<Vector2>(mr.additionalVertexStreams.uv2);
+			}
+			if (mr.enlightenVertexStream != null && mr.enlightenVertexStream.uv2.Length == model.Mesh.UV.Count)//should be using lightmap uvs
+			{
+				model.Mesh.UV2 = new List<Vector2>(mr.enlightenVertexStream.uv2);
 			}
 
 			SetTextureData(model.TextureData, mesh, tr);
@@ -1279,38 +1328,48 @@ namespace AevenScnTool.IO
 				return;
 			}
 
-			for (int i = 0; i < textures.textures.Count; i++)
+			if (textures.textures.Count > mesh.subMeshCount)
+			{
+				Debug.Log($"Oh no! {textures.gameObject.name} has more textures in texture reference than submeshes in it's mesh!", textures.gameObject);
+			}
+			if (textures.textures.Count < mesh.subMeshCount)
+			{
+				Debug.Log($"Oh no! {textures.gameObject.name} has more submeshes in it's mesh than textures intexture reference!", textures.gameObject);
+			}
+
+			for (int i = 0; i < mesh.subMeshCount; i++)
 			{
 				TextureEntry te = new TextureEntry();
-				if (textures.textures[i] != null)
-				{
-					if (textures.textures[i].mainTexturePath != string.Empty) te.FileName = new FileInfo(textures.textures[i].mainTexturePath).Name;
-					if (textures.textures[i].sideTexturePath != string.Empty)
-					{
-						te.FileName2 = new FileInfo(textures.textures[i].sideTexturePath).Name;
-					}
-					else
-					{
-						var mr = textures.GetComponent<MeshRenderer>();
-						if (mr.lightmapIndex != -1)
-						{
+				te.FaceCount = mesh.GetSubMesh(i).indexCount / 3;
+				te.FaceOffset = mesh.GetSubMesh(i).indexStart / 3;
 
-							var lm = LightmapSettings.lightmaps[mr.lightmapIndex];
-							te.FileName2 = lm.lightmapColor.name + ".tga";
-						}
-						
-					}
-				}
-				//Set normal texture too
-				if (i >= mesh.subMeshCount)
+				if (i >= textures.textures.Count)
 				{
-					te.FaceCount = 0;
-					te.FaceOffset = mesh.triangles.Length / 3;
+					te.FileName = "MissingTexture.tga";
 				}
 				else
 				{
-					te.FaceCount = mesh.GetSubMesh(i).indexCount / 3;
-					te.FaceOffset = mesh.GetSubMesh(i).indexStart / 3;
+					if (textures.textures[i] != null)
+					{
+						if (textures.textures[i].mainTexturePath != string.Empty) 
+							te.FileName = new FileInfo(textures.textures[i].mainTexturePath).Name;
+						if (textures.textures[i].sideTexturePath != string.Empty)
+						{
+							te.FileName2 = new FileInfo(textures.textures[i].sideTexturePath).Name;
+						}
+						else
+						{
+							var mr = textures.GetComponent<MeshRenderer>();
+							if (mr.lightmapIndex != -1)
+							{
+
+								var lm = LightmapSettings.lightmaps[mr.lightmapIndex];
+								te.FileName2 = lm.lightmapColor.name + ".tga";
+								lightmaps.Add(lm.lightmapColor);
+							}
+
+						}
+					}
 				}
 				textureData.Textures.Add(te);
 			}
@@ -1450,6 +1509,90 @@ namespace AevenScnTool.IO
 			chunk.Name = name;
 
 			return chunk;
+		}
+
+
+		public static byte[] WriteTextureDXT(Texture2D texture)
+		{
+			var colors = texture.GetPixels32();
+			byte[] bytes = new byte[colors.Length * 4];
+			for (int i = 0; i < colors.Length; i++)
+			{
+				int bi = i * 4;
+				bytes[bi] = colors[i].r;
+				bytes[bi + 1] = colors[i].g;
+				bytes[bi + 2] = colors[i].b;
+				bytes[bi + 3] = colors[i].a;
+			}
+
+			byte[] magic = System.Text.Encoding.ASCII.GetBytes(new char[] { 'D', 'D', 'S', ' ' });
+			int Size = 124;
+			byte[] Flags = StrToByteArray("00000000");
+			int Height = texture.height;
+			int Width = texture.width;
+			int PitchOrLinearSize = 0;
+			int Depth = 0;
+			int MipMapCount = 1;
+			byte[] Reserved1 = new byte[44];//[11];
+											//pixel format
+			int pfSize = 32;
+			var pfFlags = StrToByteArray("41000000");
+			byte[] pfFourCC = System.Text.Encoding.ASCII.GetBytes(new char[] { 'D', 'X', 'T', '1' });
+			if (texture.format == TextureFormat.DXT1)
+			{
+				pfFourCC = System.Text.Encoding.ASCII.GetBytes(new char[] { 'D', 'X', 'T', '1' });
+			}
+			else if (texture.format == TextureFormat.DXT5)
+			{
+				pfFourCC = System.Text.Encoding.ASCII.GetBytes(new char[] { 'D', 'X', 'T', '5' });
+			}
+			int pfRGBBitCount = 32;
+			byte[] pfRBitMask = StrToByteArray("ff000000");
+			byte[] pfGBitMask = StrToByteArray("00ff0000");
+			byte[] pfBBitMask = StrToByteArray("0000ff00");
+			byte[] pfABitMask = StrToByteArray("000000ff");
+
+			var Caps = StrToByteArray("00010000");
+			int Caps2 = 0;
+			int Caps3 = 0;
+			int Caps4 = 0;
+			int Reserved2 = 0;
+
+			List<byte> dxtBytes = new List<byte>();
+			dxtBytes.AddRange(magic);
+			dxtBytes.AddRange(BitConverter.GetBytes(Size));
+			dxtBytes.AddRange(Flags);
+			dxtBytes.AddRange(BitConverter.GetBytes(Height));
+			dxtBytes.AddRange(BitConverter.GetBytes(Width));
+			dxtBytes.AddRange(BitConverter.GetBytes(PitchOrLinearSize));
+			dxtBytes.AddRange(BitConverter.GetBytes(Depth));
+			dxtBytes.AddRange(BitConverter.GetBytes(MipMapCount));
+			dxtBytes.AddRange(Reserved1);
+			dxtBytes.AddRange(BitConverter.GetBytes(pfSize));
+			dxtBytes.AddRange(pfFlags);
+			dxtBytes.AddRange(pfFourCC);
+			dxtBytes.AddRange(BitConverter.GetBytes(pfRGBBitCount));
+			dxtBytes.AddRange(pfRBitMask);
+			dxtBytes.AddRange(pfGBitMask);
+			dxtBytes.AddRange(pfBBitMask);
+			dxtBytes.AddRange(pfABitMask);
+			dxtBytes.AddRange(Caps);
+			dxtBytes.AddRange(BitConverter.GetBytes(Caps2));
+			dxtBytes.AddRange(BitConverter.GetBytes(Caps3));
+			dxtBytes.AddRange(BitConverter.GetBytes(Caps4));
+			dxtBytes.AddRange(BitConverter.GetBytes(Reserved2));
+			dxtBytes.AddRange(bytes);
+
+			return dxtBytes.ToArray();
+
+			static byte[] StrToByteArray(string str)
+			{
+				List<byte> hexres = new List<byte>();
+				for (int i = 0; i < str.Length; i += 2)
+					hexres.Add(Convert.ToByte(str.Substring(i, 2), 16));
+
+				return hexres.ToArray();
+			}
 		}
 	}
 }

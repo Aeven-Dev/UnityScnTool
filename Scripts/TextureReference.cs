@@ -115,7 +115,7 @@ namespace AevenScnTool
                     }
                     else
                     {
-                        mainTexture = LoadTextureDXT(File.ReadAllBytes(item.mainTexturePath));
+                        mainTexture = IO.ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(item.mainTexturePath));
                         mainTexture.name = new FileInfo(item.mainTexturePath).Name;
                     }
                 }
@@ -128,7 +128,7 @@ namespace AevenScnTool
                     }
                     else
                     {
-                        sideTexture = LoadTextureDXT(File.ReadAllBytes(item.sideTexturePath));
+                        sideTexture = IO.ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(item.sideTexturePath));
                         sideTexture.name = new FileInfo(item.sideTexturePath).Name;
                     }
                 }
@@ -191,21 +191,142 @@ namespace AevenScnTool
             AssetDatabase.SaveAssets();
         }
 
-        [ContextMenu("Save Textures! o.O")]
-        public void SaveTextures()
+        [ContextMenu("Copy Textures! o.O")]
+        public void CopyTextures()
         {
             string path = EditorUtility.SaveFolderPanel("Save Textures!", "", "");
             foreach (TextureItem item in textures)
             {
                 if (File.Exists(item.mainTexturePath))
                     File.Copy(item.mainTexturePath, path + "/" + new FileInfo(item.mainTexturePath).Name);
-                else if (item.sideTexturePath != string.Empty)
+                else if (item.mainTexturePath != string.Empty)
                     Debug.LogWarning("Im sorry t.t! I couldnt find the textures that were in the text field. Can you check that the path is correct please?" + Environment.NewLine + item.mainTexturePath);
 
                 if (File.Exists(item.sideTexturePath))
                     File.Copy(item.sideTexturePath, path + "/" + new FileInfo(item.sideTexturePath).Name);
                 else if (item.sideTexturePath != string.Empty)
                     Debug.LogWarning("Im sorry t.t! I couldnt find the textures that were in the text field. Can you check that the path is correct please?" + Environment.NewLine + item.sideTexturePath);
+            }
+        }
+
+        [ContextMenu("Save Textures! o.O/DDS! (experimental)")]
+        public void SaveTexturesDds()
+        {
+            string path = EditorUtility.SaveFolderPanel("Save Textures!", "", "");
+
+            if (path == string.Empty)
+            {
+                return;
+            }
+            MeshRenderer mr = gameObject.GetComponent<MeshRenderer>();
+            if (!mr)
+            {
+                return;
+            }
+            foreach (Material item in mr.sharedMaterials)
+            {
+                if (item.mainTexture is Texture2D tex)
+                {
+                    byte[] bytes = IO.ScnFileExporter.WriteTextureDXT(tex);
+
+
+                    string name = path + "\\" + tex.name;
+                    if (!name.EndsWith(".dds"))
+                    {
+                        name += ".dds";
+                    }
+
+                    File.WriteAllBytes(name, bytes);
+                }
+
+                if (item.GetTexture("_BumpMap") is Texture2D normal)
+                {
+                    byte[] bytes = IO.ScnFileExporter.WriteTextureDXT(normal);
+
+                    string name = path + "\\" + normal.name;
+                    if (!name.EndsWith(".dds"))
+                    {
+                        name += ".dds";
+                    }
+
+                    File.WriteAllBytes(name, bytes);
+                }
+                if (item.GetTexture("_DetailAlbedoMap") is Texture2D lightmap)
+                {
+                    byte[] bytes = IO.ScnFileExporter.WriteTextureDXT(lightmap);
+
+                    string name = path + "\\" + lightmap.name;
+                    if (!name.EndsWith(".dds"))
+                    {
+                        name += ".dds";
+                    }
+
+                    File.WriteAllBytes(name, bytes);
+                }
+            }
+        }
+
+
+        [ContextMenu("Save Textures! o.O/TGA!")]
+        public void SaveTexturesTga()
+        {
+            string path = EditorUtility.SaveFolderPanel("Save Textures!", "", "");
+
+            if (path == string.Empty)
+            {
+                return;
+            }
+            MeshRenderer mr = gameObject.GetComponent<MeshRenderer>();
+            if (!mr)
+            {
+                return;
+            }
+            foreach (Material item in mr.sharedMaterials)
+            {
+                if (item.mainTexture is Texture2D tex)
+                {
+                    var t = new Texture2D(tex.width, tex.height);
+                    t.SetPixels32(tex.GetPixels32(0));
+                    byte[] bytes =  t.EncodeToTGA();
+
+
+                    string name = path + "\\" + tex.name;
+                    if (!name.EndsWith(".tga"))
+                    {
+                        name += ".tga";
+                    }
+
+                    File.WriteAllBytes(name, bytes);
+                }
+
+                if (item.GetTexture("_BumpMap") is Texture2D normal)
+                {
+                    var t = new Texture2D(normal.width, normal.height);
+                    t.SetPixels32(normal.GetPixels32(0));
+                    byte[] bytes = t.EncodeToTGA();
+
+                    string name = path + "\\" + normal.name;
+                    if (!name.EndsWith(".tga"))
+                    {
+                        name += ".tga";
+                    }
+
+                    File.WriteAllBytes(name, bytes);
+                }
+                if (item.GetTexture("_DetailAlbedoMap") is Texture2D lightmap)
+                {
+                    var t = new Texture2D(lightmap.width, lightmap.height);
+                    t.SetPixels32(lightmap.GetPixels32(0));
+                    byte[] bytes = t.EncodeToTGA();
+
+                    string name = path + "\\" + lightmap.name;
+                    if (!name.EndsWith(".tga"))
+                    {
+                        name += ".tga";
+                    }
+
+                    File.WriteAllBytes(name, bytes);
+                }
             }
         }
 
@@ -238,7 +359,7 @@ namespace AevenScnTool
                 item.sideTexturePath = string.Empty;
             }
         }
-
+/*
         public static Texture2D LoadTextureDXT(byte[] ddsBytes)
         {
             byte a = ddsBytes[84];
@@ -271,7 +392,7 @@ namespace AevenScnTool
 
             return (texture);
         }
-
+*/
         bool HasLightmap()
         {
             foreach (var item in textures)
