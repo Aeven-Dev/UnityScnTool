@@ -1,7 +1,7 @@
 # UnityScnTool
 
 ## Instalation! :D Take your first steps in s4 modding!
-Firs and foremost, you're gonna need unity! The version this was developed was 2012.2.7f1, so use that one or later ones to avoid missing some uinty functionality that I use like UIElements. You also need to have probuilder, this is because i still dont know how to make probuilder support modular.
+Firs and foremost, you're gonna need unity! The version this was developed was 2021.2.7f1, so use that one or later ones to avoid missing some uinty functionality that I use like UIElements. You also need to have probuilder, this is because i still dont know how to make probuilder support modular.
 
 So you'll need to make an unity project of course, i recomend using the standart rendering pipeline since it's not like anything from the shaders would translate to S4. On the other hand if you want to get things out of s4 for yourself then do as you wish!
 
