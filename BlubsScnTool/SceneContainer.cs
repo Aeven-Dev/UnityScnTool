@@ -100,6 +100,8 @@ namespace NetsphereScnTool.Scene
                 {
                     var type = r.ReadEnum<ChunkType>();
                     string name = r.ReadCString();
+
+                    Debug.Log(name);
                     string subName = r.ReadCString();
 
                     switch (type)

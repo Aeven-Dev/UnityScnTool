@@ -13,7 +13,7 @@ public class Jumppad : MonoBehaviour
 
 	[HideInInspector]public Vector3[] arcPoints = new Vector3[0];
 	public BoxCollider thisColl;
-	public BoxCollider power;
+	[HideInInspector]public BoxCollider power;
 
 	private void Start()
 	{
@@ -30,10 +30,7 @@ public class Jumppad : MonoBehaviour
 	private void OnDrawGizmosSelected()
 	{
 		if (!power) return;
-		if (transform.hasChanged || power.transform.hasChanged)
-		{
-			//CalculateArc();
-		}
+		
 		for (int i = 1; i < arcPoints.Length; i++)
 		{
 			Vector3 prev = transform.position + arcPoints[i - 1];

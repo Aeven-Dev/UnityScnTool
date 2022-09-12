@@ -41,12 +41,7 @@ namespace AevenScnTool.Menus
 
         private void GenerateMapInfoText()
         {
-            List<GameObject> go_list = new List<GameObject>();
-            List<Scene> scenes = SelectableItem.GetRootSelectedItems<Scene>(scenesInHierarchy);
-            foreach (var scene in scenes)
-            {
-                go_list.AddRange(ObjectCreation.GetAllGameObjectsFromScene(scene));
-            }
+            List<ScnData> scenes = SelectableItem.GetRootSelectedItems<ScnData>(scenesInHierarchy);
 
             List<BlastData> bd = new List<BlastData>();
             List<DOTData> dotd = new List<DOTData>();
@@ -54,23 +49,15 @@ namespace AevenScnTool.Menus
             List<WarpGateData> wgd = new List<WarpGateData>();
             List<EventItemPosData> eipd = new List<EventItemPosData>();
             List<SpectatorCameraData> scd = new List<SpectatorCameraData>();
-
-            foreach (var item in go_list)
+            foreach (var scene in scenes)
             {
-                BlastData blast = item.GetComponent<BlastData>();
-                if (blast) bd.Add(blast);
-                DOTData dot = item.GetComponent<DOTData>();
-                if (dot) dotd.Add(dot);
-                SeizeData seize = item.GetComponent<SeizeData>();
-                if (seize) sd.Add(seize);
-                WarpGateData warp = item.GetComponent<WarpGateData>();
-                if (warp) wgd.Add(warp);
-                EventItemPosData eventitem = item.GetComponent<EventItemPosData>();
-                if (eventitem) eipd.Add(eventitem);
-                SpectatorCameraData cam = item.GetComponent<SpectatorCameraData>();
-                if (cam) scd.Add(cam);
+                bd.AddRange(scene.GetComponentsInChildren<BlastData>());
+                dotd.AddRange(scene.GetComponentsInChildren<DOTData>());
+                sd.AddRange(scene.GetComponentsInChildren<SeizeData>());
+                wgd.AddRange(scene.GetComponentsInChildren<WarpGateData>());
+                eipd.AddRange(scene.GetComponentsInChildren<EventItemPosData>());
+                scd.AddRange(scene.GetComponentsInChildren<SpectatorCameraData>());
             }
-
 
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < bd.Count; i++) { bd[i].Parse(sb, i + 1); sb.AppendLine(); }
@@ -120,29 +107,25 @@ namespace AevenScnTool.Menus
         {
             MapInfoWindow window = (MapInfoWindow)GetWindow(typeof(MapInfoWindow));
             window.text = "";
-            window.scenesInHierarchy = new SelectableItem[SceneManager.sceneCount];
+            
+            List<SelectableItem> scns = new List<SelectableItem>();
             for (int i = 0; i < SceneManager.sceneCount; i++)
             {
                 Scene scene = SceneManager.GetSceneAt(i);
-                List<SelectableItem> scns = new List<SelectableItem>();
+				
                 GameObject[] rootGO = scene.GetRootGameObjects();
 
                 for (int j = 0; j < rootGO.Length; j++)
                 {
-                    ScnData sd = rootGO[i].GetComponent<ScnData>();
+                    ScnData sd = rootGO[j].GetComponent<ScnData>();
                     if (sd)
                     {
+                        Debug.Log("Added scn");
                         scns.Add(new SelectableItem(sd.name, sd, new SelectableItem[0]));
                     }
                 }
-
-                window.scenesInHierarchy[i] = new SelectableItem(scene.name, scene, scns.ToArray());
-                if (SceneManager.GetSceneAt(i) == SceneManager.GetActiveScene())
-                {
-                    window.scenesInHierarchy[i].selected = true;
-                }
             }
-
+            window.scenesInHierarchy = scns.ToArray();
             window.GenerateMapInfoText();
 
 

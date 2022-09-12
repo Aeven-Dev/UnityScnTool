@@ -28,6 +28,9 @@ namespace AevenScnTool
 		public bool uv_flipVertical = false;
 		public bool uv_flipHorizontal = false;
 
+		public bool uv_flipVertical_lm = false;
+		public bool uv_flipHorizontal_lm = false;
+
 		public Material base_mat;
 		public static Material GetMatFromShader(RenderFlag shader)
 		{

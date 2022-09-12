@@ -74,6 +74,7 @@ namespace NetsphereScnTool.Scene.Chunks
                 int count = r.ReadInt32();
                 for (int i = 0; i < count; ++i)
                 {
+                    Debug.Log(r.BaseStream.Position);
                     Animation.Add(new ModelAnimation { Name = r.ReadCString(), TransformKeyData2 = r.Deserialize<TransformKeyData2>() });
                 }
             }

@@ -36,6 +36,10 @@ namespace AevenScnTool.Menus
 			ScnToolData.Instance.uv_flipVertical = EditorGUILayout.Toggle("Flip UVs Vertically .-.", ScnToolData.Instance.uv_flipVertical);
 			ScnToolData.Instance.uv_flipHorizontal = EditorGUILayout.Toggle("Flip UVs Horizontally q:", ScnToolData.Instance.uv_flipHorizontal);
 
+
+			ScnToolData.Instance.uv_flipVertical_lm = EditorGUILayout.Toggle("Flip UVs Vertically for lightmaps", ScnToolData.Instance.uv_flipVertical_lm);
+			ScnToolData.Instance.uv_flipHorizontal_lm = EditorGUILayout.Toggle("Flip UVs Horizontally for lightmaps", ScnToolData.Instance.uv_flipHorizontal_lm);
+
 			GUILayout.Space(40);
 			if (GUILayout.Button(new GUIContent("Ultimate Modding Power!!",
 				"A powerful mode where every little change is saved to the file, dangerous but useful!"),

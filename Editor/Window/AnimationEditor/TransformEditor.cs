@@ -216,11 +216,17 @@ public class TransformEditor : VisualElement
         }
     }
 
-    void SetTransformToFrame( int frame)
+    bool SetTransformToFrame( int frame)
 	{
+        bool state = true;
         foreach (var part in bones.Keys)
 		{
-			if (copies.TryGetValue(part, out S4Animation copy))
+            if (part == null)
+            {
+                state = false;
+                continue;
+            }
+            if (copies.TryGetValue(part, out S4Animation copy))
 			{
 
                 Vector3 oldPos = part.transform.localPosition;
@@ -257,6 +263,7 @@ public class TransformEditor : VisualElement
                     part.transform.localScale = newPos;
             }
         }
+        return state;
     }
 
     public void AddChannel(TransformKeyData tkd)
@@ -315,7 +322,25 @@ public class TransformEditor : VisualElement
         keyLine.style.left = length;
         frameSlider.SetValueWithoutNotify(newFrame);
 
-        SetTransformToFrame(newFrame);
+		if (!SetTransformToFrame(newFrame))
+		{
+            var b = new List<S4Animations>(bones.Keys);
+            for (int i = 0; i < b.Count; i++)
+            {
+                if (b[i] == null)
+                {
+                    bones.Remove(b[i]);
+                }
+            }
+            var c = new List<S4Animations>(copies.Keys);
+            for (int i = 0; i < copies.Count; i++)
+            {
+                if (c[i] == null)
+                {
+                    copies.Remove(c[i]);
+                }
+            }
+        }
     }
     public void SetChannel(TransformKeyData part, bool state, TransformChannel.Channel channel)
     {
@@ -486,6 +511,11 @@ public class TransformEditor : VisualElement
     {
         keyframeController.RegisterSetTotalFramesCallback(callback);
     }
+
+    public void OnDestroy()
+	{
+        keyframeController.OnDestroy();
+	}
 }
 
 public class TransformChannel

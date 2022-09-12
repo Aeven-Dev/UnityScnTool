@@ -15,7 +15,9 @@ MonoBehaviour:
   s4_folder_path: 
   s4_startup_file: 
   scale: 100
-  main_animation_name: DANCE_(>w<)
-  uv_flipVertical: 0
+  main_animation_name: DANCE
+  uv_flipVertical: 1
   uv_flipHorizontal: 0
+  uv_flipVertical_lm: 1
+  uv_flipHorizontal_lm: 0
   base_mat: {fileID: 0}

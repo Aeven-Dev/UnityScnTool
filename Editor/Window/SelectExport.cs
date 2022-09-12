@@ -141,8 +141,15 @@ namespace AevenScnTool.Menus
 			{
                 foreach (var tex in ScnFileExporter.lightmaps)
                 {
-                    var bytes = ScnFileExporter.WriteTextureDXT(tex);
-                    File.WriteAllBytes(fileInfo.Directory.FullName + "\\" + tex.name + ".dds", bytes);
+					try
+					{
+                        var bytes = ScnFileExporter.WriteTextureDXT(tex);
+                        File.WriteAllBytes(fileInfo.Directory.FullName + "\\" + tex.name + ".dds", bytes);
+                    }
+					catch (System.Exception)
+					{
+
+					}
                 }
             }
 

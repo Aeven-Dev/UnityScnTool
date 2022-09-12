@@ -55,13 +55,19 @@ namespace AevenScnTool
                 Texture lightmap = mats[i].GetTexture("_DetailAlbedoMap");
                 Texture normal = mats[i].GetTexture("_BumpMap");
                 string sideTex; bool nor = false;
+
+                Vector2 mainTiling = mats[i].mainTextureScale;
+                Vector2 sideTiling = Vector2.one;
+
                 if (lightmap)
                 {
                     sideTex = AssetDatabase.GetAssetPath(lightmap);
+                    sideTiling = mats[i].GetTextureScale("_DetailAlbedoMap");
                 }
                 else if (normal)
                 {
                     sideTex = AssetDatabase.GetAssetPath(normal);
+                    sideTiling = mats[i].GetTextureScale("_BumpMap");
                     nor = true;
                 }
                 else
@@ -69,7 +75,7 @@ namespace AevenScnTool
                     sideTex = String.Empty;
                 }
                 string n = (mainTexture != null) ? mainTexture.name : "EmptyTexture";
-                textures.Add(new TextureItem(n, mainTex, sideTex, nor));
+                textures.Add(new TextureItem( n, mainTex, sideTex, nor ));
             }
 
             if (mesh != null)
@@ -134,7 +140,7 @@ namespace AevenScnTool
                 }
 
                 mat.mainTexture = mainTexture;
-                if (item.normal)
+                if (item.sideTextureIsNormal)
                 {
                     mat.SetTexture("_BumpMap", sideTexture);
                     mat.EnableKeyword("_NORMALMAP");
@@ -414,8 +420,14 @@ namespace AevenScnTool
         public string mainTexturePath;
         //[Path]
         public string sideTexturePath;
-        public bool normal;
-        public TextureItem(string name, string mainTexturePath, string sideTexturePath, bool normal) { this.name = name; this.mainTexturePath = mainTexturePath; this.sideTexturePath = sideTexturePath; this.normal = normal; }
+        public bool sideTextureIsNormal;
+        public TextureItem(string name, string mainTexturePath, string sideTexturePath, bool sideTextureIsNormal) 
+        { 
+            this.name = name;
+            this.mainTexturePath = mainTexturePath;
+            this.sideTexturePath = sideTexturePath;
+            this.sideTextureIsNormal = sideTextureIsNormal;
+        }
     }
 }
 

@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement name="ViewportRoot" style="flex-grow: 1; flex-direction: row; display: flex; visibility: visible;">
+        <ui:VisualElement style="flex-grow: 1; flex-shrink: 0; overflow: hidden; display: flex; visibility: visible;">
+            <ui:VisualElement style="height: 100%; width: 100%; min-height: 100%; min-width: 100%; scale: 1 1; translate: 0 0; transform-origin: left top; align-items: stretch; justify-content: space-between; background-color: rgb(34, 34, 34); flex-grow: 0; flex-shrink: 1;">
+                <ui:VisualElement name="Container" style="flex-grow: 1;" />
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-grow: 1; flex-direction: row;">
+                <ui:Label text="10x - 120y" display-tooltip-when-elided="false" picking-mode="Ignore" name="PosLabel" style="flex-direction: column; flex-grow: 1; flex-basis: 0; -unity-text-align: lower-right; white-space: nowrap; height: 20px; top: -20px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

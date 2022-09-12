@@ -503,6 +503,11 @@ namespace AevenScnTool
         {
             animation.SetTotalFrames(selectedAnimName, frames);
         }
+        void OnDestroy()
+        {
+            transformEditor.OnDestroy();
+            uvAnimEditor.OnDestroy();
+        }
     }
 
     class ChannelItem : VisualElement

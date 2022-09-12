@@ -44,6 +44,10 @@ public class UVAnimEditor : VisualElement
     Button SelectAllButton;
     Button SelectNoneButton;
 
+    FloatField X_T;
+    FloatField Y_T;
+    Button Translate;
+
     SliderInt frameSlider;
 
     Dictionary<S4Animations, S4Animation> bones = new();
@@ -85,6 +89,9 @@ public class UVAnimEditor : VisualElement
         SetScale_1 = this.Q<Button>("SetScaleSelection");
         SetScale_2 = this.Q<Button>("SetScaleCenter");
 
+        X_T = this.Q<FloatField>("X_T");
+        Y_T = this.Q<FloatField>("Y_T");
+        Translate = this.Q<Button>("TranslateSelection");
 
         SelectAllButton = this.Q<Button>("SelectAllButton");
         SelectNoneButton = this.Q<Button>("SelectNoneButton");
@@ -102,6 +109,7 @@ public class UVAnimEditor : VisualElement
 
         SetSelectionLogic();
         SetMoveSelectionLogic();
+        SetTranslateCallbacks();
         SetRotationCallbacks();
         SetScaleCallbacks();
     }
@@ -381,16 +389,51 @@ public class UVAnimEditor : VisualElement
     void SetMoveSelectionLogic()
 	{
         bool moving = false;
+
+        Dictionary<Mesh, Vector2[]> thing = new();
+        Vector2 start = Vector2.zero;
         zoomViewport.contentContainer.RegisterCallback<MouseDownEvent>(e => {
+            if (keyframeController.IsPlaying)
+            {
+                return;
+            }
             if (e.button == 1) { zoomViewport.contentContainer.CaptureMouse();
                 moving = true;
+                start = e.mousePosition;
+                var points = new List<Vector2>();
+                foreach (var item in selectedPoints)
+                {
+                    if (!thing.ContainsKey(item.mesh))
+                    {
+                        thing.Add(item.mesh, new Vector2[item.mesh.uv.Length]);
+                    }
+                    thing[item.mesh][item.index] = new Vector2(
+                        item.resolvedStyle.left,
+                        item.resolvedStyle.top);
+                }
             }
 
         });
         zoomViewport.contentContainer.RegisterCallback<MouseMoveEvent>(e => {
             if (moving)
             {
-                MoveSelected(e.mouseDelta);
+                Vector2 delta = e.mousePosition - start;
+                if (e.altKey)
+                {
+                    if (Mathf.Abs(delta.x) > Mathf.Abs(delta.y))
+                    {
+                        delta.y = 0;
+                    }
+
+                    if (Mathf.Abs(delta.x) < Mathf.Abs(delta.y))
+                    {
+                        delta.x = 0;
+                    }
+
+                }
+                MoveSelected(delta, thing);
+
+
             }
         });
         zoomViewport.contentContainer.RegisterCallback<MouseUpEvent>(e => {
@@ -400,33 +443,37 @@ public class UVAnimEditor : VisualElement
         });
     }
 
-    void MoveSelected(Vector2 delta)
+    void MoveSelected(Vector2 delta, Dictionary<Mesh, Vector2[]> original)
 	{
         if (keyframeController.IsPlaying)
         {
             return;
         }
-        Dictionary<Mesh, List<(int, Vector2)>> thing = new();
-		foreach (var item in selectedPoints)
+        var newpoints = new Dictionary<Mesh, List<(int, Vector2)>>();
+
+        foreach (var item in selectedPoints)
 		{
-            float newX = item.resolvedStyle.left + delta.x;
-            float newY = item.resolvedStyle.top + delta.y;
+            float newX = original[item.mesh][item.index].x + delta.x;
+            float newY = original[item.mesh][item.index].y + delta.y;
             item.style.left = new StyleLength(new Length(newX, LengthUnit.Pixel));
             item.style.top = new StyleLength(new Length(newY, LengthUnit.Pixel));
 
             Vector2 pos = new Vector2(newX / pointContainer.resolvedStyle.width, newY / pointContainer.resolvedStyle.height);
 
-			if (!thing.ContainsKey(item.mesh))
+			if (!newpoints.ContainsKey(item.mesh))
 			{
-                thing.Add(item.mesh, new List<(int, Vector2)>());
+                newpoints.Add(item.mesh, new List<(int, Vector2)>());
 			}
-            thing[item.mesh].Add((item.index, pos));
+            newpoints[item.mesh].Add((item.index, pos));
         }
 
-        SetSomeUVS(thing);
+        SetSomeUVS(newpoints);
 
     }
-
+    void SetTranslateCallbacks()
+    {
+        Translate.clicked += () => TranslateSelected(new Vector2(X_T.value, Y_T.value));
+    }
     void SetRotationCallbacks()
     {
         ((Button)R_S[0]).clicked += () => RotateSelected(-90, CenterOfSelected());
@@ -465,7 +512,31 @@ public class UVAnimEditor : VisualElement
         center /= selectedPoints.Count;
         return center;
 	}
+    void TranslateSelected(Vector2 delta)
+    {
+        if (keyframeController.IsPlaying)
+        {
+            return;
+        }
+        var newpoints = new Dictionary<Mesh, List<(int, Vector2)>>();
+        foreach (var item in selectedPoints)
+        {
+            float newX = item.resolvedStyle.left + delta.x;
+            float newY = item.resolvedStyle.top + delta.y;
+            item.style.left = new StyleLength(new Length(newX, LengthUnit.Pixel));
+            item.style.top = new StyleLength(new Length(newY, LengthUnit.Pixel));
 
+            Vector2 pos = new Vector2(newX / pointContainer.resolvedStyle.width, newY / pointContainer.resolvedStyle.height);
+
+            if (!newpoints.ContainsKey(item.mesh))
+            {
+                newpoints.Add(item.mesh, new List<(int, Vector2)>());
+            }
+            newpoints[item.mesh].Add((item.index, pos));
+        }
+
+        SetSomeUVS(newpoints);
+    }
     void RotateSelected(float angle, Vector2 center)
     {
         if (keyframeController.IsPlaying)
@@ -520,6 +591,11 @@ public class UVAnimEditor : VisualElement
     public void RegisterSetTotalFramesCallback(EventCallback<ChangeEvent<int>> callback)
     {
         keyframeController.RegisterSetTotalFramesCallback(callback);
+    }
+
+    public void OnDestroy()
+    {
+        keyframeController.OnDestroy();
     }
 }
 

@@ -260,4 +260,14 @@ public class KeyframeController : VisualElement
 	{
         totalFramesField.RegisterValueChangedCallback(callback);
 	}
+    
+    public void OnDestroy()
+    {
+		if (playing)
+        {
+            playing = !playing;
+            EditorApplication.update -= frameController.PlayAnimation;
+            play.text = "Play!";
+        }
+    }
 }

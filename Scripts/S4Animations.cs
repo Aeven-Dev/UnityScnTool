@@ -152,12 +152,12 @@ public class S4Animation
             key.Vertices = new List<MorphKey.VertexMorph>();
             for (int j = 0; j < MorphKeys[i].Vertices.Count; j++)
             {
-                key.Vertices.Add(new MorphKey.VertexMorph(MorphKeys[i].Vertices[j].index, MorphKeys[i].Vertices[j].position));
+                key.Vertices.Add(new MorphKey.VertexMorph(MorphKeys[i].Vertices[j].index, MorphKeys[i].Vertices[j].position * ScnToolData.Instance.scale));
 
             }
             for (int j = 0; j < MorphKeys[i].UVs.Count; j++)
             {
-                key.UVs.Add(new MorphKey.UVMorph(MorphKeys[i].UVs[j].index, MorphKeys[i].UVs[j].position * ScnToolData.Instance.scale));
+                key.UVs.Add(new MorphKey.UVMorph(MorphKeys[i].UVs[j].index, MorphKeys[i].UVs[j].position));
 
             }
             anim.TransformKeyData2.MorphKeys.Add(key);
@@ -237,6 +237,117 @@ public class S4Animation
 
     public bool KeyUVs(int frame ,Vector2[] data)
 	{
+
+        List<MorphKey.UVMorph> uvs = new();
+
+        for (int u = 0; u < data.Length; u++)
+        {
+            uvs.Add(new MorphKey.UVMorph((uint)u, data[u]));
+        }
+
+        MorphKey mk = new MorphKey();
+        mk.UVs = uvs;
+        mk.frame = frame;
+
+        for (int i = 0; i < MorphKeys.Count; i++)
+        {
+            if (MorphKeys[i].frame == frame)
+            {
+                MorphKeys[i] = mk;
+                return false;
+            }
+            if (MorphKeys[i].frame > frame)
+            {
+                MorphKeys.Insert(i, mk);
+                return true;
+            }
+        }
+        MorphKeys.Add(mk);
+        return true;
+    }
+}
+
+[System.Serializable]
+public class UVScroll : S4Animation
+{
+
+    public UVScroll() { }
+
+    public new ModelAnimation ToModelAnim()
+    {
+        ModelAnimation anim = new ModelAnimation();
+        anim.Name = Name;
+        anim.TransformKeyData2 = new TransformKeyData2();
+        anim.TransformKeyData2.duration = TransformKeyData.duration;
+        anim.TransformKeyData2.FloatKeys = new List<FloatKey>();
+
+        anim.TransformKeyData2.TransformKey = new TransformKey();
+        anim.TransformKeyData2.TransformKey.Translation = TransformKeyData.TransformKey.Translation * ScnToolData.Instance.scale;
+        anim.TransformKeyData2.TransformKey.Rotation = TransformKeyData.TransformKey.Rotation;
+        anim.TransformKeyData2.TransformKey.Scale = TransformKeyData.TransformKey.Scale;
+        anim.TransformKeyData2.MorphKeys = new List<MorphKey>();
+
+        int frameCount = 0;
+        int totalLength = 0;
+
+        Vector2[] uvs = new Vector2[0];
+        Vector2 offset = Vector2.zero;
+
+        for (int i = 0; i < frameCount; i++)
+        {
+            MorphKey key = new MorphKey();
+            key.frame = totalLength * frameCount / i;
+
+            for (int j = 0; j < uvs.Length; j++)
+            {
+                key.UVs.Add(new MorphKey.UVMorph((uint)j, uvs[j] + offset * key.frame));
+
+            }
+            anim.TransformKeyData2.MorphKeys.Add(key);
+        }
+        return anim;
+    }
+    public BoneAnimation ToBoneAnim()
+    {
+        Debug.LogError("This isnt a bone animation silly!");
+        return null;
+    }
+
+    public Vector2[] SampleUVs(int frame)
+    {
+        if (MorphKeys.Count == 0)
+        {
+            return null;
+        }
+        for (int i = 0; i < MorphKeys.Count - 1; i++)
+        {
+            MorphKey prev = MorphKeys[i];
+            MorphKey next = MorphKeys[i + 1];
+
+            if (frame >= prev.frame && frame < next.frame)
+            {
+                Vector2[] uvs = new Vector2[MorphKeys[i].UVs.Count];
+                for (int u = 0; u < uvs.Length; u++)
+                {
+                    Vector2 pos1 = prev.UVs[u].position;
+                    Vector2 pos2 = next.UVs[u].position;
+                    float range = next.frame - prev.frame;
+                    float t = frame - prev.frame;
+                    uvs[u] = Vector2.Lerp(pos1, pos2, t / range);
+                }
+                return uvs;
+            }
+        }
+        Vector2[] last_uvs = new Vector2[MorphKeys[MorphKeys.Count - 1].UVs.Count];
+        for (int u = 0; u < last_uvs.Length; u++)
+        {
+            last_uvs[u] = MorphKeys[MorphKeys.Count - 1].UVs[u].position;
+        }
+        return last_uvs;
+    }
+
+    public bool KeyUVs(int frame, Vector2[] data)
+    {
 
         List<MorphKey.UVMorph> uvs = new();
 

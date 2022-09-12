@@ -240,30 +240,33 @@ namespace AevenScnTool.Menus
         [MenuItem("GameObject/S4 Scn/Swap Teams! :3")]
         static void SwapTeam()
         {
-            if (Selection.activeTransform == null)
-            {
-                Debug.Log("You need to have an object selected, silly! :P");
-                return;
-            }
-            if (Selection.activeTransform.name.Contains("alpha"))
-            {
-                Selection.activeTransform.name.Replace("alpha", "beta");
-            }
-            else if (Selection.activeTransform.name.Contains("beta"))
-            {
-                Selection.activeTransform.name.Replace("beta", "alpha");
-            }
-            else if (Selection.activeTransform.name.Contains("red"))
-            {
-                Selection.activeTransform.name.Replace("red", "blue");
-            }
-            else if (Selection.activeTransform.name.Contains("blue"))
-            {
-                Selection.activeTransform.name.Replace("blue", "red");
-            }
-            else
-            {
-                Debug.Log("Your object isnt name alpha, beta, red or blue! There is nothing i can do! :P");
+			for (int i = 0; i < Selection.gameObjects.Length; i++)
+			{
+                if (Selection.activeTransform == null)
+                {
+                    Debug.Log("You need to have an object selected, silly! :P");
+                    return;
+                }
+                if (Selection.gameObjects[i].name.Contains("alpha"))
+                {
+                    Selection.gameObjects[i].name=Selection.gameObjects[i].name.Replace("alpha", "beta");
+                }
+                else if (Selection.gameObjects[i].name.Contains("beta"))
+                {
+                    Selection.gameObjects[i].name=Selection.gameObjects[i].name.Replace("beta", "alpha");
+                }
+                else if (Selection.gameObjects[i].name.Contains("red"))
+                {
+                    Selection.gameObjects[i].name=Selection.gameObjects[i].name.Replace("red", "blue");
+                }
+                else if (Selection.gameObjects[i].name.Contains("blue"))
+                {
+                    Selection.gameObjects[i].name=Selection.gameObjects[i].name.Replace("blue", "red");
+                }
+                else
+                {
+                    Debug.Log("Your object isnt name alpha, beta, red or blue! There is nothing i can do! :P");
+                }
             }
         }
 
