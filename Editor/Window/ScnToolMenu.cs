@@ -399,8 +399,8 @@ namespace AevenScnTool.Menus
 				}
 
 				//Clear the materials so we get a clean list of the materials that we generated for this scn
-				ScnFileImporter.MainMaterials.Clear();
-				ScnFileImporter.SideMaterials.Clear();
+				ModelChunkImporter.MainMaterials.Clear();
+				ModelChunkImporter.SideMaterials.Clear();
 
 				foreach (string scnName in scnNames)
 				{
@@ -416,11 +416,11 @@ namespace AevenScnTool.Menus
 					ScnFileImporter.BuildFromContainer(container, sceneObj);
 				}
 
-				foreach (var item in ScnFileImporter.MainMaterials)
+				foreach (var item in ModelChunkImporter.MainMaterials)
 				{
 					AssetDatabase.CreateAsset(item.Value, "Assets/AllScns/" + folder + "Materials/" + new FileInfo(item.Key).Name);
 				}
-				foreach (var item in ScnFileImporter.SideMaterials)
+				foreach (var item in ModelChunkImporter.SideMaterials)
 				{
 					AssetDatabase.CreateAsset(item.Value, "Assets/AllScns/" + folder + "Materials/Lightmaps/" + new FileInfo(item.Key).Name);
 				}

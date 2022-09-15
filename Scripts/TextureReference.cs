@@ -15,6 +15,9 @@ namespace AevenScnTool
         public bool flipUvVertical = false;
         public bool flipUvHorizontal = false;
 
+        public bool flipUvVertical_lm = false;
+        public bool flipUvHorizontal_lm = false;
+
         public List<TextureItem> textures = new List<TextureItem>();
 
         public bool hasLightmap { get { return HasLightmap(); } }

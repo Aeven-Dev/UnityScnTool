@@ -16,73 +16,8 @@ namespace AevenScnTool.IO
 {
 	public static class ScnFileImporter
 	{
-		public static Dictionary<string, Material> MainMaterials = new Dictionary<string, Material>();
-		public static Dictionary<string, Material> SideMaterials = new Dictionary<string, Material>();
-		static Dictionary<SceneChunk, GameObject> createdObjects = new Dictionary<SceneChunk, GameObject>();
+		public static Dictionary<SceneChunk, GameObject> createdObjects = new Dictionary<SceneChunk, GameObject>();
 
-/*
-		public static void BuildFromContainer2(SceneContainer container, GameObject sceneObj)
-		{
-			createdObjects.Clear();
-
-
-			foreach (BoneSystemChunk boneSys in container.boneSystems)
-			{
-				createdObjects.Add(boneSys, CreateBoneSystem(boneSys));
-			}
-
-			foreach (BoneChunk bone in container.bones)
-			{
-				createdObjects.Add(bone, CreateBone(bone));
-			}
-
-			foreach (ModelChunk model in container.models)
-			{
-				createdObjects.Add(model, CreateModel(model, container.fileInfo.Directory));
-			}
-
-			foreach (SkyDirect1Chunk skyDirect in container.skyDirect1List) { }
-
-			foreach (BoxChunk box in container.boxes)
-			{
-				createdObjects.Add(box, CreateBox(box));
-			}
-
-			foreach (ShapeChunk shape in container.shapes)
-			{
-				createdObjects.Add(shape, CreateShape(shape));
-			}
-
-
-			foreach (SceneChunk chunk in container)
-			{
-				if (createdObjects.ContainsKey(chunk) == false) continue;
-
-				GameObject child = createdObjects[chunk];
-				GameObject parent = null;
-				if (chunk.SubName == string.Empty || chunk.SubName == sceneObj.name)
-				{
-					parent = sceneObj;
-				}
-				else
-				{
-					foreach (SceneChunk posibleParent in container)
-					{
-						if (posibleParent.Name == chunk.SubName)
-						{
-							parent = createdObjects[posibleParent];
-							break;
-						}
-					}
-				}
-				if (parent == null)
-				{
-					parent = sceneObj;
-				}
-				child.transform.SetParent(parent.transform, false);
-			}
-		}
-		*/
 		public static void BuildFromContainer(SceneContainer container, GameObject sceneObj, bool identityMatrix = false)
 		{
 			List < TreeItem < SceneChunk >> rootItems = GetRootItems(container);
@@ -182,22 +117,22 @@ namespace AevenScnTool.IO
 				go.transform.localScale = Vector3.one;
 			}
 
-			Mesh mesh = CreateMesh(model);
+			Mesh mesh = ModelChunkImporter.CreateMesh(model);
 
 			Material mat = ScnToolData.GetMatFromShader(model.Shader);
 
 			TextureReference tr = go.AddComponent<TextureReference>();
 			tr.renderFlags = model.Shader;
 
-			Material[] mats = SetFaceData(mesh, model, di, tr);
+			Material[] mats = ModelChunkImporter.SetFaceData(mesh, model, di, tr);
 
 			if (model.WeightBone.Count > 0)
 			{
-				SetSkinnedMesh(go, model, mesh, mats);
+				ModelChunkImporter.SetSkinnedMesh(go, model, mesh, mats);
 			}
 			else if (model.Name.StartsWith("oct_"))
 			{
-				SetOctMesh(go, model, mesh);
+				ModelChunkImporter.SetOctMesh(go, model, mesh);
 			}
 			else
 			{
@@ -206,7 +141,7 @@ namespace AevenScnTool.IO
 				mr.materials = mats;
 				mf.mesh = mesh;
 			}
-			int isAnim = ModelAnimationIsTransform(model.Animation);
+			int isAnim = ModelChunkImporter.ModelAnimationIsTransform(model.Animation);
 			if (isAnim == 1)
 			{
 				go.transform.localPosition = model.Animation[0].TransformKeyData2.TransformKey.Translation / ScnToolData.Instance.scale;
@@ -359,275 +294,6 @@ namespace AevenScnTool.IO
 		}
 
 
-		static Mesh CreateMesh(ModelChunk model)
-		{
-			Mesh mesh = new Mesh();
-
-			var verts = model.Mesh.Vertices.ToArray().Clone() as Vector3[];
-
-			for (int i = 0; i < verts.Length; i++)
-			{
-				verts[i] = verts[i] / ScnToolData.Instance.scale; 
-			}
-
-			mesh.vertices = verts;
-
-			mesh.normals = model.Mesh.Normals.ToArray().Clone() as Vector3[];
-			mesh.tangents = model.Mesh.TangentsArray().Clone() as Vector4[];
-			mesh.uv = model.Mesh.UV.ToArray().Clone() as Vector2[];
-			mesh.uv2 = model.Mesh.UV2.ToArray().Clone() as Vector2[];
-			mesh.uv3 = model.Mesh.UV2.ToArray().Clone() as Vector2[];
-			mesh.uv4 = model.Mesh.UV2.ToArray().Clone() as Vector2[];
-
-			return mesh;
-		}
-
-		static void SetSkinnedMesh(GameObject go, ModelChunk model, Mesh mesh, Material[] mats)
-		{
-			SkinnedMeshRenderer smr = go.AddComponent<SkinnedMeshRenderer>();
-			smr.sharedMesh = mesh;
-			smr.materials = mats;
-
-			//WeightBone
-			byte[] bonesPerVertex = new byte[mesh.vertexCount];
-			List<BoneWeight1>[] weights = new List<BoneWeight1>[mesh.vertexCount];
-			List<Transform> bones = new List<Transform>();
-			List<Matrix4x4> bindPoses = new List<Matrix4x4>();
-
-			ExtractBoneWeightData(model, bones, bindPoses, bonesPerVertex, weights);
-
-			List<BoneWeight1> w = new List<BoneWeight1>();
-			for (int i = 0; i < weights.Length; i++)
-			{
-				w.AddRange(weights[i]);
-			}
-
-			NativeArray<BoneWeight1> w_na = new NativeArray<BoneWeight1>(w.ToArray(), Allocator.Temp);
-
-			NativeArray<byte> bpv = new NativeArray<byte>(bonesPerVertex, Allocator.Temp);
-
-			smr.sharedMesh.SetBoneWeights(bpv, w_na);
-			smr.sharedMesh.bindposes = bindPoses.ToArray();
-			smr.bones = bones.ToArray();
-
-			GameObject rootBone = null;
-
-
-			foreach (SceneChunk chunk in createdObjects.Keys)
-			{
-				if (createdObjects[chunk].name == model.SubName)
-				{
-					rootBone = createdObjects[chunk];
-					break;
-				}
-			}
-
-			if (rootBone != null)
-			{
-				smr.rootBone = rootBone.transform;
-			}
-
-			smr.ResetBounds();
-		}
-
-		static void ExtractBoneWeightData(ModelChunk model, List<Transform> bones, List<Matrix4x4> bindPoses, byte[] bonesPerVertex, List<BoneWeight1>[] weights)
-		{
-			for (int i = 0; i < model.WeightBone.Count; i++)
-			{
-				int boneIndex = GetBoneIndexFromBoneName(model.WeightBone[i].Name, bones);
-				bindPoses.Add(model.WeightBone[i].Matrix);
-
-				if (boneIndex == -1)
-				{
-					Debug.LogWarning($"Bone '{model.WeightBone[i].Name}' couldnt be found. Did you made an oppsie? :P");
-					continue;
-				}
-
-
-				for (int j = 0; j < model.WeightBone[i].Weight.Count; j++)
-				{
-					int index = (int)(model.WeightBone[i].Weight[j].Vertex);
-					bonesPerVertex[index]++;
-					if (weights[index] == null)
-					{
-						weights[index] = new List<BoneWeight1>();
-					}
-					BoneWeight1 bw = new BoneWeight1();
-					bw.boneIndex = boneIndex;
-					bw.weight = model.WeightBone[i].Weight[j].Weight;
-					weights[index].Add(bw);
-				}
-			}
-		}
-
-		static Material[] SetFaceData(Mesh mesh, ModelChunk model, DirectoryInfo di, TextureReference tr)
-		{
-			Material mat = ScnToolData.GetMatFromShader(model.Shader);
-
-			Material[] mats = new Material[model.TextureData.Textures.Count];
-
-			if (model.TextureData.Textures.Count > 0)
-			{
-				mesh.subMeshCount = model.TextureData.Textures.Count;
-				int[] tris = model.Mesh.Triangles();
-
-				for (int i = 0; i < tris.Length; i++)
-				{
-					if (tris[i] >= mesh.vertexCount)
-					{
-						Debug.Log("Goodness me, some face index are above the vert count X:");
-					}
-					if (tris[i] < 0)
-					{
-						Debug.Log("Goodness me, face index are negative D:");
-					}
-				}
-
-				for (int i = 0; i < model.TextureData.Textures.Count; i++)
-				{
-					TextureEntry texEntry = model.TextureData.Textures[i];
-					mesh.SetTriangles(tris, texEntry.FaceOffset * 3, texEntry.FaceCount * 3, i);
-
-					Material mat_x = new Material(mat);
-					string mainTex = string.Empty;
-					if (texEntry.FileName != string.Empty)
-					{
-						mainTex = di.FullName + "\\" + texEntry.FileName.Replace(".tga", ".dds");
-
-						if (File.Exists(mainTex))
-						{
-							mat_x.mainTexture = ParseTextureDXT(File.ReadAllBytes(mainTex));
-							mat_x.mainTexture.name = texEntry.FileName.Replace("tga", "dds");
-						}
-						else
-						{
-							Debug.Log($"Gosh! Texture {mainTex} doesnt exist!");
-
-							mat_x.mainTexture = Texture2D.whiteTexture;
-						}
-					}
-
-					string sideTex = string.Empty;
-					bool normal = false;
-					if (texEntry.FileName2 != string.Empty)
-					{
-						sideTex = di.FullName + "\\" + texEntry.FileName2.Replace("tga", "dds");
-						if (File.Exists(sideTex))
-						{
-							Texture2D st = ParseTextureDXT(File.ReadAllBytes(sideTex));
-							st.name = texEntry.FileName2.Replace("tga", "dds");
-							if (model.TextureData.ExtraUV == 1)
-							{
-								mat_x.SetTexture("_DetailAlbedoMap", st);
-								mat_x.EnableKeyword("_DETAIL_MULX2");
-							}
-							else
-							{
-								mat_x.SetTexture("_BumpMap", st);
-								mat_x.EnableKeyword("_NORMALMAP");
-								normal = true;
-							}
-						}
-					}
-					tr.textures.Add(new TextureItem(texEntry.FileName, mainTex, sideTex, normal));
-					mats[i] = mat_x;
-				}
-
-
-			}
-			else
-			{
-				mesh.triangles = model.Mesh.Triangles();
-			}
-
-			return mats;
-		}
-
-		static int GetBoneIndexFromBoneName(string name, List<Transform> bones)
-		{
-			GameObject go = null;
-
-			foreach (SceneChunk chunk in createdObjects.Keys)
-			{
-				if (createdObjects[chunk].name == name)
-				{
-					go = createdObjects[chunk];
-					break;
-				}
-			}
-
-			if (go == null)
-			{
-				return -1;
-			}
-			bones.Add(go.transform);
-			return bones.Count - 1;
-		}
-
-		
-
-		static void SetOctMesh(GameObject go, ModelChunk model, Mesh mesh)
-		{
-			MeshCollider mc = go.AddComponent<MeshCollider>();
-			CollisionData cd = go.AddComponent<CollisionData>();
-
-			if (Enum.TryParse(model.Name[4..], out GroundFlag result1))
-			{
-				cd.ground = result1;
-			}
-			else if (Enum.TryParse(model.Name[4..], out WeaponFlag result2))
-			{
-				cd.weapon = result2;
-			}
-			else
-			{
-				cd.ground = GroundFlag.blast;
-			}
-
-			mc.cookingOptions = MeshColliderCookingOptions.EnableMeshCleaning;
-			if (mesh.vertices.Length > 0)
-			{
-				mc.sharedMesh = mesh;
-			}
-		}
-
-		static int ModelAnimationIsTransform(List<ModelAnimation> anims)
-		{
-			if (anims.Count == 0)
-			{
-				return -1;
-			}
-			else if (anims.Count > 1)
-			{
-				return 0;
-			}
-			else if (anims.Count == 1)
-			{
-				var anim = anims[0];
-				if (anim.TransformKeyData2.TransformKey.TKey.Count != 0)
-				{
-					return 0;
-				}
-				if (anim.TransformKeyData2.TransformKey.RKey.Count != 0)
-				{
-					return 0;
-				}
-				if (anim.TransformKeyData2.TransformKey.SKey.Count != 0)
-				{
-					return 0;
-				}
-				if (anim.TransformKeyData2.FloatKeys.Count != 0)
-				{
-					return 2;
-				}
-				if (anim.TransformKeyData2.MorphKeys.Count != 0)
-				{
-					return 0;
-				}
-				return 1;
-			}
-			return 0;
-		}
 
 		static int BoneAnimationIsTransform(List<BoneAnimation> anims)
 		{
@@ -661,58 +327,6 @@ namespace AevenScnTool.IO
 				return 1;
 			}
 			return 0;
-		}
-
-		static (Material, Material) LoadMaterials(string mainTexturePath, string sideTexturePath, RenderFlag shader, bool isNormal = false)
-		{
-			string mainMatName = new FileInfo(mainTexturePath).Name;
-			string sideMatName = new FileInfo(sideTexturePath).Name;
-
-			Material mainMat;
-			if (!MainMaterials.TryGetValue(mainMatName, out mainMat))
-			{
-				Material mat = ScnToolData.GetMatFromShader(shader);
-				mainMat = new Material(mat);
-				if (File.Exists(mainTexturePath))
-				{
-					mainMat.mainTexture = ParseTextureDXT(File.ReadAllBytes(mainTexturePath));
-					mainMat.mainTexture.name = new FileInfo(mainTexturePath).Name.Replace("tga", "dds");
-
-					MainMaterials.Add(mainMatName, mainMat);
-				}
-				else
-				{
-					Debug.Log("Gosh! there's no texture at " + mainTexturePath);
-				}
-			}
-
-			Material sideMat;
-			if (!SideMaterials.TryGetValue(sideMatName, out sideMat))
-			{
-				Material mat = ScnToolData.GetMatFromShader(shader);
-				sideMat = new Material(mat);
-				if (File.Exists(sideTexturePath))
-				{
-					Texture2D st = ParseTextureDXT(File.ReadAllBytes(sideTexturePath));
-					st.name = new FileInfo(sideTexturePath).Name.Replace(".tga", ".dds");
-					if (isNormal)
-					{
-						sideMat.SetTexture("_DetailAlbedoMap", st);
-						sideMat.EnableKeyword("_DETAIL_MULX2");
-					}
-					else
-					{
-						sideMat.SetTexture("_BumpMap", st);
-						sideMat.EnableKeyword("_NORMALMAP");
-					}
-					SideMaterials.Add(sideMatName, sideMat);
-				}
-				else
-				{
-					Debug.Log("Gosh! there's no texture at " + sideTexturePath);
-				}
-			}
-			return (mainMat, sideMat);
 		}
 
 		public static Texture2D ParseTextureDXT(byte[] ddsBytes)
@@ -750,6 +364,69 @@ namespace AevenScnTool.IO
 			return (texture);
 		}
 
+		public static Texture2D LoadTGA(string fileName)
+		{
+			using (var imageFile = File.OpenRead(fileName))
+			{
+				return LoadTGA(imageFile);
+			}
+		}
+
+		public static Texture2D LoadTGA(Stream TGAStream)
+		{
+
+			using (BinaryReader r = new BinaryReader(TGAStream))
+			{
+				// Skip some header info we don't care about.
+				// Even if we did care, we have to move the stream seek point to the beginning,
+				// as the previous method in the workflow left it at the end.
+				r.BaseStream.Seek(12, SeekOrigin.Begin);
+
+				short width = r.ReadInt16();
+				short height = r.ReadInt16();
+				int bitDepth = r.ReadByte();
+
+				// Skip a byte of header information we don't care about.
+				r.BaseStream.Seek(1, SeekOrigin.Current);
+
+				Texture2D tex = new Texture2D(width, height);
+				Color32[] pulledColors = new Color32[width * height];
+
+				if (bitDepth == 32)
+				{
+					for (int i = 0; i < width * height; i++)
+					{
+						byte red = r.ReadByte();
+						byte green = r.ReadByte();
+						byte blue = r.ReadByte();
+						byte alpha = r.ReadByte();
+
+						pulledColors[i] = new Color32(blue, green, red, alpha);
+					}
+				}
+				else if (bitDepth == 24)
+				{
+					for (int i = 0; i < width * height; i++)
+					{
+						byte red = r.ReadByte();
+						byte green = r.ReadByte();
+						byte blue = r.ReadByte();
+
+						pulledColors[i] = new Color32(blue, green, red, 1);
+					}
+				}
+				else
+				{
+					throw new Exception("TGA texture had non 32/24 bit depth.");
+				}
+
+				tex.SetPixels32(pulledColors);
+				tex.Apply();
+				return tex;
+
+			}
+		}
+
 
 
 		public static ScnData LoadModel(string path, bool identityMatrix = false)
@@ -771,6 +448,357 @@ namespace AevenScnTool.IO
 		public T item;
 		public List<TreeItem<T>> childs;
 		public TreeItem<T> parent;
+	}
+
+	public static class ModelChunkImporter
+	{
+
+		public static Dictionary<string, Material> MainMaterials = new Dictionary<string, Material>();
+		public static Dictionary<string, Material> SideMaterials = new Dictionary<string, Material>();
+
+		public static Mesh CreateMesh(ModelChunk model)
+		{
+			Mesh mesh = new Mesh();
+
+			var verts = model.Mesh.Vertices.ToArray().Clone() as Vector3[];
+
+			for (int i = 0; i < verts.Length; i++)
+			{
+				verts[i] = verts[i] / ScnToolData.Instance.scale;
+			}
+
+			mesh.vertices = verts;
+
+			mesh.normals = model.Mesh.Normals.ToArray().Clone() as Vector3[];
+			mesh.tangents = model.Mesh.TangentsArray().Clone() as Vector4[];
+			mesh.uv = model.Mesh.UV.ToArray().Clone() as Vector2[];
+			mesh.uv2 = model.Mesh.UV2.ToArray().Clone() as Vector2[];
+			mesh.uv3 = model.Mesh.UV2.ToArray().Clone() as Vector2[];
+			mesh.uv4 = model.Mesh.UV2.ToArray().Clone() as Vector2[];
+
+			return mesh;
+		}
+
+		public static void SetSkinnedMesh(GameObject go, ModelChunk model, Mesh mesh, Material[] mats)
+		{
+			SkinnedMeshRenderer smr = go.AddComponent<SkinnedMeshRenderer>();
+			smr.sharedMesh = mesh;
+			smr.materials = mats;
+
+			//WeightBone
+			byte[] bonesPerVertex = new byte[mesh.vertexCount];
+			List<BoneWeight1>[] weights = new List<BoneWeight1>[mesh.vertexCount];
+			List<Transform> bones = new List<Transform>();
+			List<Matrix4x4> bindPoses = new List<Matrix4x4>();
+
+			ExtractBoneWeightData(model, bones, bindPoses, bonesPerVertex, weights);
+
+			List<BoneWeight1> w = new List<BoneWeight1>();
+			for (int i = 0; i < weights.Length; i++)
+			{
+				w.AddRange(weights[i]);
+			}
+
+			NativeArray<BoneWeight1> w_na = new NativeArray<BoneWeight1>(w.ToArray(), Allocator.Temp);
+
+			NativeArray<byte> bpv = new NativeArray<byte>(bonesPerVertex, Allocator.Temp);
+
+			smr.sharedMesh.SetBoneWeights(bpv, w_na);
+			smr.sharedMesh.bindposes = bindPoses.ToArray();
+			smr.bones = bones.ToArray();
+
+			GameObject rootBone = null;
+
+
+			foreach (SceneChunk chunk in ScnFileImporter.createdObjects.Keys)
+			{
+				if (ScnFileImporter.createdObjects[chunk].name == model.SubName)
+				{
+					rootBone = ScnFileImporter.createdObjects[chunk];
+					break;
+				}
+			}
+
+			if (rootBone != null)
+			{
+				smr.rootBone = rootBone.transform;
+			}
+
+			smr.ResetBounds();
+		}
+
+		public static void ExtractBoneWeightData(ModelChunk model, List<Transform> bones, List<Matrix4x4> bindPoses, byte[] bonesPerVertex, List<BoneWeight1>[] weights)
+		{
+			for (int i = 0; i < model.WeightBone.Count; i++)
+			{
+				int boneIndex = GetBoneIndexFromBoneName(model.WeightBone[i].Name, bones);
+				bindPoses.Add(model.WeightBone[i].Matrix);
+
+				if (boneIndex == -1)
+				{
+					Debug.LogWarning($"Bone '{model.WeightBone[i].Name}' couldnt be found. Did you made an oppsie? :P");
+					continue;
+				}
+
+
+				for (int j = 0; j < model.WeightBone[i].Weight.Count; j++)
+				{
+					int index = (int)(model.WeightBone[i].Weight[j].Vertex);
+					bonesPerVertex[index]++;
+					if (weights[index] == null)
+					{
+						weights[index] = new List<BoneWeight1>();
+					}
+					BoneWeight1 bw = new BoneWeight1();
+					bw.boneIndex = boneIndex;
+					bw.weight = model.WeightBone[i].Weight[j].Weight;
+					weights[index].Add(bw);
+				}
+			}
+		}
+
+		public static Material[] SetFaceData(Mesh mesh, ModelChunk model, DirectoryInfo di, TextureReference tr)
+		{
+			Material mat = ScnToolData.GetMatFromShader(model.Shader);
+
+			Material[] mats = new Material[model.TextureData.Textures.Count];
+
+			if (model.TextureData.Textures.Count > 0)
+			{
+				mesh.subMeshCount = model.TextureData.Textures.Count;
+				int[] tris = model.Mesh.Triangles();
+
+				for (int i = 0; i < tris.Length; i++)
+				{
+					if (tris[i] >= mesh.vertexCount)
+					{
+						Debug.Log("Goodness me, some face index are above the vert count X:");
+					}
+					if (tris[i] < 0)
+					{
+						Debug.Log("Goodness me, face index are negative D:");
+					}
+				}
+
+				for (int i = 0; i < model.TextureData.Textures.Count; i++)
+				{
+					TextureEntry texEntry = model.TextureData.Textures[i];
+					mesh.SetTriangles(tris, texEntry.FaceOffset * 3, texEntry.FaceCount * 3, i);
+
+					Material mat_x = new Material(mat);
+					string mainTex = string.Empty;
+					if (texEntry.FileName != string.Empty)
+					{
+						mainTex = di.FullName + "\\" + texEntry.FileName.Replace(".tga", ".dds");
+
+						if (File.Exists(mainTex))
+						{
+							mat_x.mainTexture = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(mainTex));
+							mat_x.mainTexture.name = texEntry.FileName.Replace("tga", "dds");
+						}
+						else
+						{
+							Debug.Log($"Gosh! Texture {mainTex} doesnt exist!");
+
+							mat_x.mainTexture = Texture2D.whiteTexture;
+						}
+					}
+
+					string sideTex = string.Empty;
+					bool normal = false;
+					if (texEntry.FileName2 != string.Empty)
+					{
+						sideTex = di.FullName + "\\" + texEntry.FileName2;
+						if (File.Exists(sideTex))
+						{
+							Texture2D st = ScnFileImporter.LoadTGA(sideTex);
+							st.name = texEntry.FileName2;
+							if (model.TextureData.ExtraUV == 1)
+							{
+								mat_x.SetTexture("_DetailAlbedoMap", st);
+								mat_x.EnableKeyword("_DETAIL_MULX2");
+							}
+							else
+							{
+								mat_x.SetTexture("_BumpMap", st);
+								mat_x.EnableKeyword("_NORMALMAP");
+								normal = true;
+							}
+						}
+						else
+						{
+
+							sideTex = di.FullName + "\\" + texEntry.FileName2.Replace("tga", "dds");
+							if (File.Exists(sideTex))
+							{
+								Texture2D st = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(sideTex));
+								st.name = texEntry.FileName2.Replace("tga", "dds");
+								if (model.TextureData.ExtraUV == 1)
+								{
+									mat_x.SetTexture("_DetailAlbedoMap", st);
+									mat_x.EnableKeyword("_DETAIL_MULX2");
+								}
+								else
+								{
+									mat_x.SetTexture("_BumpMap", st);
+									mat_x.EnableKeyword("_NORMALMAP");
+									normal = true;
+								}
+							}
+						}
+					}
+					tr.textures.Add(new TextureItem(texEntry.FileName, mainTex, sideTex, normal));
+					mats[i] = mat_x;
+				}
+
+
+			}
+			else
+			{
+				mesh.triangles = model.Mesh.Triangles();
+			}
+
+			return mats;
+		}
+
+		public static int GetBoneIndexFromBoneName(string name, List<Transform> bones)
+		{
+			GameObject go = null;
+
+			foreach (SceneChunk chunk in ScnFileImporter.createdObjects.Keys)
+			{
+				if (ScnFileImporter.createdObjects[chunk].name == name)
+				{
+					go = ScnFileImporter.createdObjects[chunk];
+					break;
+				}
+			}
+
+			if (go == null)
+			{
+				return -1;
+			}
+			bones.Add(go.transform);
+			return bones.Count - 1;
+		}
+
+
+
+		public static void SetOctMesh(GameObject go, ModelChunk model, Mesh mesh)
+		{
+			MeshCollider mc = go.AddComponent<MeshCollider>();
+			CollisionData cd = go.AddComponent<CollisionData>();
+
+			if (Enum.TryParse(model.Name[4..], out GroundFlag result1))
+			{
+				cd.ground = result1;
+			}
+			else if (Enum.TryParse(model.Name[4..], out WeaponFlag result2))
+			{
+				cd.weapon = result2;
+			}
+			else
+			{
+				cd.ground = GroundFlag.blast;
+			}
+
+			mc.cookingOptions = MeshColliderCookingOptions.EnableMeshCleaning;
+			if (mesh.vertices.Length > 0)
+			{
+				mc.sharedMesh = mesh;
+			}
+		}
+
+		public static int ModelAnimationIsTransform(List<ModelAnimation> anims)
+		{
+			if (anims.Count == 0)
+			{
+				return -1;
+			}
+			else if (anims.Count > 1)
+			{
+				return 0;
+			}
+			else if (anims.Count == 1)
+			{
+				var anim = anims[0];
+				if (anim.TransformKeyData2.TransformKey.TKey.Count != 0)
+				{
+					return 0;
+				}
+				if (anim.TransformKeyData2.TransformKey.RKey.Count != 0)
+				{
+					return 0;
+				}
+				if (anim.TransformKeyData2.TransformKey.SKey.Count != 0)
+				{
+					return 0;
+				}
+				if (anim.TransformKeyData2.FloatKeys.Count != 0)
+				{
+					return 2;
+				}
+				if (anim.TransformKeyData2.MorphKeys.Count != 0)
+				{
+					return 0;
+				}
+				return 1;
+			}
+			return 0;
+		}
+
+		static (Material, Material) LoadMaterials(string mainTexturePath, string sideTexturePath, RenderFlag shader, bool isNormal = false)
+		{
+			string mainMatName = new FileInfo(mainTexturePath).Name;
+			string sideMatName = new FileInfo(sideTexturePath).Name;
+
+			Material mainMat;
+			if (!MainMaterials.TryGetValue(mainMatName, out mainMat))
+			{
+				Material mat = ScnToolData.GetMatFromShader(shader);
+				mainMat = new Material(mat);
+				if (File.Exists(mainTexturePath))
+				{
+					mainMat.mainTexture = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(mainTexturePath));
+					mainMat.mainTexture.name = new FileInfo(mainTexturePath).Name.Replace("tga", "dds");
+
+					MainMaterials.Add(mainMatName, mainMat);
+				}
+				else
+				{
+					Debug.Log("Gosh! there's no texture at " + mainTexturePath);
+				}
+			}
+
+			Material sideMat;
+			if (!SideMaterials.TryGetValue(sideMatName, out sideMat))
+			{
+				Material mat = ScnToolData.GetMatFromShader(shader);
+				sideMat = new Material(mat);
+				if (File.Exists(sideTexturePath))
+				{
+					Texture2D st = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(sideTexturePath));
+					st.name = new FileInfo(sideTexturePath).Name.Replace(".tga", ".dds");
+					if (isNormal)
+					{
+						sideMat.SetTexture("_DetailAlbedoMap", st);
+						sideMat.EnableKeyword("_DETAIL_MULX2");
+					}
+					else
+					{
+						sideMat.SetTexture("_BumpMap", st);
+						sideMat.EnableKeyword("_NORMALMAP");
+					}
+					SideMaterials.Add(sideMatName, sideMat);
+				}
+				else
+				{
+					Debug.Log("Gosh! there's no texture at " + sideTexturePath);
+				}
+			}
+			return (mainMat, sideMat);
+		}
+
 	}
 
 	public static class ScnFileExporter
@@ -826,22 +854,22 @@ namespace AevenScnTool.IO
 			if (bone) return CreateBoneSystemChunk(bonesystem, container, parentChunk);
 
 			SkinnedMeshRenderer smr = child.GetComponent<SkinnedMeshRenderer>();
-			if (smr) return CreateModelChunkSkinned(smr, container, parentChunk, relativeParent);
+			if (smr) return ModelChunkExporter.CreateModelChunkSkinned(smr, container, parentChunk, relativeParent);
 
 			MeshRenderer mr = child.GetComponent<MeshRenderer>();
 			if (mr)
 			{
-				var mesh = CreateModelChunk(mr, container, parentChunk, relativeParent);
+				var mesh = ModelChunkExporter.CreateModelChunk(mr, container, parentChunk, relativeParent);
 				CollisionData cd_mr = child.GetComponent<CollisionData>();
 				if (cd_mr)
 				{
-					CreateCollisionChunk(cd_mr, container, mesh);
+					ModelChunkExporter.CreateCollisionChunk(cd_mr, container, mesh);
 				}
 				return mesh;
 			}
 
 			CollisionData cd = child.GetComponent<CollisionData>();
-			if (cd) return CreateCollisionChunk(cd, container, parentChunk);
+			if (cd) return ModelChunkExporter.CreateCollisionChunk(cd, container, parentChunk);
 
 			BoxCollider bc = child.GetComponent<BoxCollider>();
 			if (bc) return CreateBoxChunk(bc, container, parentChunk);
@@ -851,7 +879,6 @@ namespace AevenScnTool.IO
 
 			return null;
 		}
-
 
 		static BoneChunk CreateBoneChunk(Bone bone, SceneContainer container, SceneChunk parent)
 		{
@@ -920,7 +947,180 @@ namespace AevenScnTool.IO
 			return boneSys;
 		}
 
-		static ModelChunk CreateCollisionChunk(CollisionData cd, SceneContainer container, SceneChunk parentChunk)
+		static BoxChunk CreateBoxChunk(BoxCollider bc, SceneContainer container, SceneChunk parentChunk)
+		{
+			string boxName = bc.name;
+			var pd = bc.GetComponent<PointDrawer>();
+			if (pd)
+			{
+
+			}
+
+			BoxChunk box = MakeChunk<BoxChunk>(container, boxName);
+			while (ValidateName(box.Name) == false)
+			{
+				box.Name = box.Name + ScnToolData.GetRandomName();
+			}
+
+			if (parentChunk != null)
+			{
+				if (parentChunk.ChunkType == ChunkType.Bone || parentChunk.ChunkType == ChunkType.Box)
+				{
+					box.SubName = parentChunk.Name;
+					box.Matrix = Matrix4x4.TRS(bc.transform.localPosition * ScnToolData.Instance.scale, bc.transform.localRotation, bc.transform.localScale);
+					box.Size = bc.size * ScnToolData.Instance.scale / 2;
+					return box;
+				}
+			}
+
+			box.SubName = container.Header.Name;
+			box.Matrix = Matrix4x4.TRS(bc.transform.position * ScnToolData.Instance.scale, bc.transform.rotation, bc.transform.lossyScale);
+			box.Size = bc.size * ScnToolData.Instance.scale / 2;
+			return box;
+		}
+
+		static ShapeChunk CreateShapeChunks(LineRenderer lr, SceneContainer container)
+		{
+			if (lr.positionCount % 2 != 0)
+			{
+				Debug.LogWarning("Your LineRenderer had an odd number of positions! This cant be, it's suposed to be in pairs! We're gonna have to ignore it this time, fix it please~~~!", lr.gameObject);
+				return MakeChunk<ShapeChunk>(container, lr.name + "_empty"); ;
+			}
+			ShapeChunk shape = MakeChunk<ShapeChunk>(container, lr.name);
+			while (ValidateName(shape.Name) == false)
+			{
+				shape.Name = shape.Name + ScnToolData.GetRandomName();
+			}
+
+
+			if (lr.transform.parent != null) shape.SubName = lr.transform.parent.name;
+
+			shape.Matrix = Matrix4x4.TRS(lr.transform.localPosition, lr.transform.localRotation, lr.transform.localScale);
+
+			for (int i = 0; i < lr.positionCount; i += 2)
+			{
+				shape.Unk.Add(Tuple.Create(lr.GetPosition(i) * ScnToolData.Instance.scale, lr.GetPosition(i + 1) * ScnToolData.Instance.scale));
+			}
+
+			return shape;
+		}
+
+		public static bool ValidateName(string name)
+		{
+			if (name.StartsWith("oct_"))
+			{
+				return true;
+			}
+			if (usedNames.Contains(name))
+			{
+				Debug.LogWarning($"Oh boy! you're using the name '{name}' somewhere else already! That could be a very big issue so im going to rename it inside the scene file!");
+				return false;
+			}
+			else
+			{
+				usedNames.Add(name);
+				return true;
+			}
+		}
+
+		public static T MakeChunk<T>(SceneContainer container, string name) where T : SceneChunk
+		{
+			T chunk = (T)Activator.CreateInstance(typeof(T), new object[] { container });
+			container.Add(chunk);
+			chunk.Name = name;
+
+			return chunk;
+		}
+
+
+		public static byte[] WriteTextureDXT(Texture2D texture)
+		{
+			var colors = texture.GetPixels32();
+			byte[] bytes = new byte[colors.Length * 4];
+			for (int i = 0; i < colors.Length; i++)
+			{
+				int bi = i * 4;
+				bytes[bi] = colors[i].r;
+				bytes[bi + 1] = colors[i].g;
+				bytes[bi + 2] = colors[i].b;
+				bytes[bi + 3] = colors[i].a;
+			}
+
+			byte[] magic = System.Text.Encoding.ASCII.GetBytes(new char[] { 'D', 'D', 'S', ' ' });
+			int Size = 124;
+			byte[] Flags = StrToByteArray("00000000");
+			int Height = texture.height;
+			int Width = texture.width;
+			int PitchOrLinearSize = 0;
+			int Depth = 0;
+			int MipMapCount = 1;
+			byte[] Reserved1 = new byte[44];//[11];
+											//pixel format
+			int pfSize = 32;
+			var pfFlags = StrToByteArray("41000000");
+			byte[] pfFourCC = System.Text.Encoding.ASCII.GetBytes(new char[] { 'D', 'X', 'T', '1' });
+			if (texture.format == TextureFormat.DXT1)
+			{
+				pfFourCC = System.Text.Encoding.ASCII.GetBytes(new char[] { 'D', 'X', 'T', '1' });
+			}
+			else if (texture.format == TextureFormat.DXT5)
+			{
+				pfFourCC = System.Text.Encoding.ASCII.GetBytes(new char[] { 'D', 'X', 'T', '5' });
+			}
+			int pfRGBBitCount = 32;
+			byte[] pfRBitMask = StrToByteArray("ff000000");
+			byte[] pfGBitMask = StrToByteArray("00ff0000");
+			byte[] pfBBitMask = StrToByteArray("0000ff00");
+			byte[] pfABitMask = StrToByteArray("000000ff");
+
+			var Caps = StrToByteArray("00010000");
+			int Caps2 = 0;
+			int Caps3 = 0;
+			int Caps4 = 0;
+			int Reserved2 = 0;
+
+			List<byte> dxtBytes = new List<byte>();
+			dxtBytes.AddRange(magic);
+			dxtBytes.AddRange(BitConverter.GetBytes(Size));
+			dxtBytes.AddRange(Flags);
+			dxtBytes.AddRange(BitConverter.GetBytes(Height));
+			dxtBytes.AddRange(BitConverter.GetBytes(Width));
+			dxtBytes.AddRange(BitConverter.GetBytes(PitchOrLinearSize));
+			dxtBytes.AddRange(BitConverter.GetBytes(Depth));
+			dxtBytes.AddRange(BitConverter.GetBytes(MipMapCount));
+			dxtBytes.AddRange(Reserved1);
+			dxtBytes.AddRange(BitConverter.GetBytes(pfSize));
+			dxtBytes.AddRange(pfFlags);
+			dxtBytes.AddRange(pfFourCC);
+			dxtBytes.AddRange(BitConverter.GetBytes(pfRGBBitCount));
+			dxtBytes.AddRange(pfRBitMask);
+			dxtBytes.AddRange(pfGBitMask);
+			dxtBytes.AddRange(pfBBitMask);
+			dxtBytes.AddRange(pfABitMask);
+			dxtBytes.AddRange(Caps);
+			dxtBytes.AddRange(BitConverter.GetBytes(Caps2));
+			dxtBytes.AddRange(BitConverter.GetBytes(Caps3));
+			dxtBytes.AddRange(BitConverter.GetBytes(Caps4));
+			dxtBytes.AddRange(BitConverter.GetBytes(Reserved2));
+			dxtBytes.AddRange(bytes);
+
+			return dxtBytes.ToArray();
+
+			static byte[] StrToByteArray(string str)
+			{
+				List<byte> hexres = new List<byte>();
+				for (int i = 0; i < str.Length; i += 2)
+					hexres.Add(Convert.ToByte(str.Substring(i, 2), 16));
+
+				return hexres.ToArray();
+			}
+		}
+	}
+
+	public static class ModelChunkExporter
+	{
+
+		public static ModelChunk CreateCollisionChunk(CollisionData cd, SceneContainer container, SceneChunk parentChunk)
 		{
 			if (cd.ground == GroundFlag.blast)//Dealing with the special case of breakables
 			{
@@ -963,22 +1163,15 @@ namespace AevenScnTool.IO
 
 			ModelChunk CreateModelChunkFromMesh(Transform transform, Mesh mesh, string name)
 			{
-				ModelChunk model = MakeChunk<ModelChunk>(container, name);
+				ModelChunk model = ScnFileExporter.MakeChunk<ModelChunk>(container, name);
 				model.SubName = container.Header.Name;
 				model.Matrix = Matrix4x4.TRS(
 					transform.position * ScnToolData.Instance.scale,
 					transform.rotation,
 					transform.lossyScale);
 				model.Shader = RenderFlag.None;
-				model.Animation = new List<ModelAnimation>();
-				model.Animation.Add(new ModelAnimation());
-				model.Animation[0].Name = ScnToolData.Instance.main_animation_name;
-				model.Animation[0].TransformKeyData2 = new TransformKeyData2();
-				model.Animation[0].TransformKeyData2.TransformKey = new TransformKey();
 
-				model.Animation[0].TransformKeyData2.TransformKey.Translation = transform.position * ScnToolData.Instance.scale;
-				model.Animation[0].TransformKeyData2.TransformKey.Rotation = transform.rotation;
-				model.Animation[0].TransformKeyData2.TransformKey.Scale = transform.lossyScale;
+				model.Animation = GetTransformAnimation(transform.position, transform.rotation, transform.lossyScale);
 
 				SetMesh(model.Mesh, mesh, obj: cd.gameObject);
 
@@ -991,12 +1184,12 @@ namespace AevenScnTool.IO
 
 			ModelChunk CreateModelChunkFromMeshBlast(Transform transform, Mesh mesh, string name, SceneChunk parentChunk)
 			{
-				ModelChunk model = MakeChunk<ModelChunk>(container, name);
-				while (ValidateName(model.Name) == false)
+				ModelChunk model = ScnFileExporter.MakeChunk<ModelChunk>(container, name);
+				while (ScnFileExporter.ValidateName(model.Name) == false)
 				{
 					model.Name = model.Name + ScnToolData.GetRandomName();
 				}
-				model.SubName = parentChunk != null? parentChunk.Name : container.Header.Name;
+				model.SubName = parentChunk != null ? parentChunk.Name : container.Header.Name;
 				model.Matrix = Matrix4x4.TRS(
 					transform.localPosition * ScnToolData.Instance.scale,
 					transform.localRotation,
@@ -1022,14 +1215,14 @@ namespace AevenScnTool.IO
 			}
 		}
 
-		static ModelChunk CreateModelChunk(MeshRenderer mr, SceneContainer container, SceneChunk parentChunk, Transform relativeParent)
+		public static ModelChunk CreateModelChunk(MeshRenderer mr, SceneContainer container, SceneChunk parentChunk, Transform relativeParent)
 		{
-			ModelChunk model = MakeChunk<ModelChunk>(container, mr.name);
-			while (ValidateName(model.Name) == false)
+			ModelChunk model = ScnFileExporter.MakeChunk<ModelChunk>(container, mr.name);
+			while (ScnFileExporter.ValidateName(model.Name) == false)
 			{
 				model.Name = model.Name + ScnToolData.GetRandomName();
 			}
-			
+
 
 			MeshFilter mf = mr.GetComponent<MeshFilter>();
 			ProBuilderMesh pbm = mr.GetComponent<ProBuilderMesh>();
@@ -1052,7 +1245,7 @@ namespace AevenScnTool.IO
 					{
 						lightmap = true;
 					}
-					
+
 				}
 
 				mesh = GetMeshFromPBM(pbm, lightmap);
@@ -1070,42 +1263,34 @@ namespace AevenScnTool.IO
 			if (tr)
 			{
 				model.Shader = tr.renderFlags;
-				SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal, mr.gameObject,uv2: true);
+				SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal, mr.gameObject, uv2: true);
 			}
 			else
 			{
 				model.Shader = RenderFlag.None;
 				SetMesh(model.Mesh, mesh, false, false, mr.gameObject, uv2: true);
 
-				
+
 
 				Debug.LogError("Goodness me! You have a mesh without a texture reference! That will make the mesh have so much problems!", mr.gameObject);
 			}
-			/*if (mr.additionalVertexStreams != null && mr.additionalVertexStreams.uv2.Length == model.Mesh.UV.Count)//should be using lightmap uvs
-			{
-				model.Mesh.UV2 = new List<Vector2>(mr.additionalVertexStreams.uv2);
-			}
-			if (mr.enlightenVertexStream != null && mr.enlightenVertexStream.uv2.Length == model.Mesh.UV.Count)//should be using lightmap uvs
-			{
-				model.Mesh.UV2 = new List<Vector2>(mr.enlightenVertexStream.uv2);
-			}*/
-			Debug.Log(mr.lightmapScaleOffset, mr.gameObject);
+
 
 			for (int i = 0; i < model.Mesh.UV2.Count; i++)
 			{
-				float x = (model.Mesh.UV2[i].x  * mr.lightmapScaleOffset.x) + mr.lightmapScaleOffset.z;
-				float y = (model.Mesh.UV2[i].y  * mr.lightmapScaleOffset.y) + mr.lightmapScaleOffset.w;
+				float x = (model.Mesh.UV2[i].x * mr.lightmapScaleOffset.x) + mr.lightmapScaleOffset.z;
+				float y = (model.Mesh.UV2[i].y * mr.lightmapScaleOffset.y) + mr.lightmapScaleOffset.w;
 				model.Mesh.UV2[i] = new Vector2(x, y);
 			}
 
-			if (ScnToolData.Instance.uv_flipVertical_lm)
+			if (ScnToolData.Instance.uv_flipVertical_lm ^ tr.flipUvVertical_lm)
 			{
 				for (int i = 0; i < model.Mesh.UV2.Count; i++)
 				{
 					model.Mesh.UV2[i] = new Vector2(model.Mesh.UV2[i].x, -model.Mesh.UV2[i].y);
 				}
 			}
-			if (ScnToolData.Instance.uv_flipHorizontal_lm)
+			if (ScnToolData.Instance.uv_flipHorizontal_lm ^ tr.flipUvHorizontal_lm)
 			{
 				for (int i = 0; i < model.Mesh.UV2.Count; i++)
 				{
@@ -1140,17 +1325,17 @@ namespace AevenScnTool.IO
 			return model;
 		}
 
-		static ModelChunk CreateModelChunkSkinned(SkinnedMeshRenderer smr, SceneContainer container, SceneChunk parentChunk, Transform relativeParent)
+		public static ModelChunk CreateModelChunkSkinned(SkinnedMeshRenderer smr, SceneContainer container, SceneChunk parentChunk, Transform relativeParent)
 		{
-			ModelChunk model = MakeChunk<ModelChunk>(container, smr.name);
-			while (ValidateName(model.Name) == false)
+			ModelChunk model = ScnFileExporter.MakeChunk<ModelChunk>(container, smr.name);
+			while (ScnFileExporter.ValidateName(model.Name) == false)
 			{
 				model.Name = model.Name + ScnToolData.GetRandomName();
 			}
 			if (smr.transform.parent != null) model.SubName = smr.transform.parent.name;
 
 
-			(Vector3 position, Quaternion rotation, Vector3 scale) = DealWithModelParenting(smr.transform,relativeParent,model,parentChunk,container);
+			(Vector3 position, Quaternion rotation, Vector3 scale) = DealWithModelParenting(smr.transform, relativeParent, model, parentChunk, container);
 
 			Mesh mesh = smr.GetComponent<MeshFilter>().sharedMesh;
 
@@ -1215,99 +1400,9 @@ namespace AevenScnTool.IO
 			return model;
 		}
 
-		static BoxChunk CreateBoxChunk(BoxCollider bc, SceneContainer container, SceneChunk parentChunk)
-		{
-			string boxName = bc.name;
-			var pd = bc.GetComponent<PointDrawer>();
-			if (pd)
-			{
-
-			}
-
-			BoxChunk box = MakeChunk<BoxChunk>(container, boxName);
-			while (ValidateName(box.Name) == false)
-			{
-				box.Name = box.Name + ScnToolData.GetRandomName();
-			}
-
-			if (parentChunk != null)
-			{
-				if (parentChunk.ChunkType == ChunkType.Bone || parentChunk.ChunkType == ChunkType.Box)
-				{
-					box.SubName = parentChunk.Name;
-					box.Matrix = Matrix4x4.TRS(bc.transform.localPosition * ScnToolData.Instance.scale, bc.transform.localRotation, bc.transform.localScale);
-					box.Size = bc.size * ScnToolData.Instance.scale / 2;
-					return box;
-				}
-			}
-
-			box.SubName = container.Header.Name;
-			box.Matrix = Matrix4x4.TRS(bc.transform.position * ScnToolData.Instance.scale, bc.transform.rotation, bc.transform.lossyScale);
-			box.Size = bc.size * ScnToolData.Instance.scale / 2;
-			return box;
-		}
-
-		static ShapeChunk CreateShapeChunks(LineRenderer lr, SceneContainer container)
-		{
-			if (lr.positionCount % 2 != 0)
-			{
-				Debug.LogWarning("Your LineRenderer had an odd number of positions! This cant be, it's suposed to be in pairs! We're gonna have to ignore it this time, fix it please~~~!", lr.gameObject);
-				return MakeChunk<ShapeChunk>(container, lr.name + "_empty"); ;
-			}
-			ShapeChunk shape = MakeChunk<ShapeChunk>(container, lr.name);
-			while (ValidateName(shape.Name) == false)
-			{
-				shape.Name = shape.Name + ScnToolData.GetRandomName();
-			}
-
-
-			if (lr.transform.parent != null) shape.SubName = lr.transform.parent.name;
-
-			shape.Matrix = Matrix4x4.TRS(lr.transform.localPosition, lr.transform.localRotation, lr.transform.localScale);
-
-			for (int i = 0; i < lr.positionCount; i += 2)
-			{
-				shape.Unk.Add(Tuple.Create(lr.GetPosition(i) * ScnToolData.Instance.scale, lr.GetPosition(i + 1) * ScnToolData.Instance.scale));
-			}
-
-			return shape;
-		}
-
-
-		static (Vector3,Quaternion,Vector3) DealWithModelParenting(Transform transform, Transform relativeParent, SceneChunk chunk, SceneChunk parentChunk, SceneContainer container)
-		{
-			Vector3 position = transform.position * ScnToolData.Instance.scale;
-			Quaternion rotation = transform.rotation;
-			Vector3 scale = transform.lossyScale;
-			chunk.SubName = container.Header.Name;
-			if (parentChunk != null)
-			{
-				if (parentChunk.ChunkType == ChunkType.Bone ||
-					(parentChunk.ChunkType == ChunkType.ModelData/* &&
-					transform.name.StartsWith("oct_")
-					&& !transform.name.StartsWith("oct_land") &&
-					!transform.name.StartsWith("oct_weapon")*/))
-				{
-					chunk.SubName = parentChunk.Name;
-					Transform oldParent = transform.transform.parent;
-					transform.transform.SetParent(relativeParent, true);
-
-					position = transform.transform.localPosition * ScnToolData.Instance.scale;
-					rotation = transform.transform.localRotation;
-					scale = transform.transform.localScale;
-
-					transform.transform.SetParent(oldParent, true);
-				}
-			}
-
-			chunk.Matrix = Matrix4x4.TRS(position, rotation, scale);
-
-			return (position,rotation,scale);
-		}
-
 		static void SetMesh(MeshData meshData, Mesh mesh, bool flipUvVertical = false, bool flipUvHorizontal = false, UnityEngine.Object obj = null, bool uv2 = false)
 		{
-			if ( mesh == null)
+			if (mesh == null)
 			{
 				meshData.Vertices = new List<Vector3>();
 				meshData.Normals = new List<Vector3>();
@@ -1331,7 +1426,7 @@ namespace AevenScnTool.IO
 			{
 				meshData.UV2 = new List<Vector2>(mesh.uv2);
 			}
-			
+
 			if (ScnToolData.Instance.uv_flipVertical ^ flipUvVertical)
 			{
 				for (int i = 0; i < meshData.UV.Count; i++)
@@ -1347,7 +1442,7 @@ namespace AevenScnTool.IO
 				}
 			}
 
-			
+
 			meshData.SetTangents(mesh.tangents);
 			meshData.SetTriangles(mesh.triangles);
 		}
@@ -1401,7 +1496,7 @@ namespace AevenScnTool.IO
 
 								var lm = LightmapSettings.lightmaps[mr.lightmapIndex];
 								te.FileName2 = lm.lightmapColor.name + ".tga";
-								lightmaps.Add(lm.lightmapColor);
+								ScnFileExporter.lightmaps.Add(lm.lightmapColor);
 							}
 
 						}
@@ -1412,23 +1507,37 @@ namespace AevenScnTool.IO
 		}
 
 
-		static bool ValidateName(string name)
+		static (Vector3, Quaternion, Vector3) DealWithModelParenting(Transform transform, Transform relativeParent, SceneChunk chunk, SceneChunk parentChunk, SceneContainer container)
 		{
-			if (name.StartsWith("oct_"))
+			Vector3 position = transform.position * ScnToolData.Instance.scale;
+			Quaternion rotation = transform.rotation;
+			Vector3 scale = transform.lossyScale;
+			chunk.SubName = container.Header.Name;
+			if (parentChunk != null)
 			{
-				return true;
+				if (parentChunk.ChunkType == ChunkType.Bone ||
+					(parentChunk.ChunkType == ChunkType.ModelData/* &&
+					transform.name.StartsWith("oct_")
+					&& !transform.name.StartsWith("oct_land") &&
+					!transform.name.StartsWith("oct_weapon")*/))
+				{
+					chunk.SubName = parentChunk.Name;
+					Transform oldParent = transform.transform.parent;
+					transform.transform.SetParent(relativeParent, true);
+
+					position = transform.transform.localPosition * ScnToolData.Instance.scale;
+					rotation = transform.transform.localRotation;
+					scale = transform.transform.localScale;
+
+					transform.transform.SetParent(oldParent, true);
+				}
 			}
-			if (usedNames.Contains(name))
-			{
-				Debug.LogWarning($"Oh boy! you're using the name '{name}' somewhere else already! That could be a very big issue so im going to rename it inside the scene file!");
-				return false;
-			}
-			else
-			{
-				usedNames.Add(name);
-				return true;
-			}
+
+			chunk.Matrix = Matrix4x4.TRS(position, rotation, scale);
+
+			return (position, rotation, scale);
 		}
+
 
 		static Mesh GetMeshFromPBM(ProBuilderMesh pbm, bool hasLightmap)
 		{
@@ -1538,97 +1647,20 @@ namespace AevenScnTool.IO
 			}
 		}
 
-		static T MakeChunk<T>(SceneContainer container, string name) where T : SceneChunk
+		static List<ModelAnimation> GetTransformAnimation(Vector3 position, Quaternion rotation, Vector3 scale)
 		{
-			T chunk = (T)Activator.CreateInstance(typeof(T), new object[] { container });
-			container.Add(chunk);
-			chunk.Name = name;
+			var a = new List<ModelAnimation>();
+			var anim = new ModelAnimation();
+			anim.Name = ScnToolData.Instance.main_animation_name;
+			anim.TransformKeyData2 = new TransformKeyData2();
+			anim.TransformKeyData2.TransformKey = new TransformKey();
+			
+			anim.TransformKeyData2.TransformKey.Translation = position * ScnToolData.Instance.scale;
+			anim.TransformKeyData2.TransformKey.Rotation = rotation;
+			anim.TransformKeyData2.TransformKey.Scale = scale;
 
-			return chunk;
-		}
-
-
-		public static byte[] WriteTextureDXT(Texture2D texture)
-		{
-			var colors = texture.GetPixels32();
-			byte[] bytes = new byte[colors.Length * 4];
-			for (int i = 0; i < colors.Length; i++)
-			{
-				int bi = i * 4;
-				bytes[bi] = colors[i].r;
-				bytes[bi + 1] = colors[i].g;
-				bytes[bi + 2] = colors[i].b;
-				bytes[bi + 3] = colors[i].a;
-			}
-
-			byte[] magic = System.Text.Encoding.ASCII.GetBytes(new char[] { 'D', 'D', 'S', ' ' });
-			int Size = 124;
-			byte[] Flags = StrToByteArray("00000000");
-			int Height = texture.height;
-			int Width = texture.width;
-			int PitchOrLinearSize = 0;
-			int Depth = 0;
-			int MipMapCount = 1;
-			byte[] Reserved1 = new byte[44];//[11];
-											//pixel format
-			int pfSize = 32;
-			var pfFlags = StrToByteArray("41000000");
-			byte[] pfFourCC = System.Text.Encoding.ASCII.GetBytes(new char[] { 'D', 'X', 'T', '1' });
-			if (texture.format == TextureFormat.DXT1)
-			{
-				pfFourCC = System.Text.Encoding.ASCII.GetBytes(new char[] { 'D', 'X', 'T', '1' });
-			}
-			else if (texture.format == TextureFormat.DXT5)
-			{
-				pfFourCC = System.Text.Encoding.ASCII.GetBytes(new char[] { 'D', 'X', 'T', '5' });
-			}
-			int pfRGBBitCount = 32;
-			byte[] pfRBitMask = StrToByteArray("ff000000");
-			byte[] pfGBitMask = StrToByteArray("00ff0000");
-			byte[] pfBBitMask = StrToByteArray("0000ff00");
-			byte[] pfABitMask = StrToByteArray("000000ff");
-
-			var Caps = StrToByteArray("00010000");
-			int Caps2 = 0;
-			int Caps3 = 0;
-			int Caps4 = 0;
-			int Reserved2 = 0;
-
-			List<byte> dxtBytes = new List<byte>();
-			dxtBytes.AddRange(magic);
-			dxtBytes.AddRange(BitConverter.GetBytes(Size));
-			dxtBytes.AddRange(Flags);
-			dxtBytes.AddRange(BitConverter.GetBytes(Height));
-			dxtBytes.AddRange(BitConverter.GetBytes(Width));
-			dxtBytes.AddRange(BitConverter.GetBytes(PitchOrLinearSize));
-			dxtBytes.AddRange(BitConverter.GetBytes(Depth));
-			dxtBytes.AddRange(BitConverter.GetBytes(MipMapCount));
-			dxtBytes.AddRange(Reserved1);
-			dxtBytes.AddRange(BitConverter.GetBytes(pfSize));
-			dxtBytes.AddRange(pfFlags);
-			dxtBytes.AddRange(pfFourCC);
-			dxtBytes.AddRange(BitConverter.GetBytes(pfRGBBitCount));
-			dxtBytes.AddRange(pfRBitMask);
-			dxtBytes.AddRange(pfGBitMask);
-			dxtBytes.AddRange(pfBBitMask);
-			dxtBytes.AddRange(pfABitMask);
-			dxtBytes.AddRange(Caps);
-			dxtBytes.AddRange(BitConverter.GetBytes(Caps2));
-			dxtBytes.AddRange(BitConverter.GetBytes(Caps3));
-			dxtBytes.AddRange(BitConverter.GetBytes(Caps4));
-			dxtBytes.AddRange(BitConverter.GetBytes(Reserved2));
-			dxtBytes.AddRange(bytes);
-
-			return dxtBytes.ToArray();
-
-			static byte[] StrToByteArray(string str)
-			{
-				List<byte> hexres = new List<byte>();
-				for (int i = 0; i < str.Length; i += 2)
-					hexres.Add(Convert.ToByte(str.Substring(i, 2), 16));
-
-				return hexres.ToArray();
-			}
+			a.Add(anim);
+			return a;
 		}
 	}
 }

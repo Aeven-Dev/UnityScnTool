@@ -141,15 +141,31 @@ namespace AevenScnTool.Menus
 			{
                 foreach (var tex in ScnFileExporter.lightmaps)
                 {
-					try
-					{
-                        var bytes = ScnFileExporter.WriteTextureDXT(tex);
-                        File.WriteAllBytes(fileInfo.Directory.FullName + "\\" + tex.name + ".dds", bytes);
-                    }
-					catch (System.Exception)
-					{
+                    string assetPath = AssetDatabase.GetAssetPath(tex);
+                    var tImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+                    if (tImporter != null)
+                    {
+                        tImporter.textureType = TextureImporterType.Lightmap;
 
-					}
+                        tImporter.isReadable = true;
+                        tImporter.textureCompression = TextureImporterCompression.Uncompressed;
+
+                        AssetDatabase.ImportAsset(assetPath);
+                    }
+                }
+
+                AssetDatabase.Refresh();
+                foreach (var tex in ScnFileExporter.lightmaps)
+                {
+                    try
+                    {
+                        var bytes = tex.EncodeToTGA();
+                        File.WriteAllBytes(fileInfo.Directory.FullName + "\\" + tex.name + ".tga", bytes);
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError(e.Message);
+                    }
                 }
             }
 
