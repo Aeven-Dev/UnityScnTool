@@ -141,6 +141,10 @@ namespace AevenScnTool.Menus
 			{
                 foreach (var tex in ScnFileExporter.lightmaps)
                 {
+					if (tex.isReadable)
+					{
+                        continue;
+					}
                     string assetPath = AssetDatabase.GetAssetPath(tex);
                     var tImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
                     if (tImporter != null)
