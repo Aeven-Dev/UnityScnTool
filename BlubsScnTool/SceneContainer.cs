@@ -10,6 +10,8 @@ namespace NetsphereScnTool.Scene
 {
     public class SceneContainer : SortableBindingList<SceneChunk>
     {
+        public static bool verbose = false;
+
         public SceneHeader Header { get; set; }
 
         public List<BoxChunk> boxes = new List<BoxChunk>();
@@ -101,9 +103,10 @@ namespace NetsphereScnTool.Scene
                     var type = r.ReadEnum<ChunkType>();
                     string name = r.ReadCString();
 
-                    Debug.Log(name);
+                    Debug.Log("Chunk name: " + name);
                     string subName = r.ReadCString();
 
+                    Debug.Log("Chunk subName: " + subName);
                     switch (type)
                     {
                         case ChunkType.ModelData:
@@ -209,6 +212,14 @@ namespace NetsphereScnTool.Scene
                 }
             }
         }
+
+        public static void Log(object message)
+		{
+			if (verbose)
+			{
+                Debug.Log(message);
+			}
+		}
     }
 
     public class SceneHeader : IManualSerializer

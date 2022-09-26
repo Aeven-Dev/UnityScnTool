@@ -20,6 +20,7 @@ namespace NetsphereScnTool.Scene.Chunks
         {
             base.Serialize(stream);
 
+            SceneContainer.Log("Animation.Count: " + Animation.Count);
             using (var w = stream.ToBinaryWriter(true))
             {
                 w.Write(Version);
@@ -29,6 +30,8 @@ namespace NetsphereScnTool.Scene.Chunks
                 {
                     if (Version >= 0.2000000029802322f)
                     {
+                        SceneContainer.Log("anim.Name: " + anim.Name);
+                        SceneContainer.Log("anim.Copy: " + anim.Copy);
                         w.WriteCString(anim.Name);
                         w.WriteCString(anim.Copy);
                         if (string.IsNullOrWhiteSpace(anim.Copy))
@@ -38,6 +41,8 @@ namespace NetsphereScnTool.Scene.Chunks
                     {
                         w.WriteCString(anim.Name);
                         w.Serialize(anim.TransformKeyData);
+                        SceneContainer.Log("anim.Name: " + anim.Name);
+                        SceneContainer.Log("anim.TransformKeyData: " + anim.TransformKeyData);
                     }
                 }
             }
@@ -56,8 +61,12 @@ namespace NetsphereScnTool.Scene.Chunks
                 {
                     if (Version >= 0.2000000029802322f)
                     {
-                        string name = r.ReadCString();
+                        string name1 = r.ReadCString();
                         string subName = r.ReadCString();
+
+                        SceneContainer.Log("anim.Name: " + name1);
+                        SceneContainer.Log("anim.Copy: " + subName);
+
                         TransformKeyData transformKeyData = null;
 
                         if (string.IsNullOrWhiteSpace(subName))
@@ -65,15 +74,22 @@ namespace NetsphereScnTool.Scene.Chunks
                             transformKeyData = r.Deserialize<TransformKeyData>();
                         }
 
-                        Animation.Add(new BoneAnimation { Name = name, Copy = subName, TransformKeyData = transformKeyData });
+                        Animation.Add(new BoneAnimation { Name = name1, Copy = subName, TransformKeyData = transformKeyData });
+
+
+
                     }
                     else
                     {
 
-                        Animation.Add(new BoneAnimation { Name = r.ReadCString(), Copy = default(string), TransformKeyData = r.Deserialize<TransformKeyData>() });
+                        string name2 = r.ReadCString();
+                        SceneContainer.Log("anim.Name: " + name2 + " - position: " + r.BaseStream.Position);
+
+                        Animation.Add(new BoneAnimation { Name = name2, Copy = default(string), TransformKeyData = r.Deserialize<TransformKeyData>() });
                     }
                 }
             }
+
         }
     }
 }

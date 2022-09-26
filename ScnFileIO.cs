@@ -9,7 +9,9 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+#if PROBUILDER 
 using UnityEngine.ProBuilder;
+#endif
 using System.Linq;
 
 namespace AevenScnTool.IO
@@ -1224,8 +1226,6 @@ namespace AevenScnTool.IO
 			}
 
 
-			MeshFilter mf = mr.GetComponent<MeshFilter>();
-			ProBuilderMesh pbm = mr.GetComponent<ProBuilderMesh>();
 			Mesh mesh;
 
 			TextureReference tr = mr.GetComponent<TextureReference>();
@@ -1237,6 +1237,10 @@ namespace AevenScnTool.IO
 					lightmap = true;
 				}
 			}
+
+			MeshFilter mf = mr.GetComponent<MeshFilter>();
+#if PROBUILDER
+			ProBuilderMesh pbm = mr.GetComponent<ProBuilderMesh>();
 			if (pbm)
 			{
 				if (lightmap == false)
@@ -1250,7 +1254,9 @@ namespace AevenScnTool.IO
 
 				mesh = GetMeshFromPBM(pbm, lightmap);
 			}
-			else if (mf)
+			else
+#endif
+			if (mf)
 			{
 				mesh = mr.GetComponent<MeshFilter>().sharedMesh;
 			}
@@ -1538,7 +1544,7 @@ namespace AevenScnTool.IO
 			return (position, rotation, scale);
 		}
 
-
+#if PROBUILDER
 		static Mesh GetMeshFromPBM(ProBuilderMesh pbm, bool hasLightmap)
 		{
 			Mesh mesh = new Mesh();
@@ -1646,6 +1652,8 @@ namespace AevenScnTool.IO
 				}
 			}
 		}
+
+#endif
 
 		static List<ModelAnimation> GetTransformAnimation(Vector3 position, Quaternion rotation, Vector3 scale)
 		{

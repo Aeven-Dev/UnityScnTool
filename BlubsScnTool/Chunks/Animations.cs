@@ -39,6 +39,7 @@ namespace NetsphereScnTool.Scene.Chunks.DoNotUse
 
             using (var r = stream.ToBinaryReader(true))
                 MorphKeys = r.DeserializeArray<MorphKey>(r.ReadInt32()).ToList();
+
         }
     }
 
@@ -82,10 +83,12 @@ namespace NetsphereScnTool.Scene.Chunks.DoNotUse
             {
                 Duration = TimeSpan.FromMilliseconds(r.ReadUInt32());
 
+                SceneContainer.Log("Duration: " + Duration);
                 bool flag = r.ReadBoolean();
                 if (flag)
                     TransformKey = r.Deserialize<TransformKey>();
 
+                SceneContainer.Log("FloatKeys.Count: " + FloatKeys.Count);
                 FloatKeys = r.DeserializeArray<FloatKey>(r.ReadInt32()).ToList();
             }
         }
@@ -129,6 +132,8 @@ namespace NetsphereScnTool.Scene.Chunks.DoNotUse
                 w.Write(Scale.Y);
                 w.Write(Scale.Z);
 
+
+
                 w.Write(TKey.Count);
                 foreach (var tkey in TKey)
                 {
@@ -159,6 +164,7 @@ namespace NetsphereScnTool.Scene.Chunks.DoNotUse
                     w.Write(skey.Scale.Y);
                     w.Write(skey.Scale.Z);
                 }
+                
             }
         }
 

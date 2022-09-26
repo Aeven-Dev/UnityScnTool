@@ -27,6 +27,7 @@ public class TransformKeyData2 : TransformKeyData
 
         using (var w = stream.ToBinaryWriter(true))
         {
+			NetsphereScnTool.Scene.SceneContainer.Log("MorphKey Count: " + MorphKeys.Count);
             w.Write(MorphKeys.Count);
             w.Serialize(MorphKeys);
         }
@@ -38,6 +39,7 @@ public class TransformKeyData2 : TransformKeyData
 
         using (var r = stream.ToBinaryReader(true))
             MorphKeys = r.DeserializeArray<MorphKey>(r.ReadInt32()).ToList();
+        NetsphereScnTool.Scene.SceneContainer.Log("MorphKeys.Count: " + MorphKeys.Count);
     }
 
     
@@ -70,12 +72,15 @@ public class TransformKeyData : IManualSerializer
         using (var w = stream.ToBinaryWriter(true))
         {
             w.Write((uint)duration);
+            NetsphereScnTool.Scene.SceneContainer.Log("duration: " + (uint)duration);
 
             w.Write(TransformKey != null);
+            NetsphereScnTool.Scene.SceneContainer.Log("TransformKey: " + TransformKey);
             if (TransformKey != null)
                 w.Serialize(TransformKey);
 
             w.Write(FloatKeys.Count);
+            NetsphereScnTool.Scene.SceneContainer.Log("FloatKeys.Count: " + FloatKeys.Count);
             w.Serialize(FloatKeys);
         }
     }
@@ -92,6 +97,7 @@ public class TransformKeyData : IManualSerializer
 
             FloatKeys = r.DeserializeArray<FloatKey>(r.ReadInt32()).ToList();
         }
+        NetsphereScnTool.Scene.SceneContainer.Log("FloatKeys.Count: " + FloatKeys.Count);
     }
 
     public Vector3 SamplePosition(float frame)
@@ -279,7 +285,13 @@ public class TransformKey : IManualSerializer
 			w.Write(skey.Scale.y);
 			w.Write(skey.Scale.z);
 		}
-	}
+        NetsphereScnTool.Scene.SceneContainer.Log("Translation: " + Translation);
+        NetsphereScnTool.Scene.SceneContainer.Log("Rotation: " + Rotation);
+        NetsphereScnTool.Scene.SceneContainer.Log("Scale: " + Scale);
+        NetsphereScnTool.Scene.SceneContainer.Log("TKey.Count: " + TKey.Count);
+        NetsphereScnTool.Scene.SceneContainer.Log("RKey.Count: " + RKey.Count);
+        NetsphereScnTool.Scene.SceneContainer.Log("SKey.Count: " + SKey.Count);
+    }
 
     public void Deserialize(Stream stream)
     {
@@ -299,7 +311,14 @@ public class TransformKey : IManualSerializer
 		count = r.ReadUInt32();
 		for (int n = 0; n < count; n++)
 			SKey.Add(new SKey { frame = (int)r.ReadUInt32(), Scale = new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle()) });
-	}
+
+        NetsphereScnTool.Scene.SceneContainer.Log("Translation: " + Translation);
+        NetsphereScnTool.Scene.SceneContainer.Log("Rotation: " + Rotation);
+        NetsphereScnTool.Scene.SceneContainer.Log("Scale: " + Scale);
+        NetsphereScnTool.Scene.SceneContainer.Log("TKey.Count: " + TKey.Count);
+        NetsphereScnTool.Scene.SceneContainer.Log("RKey.Count: " + RKey.Count);
+        NetsphereScnTool.Scene.SceneContainer.Log("SKey.Count: " + SKey.Count);
+    }
 }
 
 [System.Serializable]

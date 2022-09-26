@@ -36,6 +36,9 @@ namespace NetsphereScnTool.Scene.Chunks
                 w.Write(Version);
 
                 w.WriteEnum(Shader);
+                SceneContainer.Log("Shader: " + Shader);
+                SceneContainer.Log("WeightBone.Count: " + WeightBone.Count);
+                SceneContainer.Log("Animation.Count: " + Animation.Count);
 
                 w.Serialize(TextureData);
                 w.Serialize(Mesh);
@@ -46,6 +49,7 @@ namespace NetsphereScnTool.Scene.Chunks
                 w.Write(Animation.Count);
                 foreach (var pair in Animation)
                 {
+                    SceneContainer.Log("Animation.Name: " + pair.Name);
                     w.WriteCString(pair.Name);
                     w.Serialize(pair.TransformKeyData2);
                 }
@@ -156,6 +160,11 @@ namespace NetsphereScnTool.Scene.Chunks
                     w.Write(unk.y);
                     w.Write(unk.z);
                 }
+                SceneContainer.Log("Vertices.Count: " + Vertices.Count);
+                SceneContainer.Log("Faces.Count: " + Faces.Count);
+                SceneContainer.Log("UV.Count: " + UV.Count);
+                SceneContainer.Log("UV2.Count: " + UV2.Count);
+                SceneContainer.Log("Tangents.Count: " + Tangents.Count);
             }
         }
 
@@ -308,9 +317,11 @@ namespace NetsphereScnTool.Scene.Chunks
                 if (Version >= 0.2000000029802322f)
                     w.Write(ExtraUV);
 
+                SceneContainer.Log("Textures.Count: " + Textures.Count);
                 w.Write(Textures.Count);
                 foreach (var texture in Textures)
                 {
+                    SceneContainer.Log("texture.FileName: " + texture.FileName);
                     w.WriteCString(texture.FileName, 1024);
                     if (Version >= 0.2000000029802322f)
                         w.WriteCString(texture.FileName2, 1024);
@@ -340,7 +351,7 @@ namespace NetsphereScnTool.Scene.Chunks
                     };
 
                     if (Version >= 0.2000000029802322f)
-                        textureData.FileName2 = r.ReadCString(1024);
+                        textureData.FileName2 = ReadString(r,1024);
 
                     textureData.FaceOffset = r.ReadInt32();
                     textureData.FaceCount = r.ReadInt32();
