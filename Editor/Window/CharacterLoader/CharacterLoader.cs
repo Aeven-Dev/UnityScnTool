@@ -214,7 +214,7 @@ public class CharacterLoader : EditorWindow
             EditorUtility.DisplayDialog("Goodness!", "I couldnt find a item.x7 in a xml folder in that S4 client! Maybe the file is missing or it could be that you extracted the resources diferently!", "D:");
             return;
         }
-
+        Debug.Log("File read!");
         Root.style.display = DisplayStyle.Flex;
         folder_text.text = path;
         rootFolder = path;
@@ -437,6 +437,7 @@ public class CharacterLoader : EditorWindow
 
                 };
             }
+            item_file.items.Add(it);
         }
 
         weapon_file = new() { weapons = new()};
@@ -510,6 +511,7 @@ public class CharacterLoader : EditorWindow
 		foreach (var item in item_file.items)
 		{
             PaperDoll.Type type = PaperDoll.GetType(item.item_key.Substring(0, 3));
+            Debug.Log(type);
 			if (type == PaperDoll.Type.NONE)
 			{
                 continue;
@@ -535,6 +537,7 @@ public class CharacterLoader : EditorWindow
                         male[type].Add(item);
                         break;
                     default:
+                        Debug.Log("Haha");
                         break;
                 }
             }

@@ -175,7 +175,12 @@ public class PaperDoll : MonoBehaviour
                 for (int i = 0; i < smr.bones.Length; i++)
                 {
                     Transform b = FindChild(attachTo.transform, smr.bones[i].name);
+                    
                     newBones.Add(b);
+                }
+                for (int i = 0; i < smr.bones.Length; i++)
+                {
+                    DestroyImmediate(smr.bones[i]);
                 }
 
                 smr.bones = newBones.ToArray();

@@ -73,8 +73,10 @@ namespace NetsphereScnTool.Scene.Chunks
                 Mesh = new MeshData(this);
                 Mesh.Deserialize(stream);
 
+
                 WeightBone = r.DeserializeArray<WeightBone>(r.ReadInt32()).ToList();
 
+                Debug.Log("Animation Count position " + r.BaseStream.Position);
                 int count = r.ReadInt32();
                 for (int i = 0; i < count; ++i)
                 {
@@ -188,12 +190,14 @@ namespace NetsphereScnTool.Scene.Chunks
                 for (int i = 0; i < count; i++)
                     UV.Add(new Vector2(r.ReadSingle(), r.ReadSingle()));
 
+                Debug.Log("UV2 position " + r.BaseStream.Position);
                 if (ModelChunk.TextureData.ExtraUV == 1)
                 {
                     for (int i = 0; i < count; i++)
                         UV2.Add(new Vector2(r.ReadSingle(), r.ReadSingle()));
                 }
 
+                Debug.Log("Tangent count position " + r.BaseStream.Position);
                 count = r.ReadInt32();
                 for (int i = 0; i < count; i++)
                     Tangents.Add(new Vector3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle()));

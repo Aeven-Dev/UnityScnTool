@@ -475,8 +475,6 @@ namespace AevenScnTool.IO
 			mesh.tangents = model.Mesh.TangentsArray().Clone() as Vector4[];
 			mesh.uv = model.Mesh.UV.ToArray().Clone() as Vector2[];
 			mesh.uv2 = model.Mesh.UV2.ToArray().Clone() as Vector2[];
-			mesh.uv3 = model.Mesh.UV2.ToArray().Clone() as Vector2[];
-			mesh.uv4 = model.Mesh.UV2.ToArray().Clone() as Vector2[];
 
 			return mesh;
 		}
@@ -608,6 +606,7 @@ namespace AevenScnTool.IO
 
 					string sideTex = string.Empty;
 					bool normal = false;
+
 					if (texEntry.FileName2 != string.Empty)
 					{
 						sideTex = di.FullName + "\\" + texEntry.FileName2;
@@ -1229,29 +1228,13 @@ namespace AevenScnTool.IO
 			Mesh mesh;
 
 			TextureReference tr = mr.GetComponent<TextureReference>();
-			bool lightmap = false;
-			foreach (var item in tr.textures)
-			{
-				if (item.sideTexturePath != "" && !item.sideTextureIsNormal)
-				{
-					lightmap = true;
-				}
-			}
-
+			bool lightmap = tr.hasLightmap;
+			
 			MeshFilter mf = mr.GetComponent<MeshFilter>();
 #if PROBUILDER
 			ProBuilderMesh pbm = mr.GetComponent<ProBuilderMesh>();
 			if (pbm)
 			{
-				if (lightmap == false)
-				{
-					if (mr.receiveGI == ReceiveGI.Lightmaps)
-					{
-						lightmap = true;
-					}
-
-				}
-
 				mesh = GetMeshFromPBM(pbm, lightmap);
 			}
 			else
@@ -1269,12 +1252,12 @@ namespace AevenScnTool.IO
 			if (tr)
 			{
 				model.Shader = tr.renderFlags;
-				SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal, mr.gameObject, uv2: true);
+				SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal, mr.gameObject, uv2: lightmap);
 			}
 			else
 			{
 				model.Shader = RenderFlag.None;
-				SetMesh(model.Mesh, mesh, false, false, mr.gameObject, uv2: true);
+				SetMesh(model.Mesh, mesh, false, false, mr.gameObject, uv2: lightmap);
 
 
 
@@ -1456,12 +1439,11 @@ namespace AevenScnTool.IO
 		static void SetTextureData(TextureData textureData, Mesh mesh, TextureReference textures)
 		{
 			textureData.Version = 0.2000000029802322f;
-			textureData.ExtraUV = (mesh.uv2.Length != 0) ? (uint)1 : (uint)0;
-
-			if (textures == null)
-			{
-				return;
-			}
+			textureData.ExtraUV = 0;
+			if (textures == null)return;
+			
+			if (textures.hasLightmap)
+				textureData.ExtraUV = (mesh.uv2.Length != 0) ? (uint)1 : (uint)0;
 
 			if (textures.textures.Count > mesh.subMeshCount)
 			{
@@ -1490,21 +1472,24 @@ namespace AevenScnTool.IO
 						{
 							te.FileName = new FileInfo(textures.textures[i].mainTexturePath).Name;
 						}
-						if (textures.textures[i].sideTexturePath != string.Empty)
+						if (textures.ignoreLightmaps == false)
 						{
-							te.FileName2 = new FileInfo(textures.textures[i].sideTexturePath).Name;
-						}
-						else
-						{
-							var mr = textures.GetComponent<MeshRenderer>();
-							if (mr.lightmapIndex != -1)
+							if (textures.textures[i].sideTexturePath != string.Empty)
 							{
-
-								var lm = LightmapSettings.lightmaps[mr.lightmapIndex];
-								te.FileName2 = lm.lightmapColor.name + ".tga";
-								ScnFileExporter.lightmaps.Add(lm.lightmapColor);
+								te.FileName2 = new FileInfo(textures.textures[i].sideTexturePath).Name;
 							}
+							else
+							{
+								var mr = textures.GetComponent<MeshRenderer>();
+								if (mr.lightmapIndex != -1)
+								{
 
+									var lm = LightmapSettings.lightmaps[mr.lightmapIndex];
+									te.FileName2 = lm.lightmapColor.name + ".tga";
+									ScnFileExporter.lightmaps.Add(lm.lightmapColor);
+								}
+
+							}
 						}
 					}
 				}

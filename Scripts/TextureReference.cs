@@ -18,11 +18,13 @@ namespace AevenScnTool
         public bool flipUvVertical_lm = false;
         public bool flipUvHorizontal_lm = false;
 
+        public bool ignoreLightmaps = false;
+
         public List<TextureItem> textures = new List<TextureItem>();
 
         public bool hasLightmap { get { return HasLightmap(); } }
 
-        [ContextMenu("Load from material! <3")]
+        [ContextMenu("Load from materials! <3")]
         public void LoadFromMaterial()
         {
             Material[] mats;
@@ -46,31 +48,21 @@ namespace AevenScnTool
             }
 
             textures.Clear();
-            Material base_mat = AssetDatabase.LoadAssetAtPath<Material>(ScnToolData.RootPath + "Editor/Materials/S4_Base_Mat.mat");
             for (int i = 0; i < mats.Length; i++)
             {
-                if (mats[i] == base_mat)
-                {
-                    continue;
-                }
                 Texture mainTexture = mats[i].mainTexture;
                 string mainTex = UnityEditor.AssetDatabase.GetAssetPath(mainTexture);
                 Texture lightmap = mats[i].GetTexture("_DetailAlbedoMap");
                 Texture normal = mats[i].GetTexture("_BumpMap");
                 string sideTex; bool nor = false;
 
-                Vector2 mainTiling = mats[i].mainTextureScale;
-                Vector2 sideTiling = Vector2.one;
-
                 if (lightmap)
                 {
                     sideTex = AssetDatabase.GetAssetPath(lightmap);
-                    sideTiling = mats[i].GetTextureScale("_DetailAlbedoMap");
                 }
                 else if (normal)
                 {
                     sideTex = AssetDatabase.GetAssetPath(normal);
-                    sideTiling = mats[i].GetTextureScale("_BumpMap");
                     nor = true;
                 }
                 else
@@ -404,14 +396,18 @@ namespace AevenScnTool
 */
         bool HasLightmap()
         {
+			if (ignoreLightmaps)
+			{
+                return false;
+			}
             foreach (var item in textures)
             {
-                if (item.sideTexturePath != string.Empty)
+                if (item.sideTexturePath != string.Empty && !item.sideTextureIsNormal)
                 {
                     return true;
                 }
             }
-            return false;
+            return GetComponent<MeshRenderer>().lightmapIndex != -1;
         }
     }
 
