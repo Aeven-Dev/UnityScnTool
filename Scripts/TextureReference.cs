@@ -8,6 +8,7 @@ using UnityEngine;
 namespace AevenScnTool
 {
     [AddComponentMenu("S4 scn/Texture Reference")]
+    [ExecuteInEditMode]
     public class TextureReference : MonoBehaviour
     {
         public RenderFlag renderFlags;
@@ -24,7 +25,24 @@ namespace AevenScnTool
 
         public bool hasLightmap { get { return HasLightmap(); } }
 
-        [ContextMenu("Load from materials! <3")]
+        [Button("Test")] public ButtonAction loadFromMaterial;
+        [Button("Test")] public ButtonAction loadToMaterial;
+        [Button("Test")] public ButtonAction saveMesh;
+        [Button("Test")] public ButtonAction copyTextures;
+        [Button("Test")] public ButtonAction saveTexturesDDS;
+        [Button("Test")] public ButtonAction saveTexturesTGA;
+        [Button("Test")] public ButtonAction removeLightmaps;
+        private void OnEnable()
+        {
+            loadFromMaterial = new ButtonAction("Load From Material! <3", LoadFromMaterial);
+            loadToMaterial = new ButtonAction("Load To Material! :>", LoadToMaterial);
+            saveMesh = new ButtonAction("Save Mesh! :3", SaveMesh);
+            copyTextures = new ButtonAction("Copy Textures! o.O", CopyTextures);
+            saveTexturesDDS = new ButtonAction("Save Textures! o.O/DDS! (experimental)", SaveTexturesDds);
+            saveTexturesTGA = new ButtonAction("Save Textures! o.O/TGA!", SaveTexturesTga);
+            removeLightmaps = new ButtonAction("Remove Lightmap! U.u'", RemoveLightmap);
+        }
+		[ContextMenu("Load from materials! <3")]
         public void LoadFromMaterial()
         {
             Material[] mats;
@@ -51,7 +69,17 @@ namespace AevenScnTool
             for (int i = 0; i < mats.Length; i++)
             {
                 Texture mainTexture = mats[i].mainTexture;
-                string mainTex = UnityEditor.AssetDatabase.GetAssetPath(mainTexture);
+                string mainTex = string.Empty;
+
+                if (mainTexture)
+                {
+                    mainTex = UnityEditor.AssetDatabase.GetAssetPath(mainTexture);
+                    if (mainTex == string.Empty)
+                    {
+                        mainTex = mainTexture.name;
+                    }
+                }
+
                 Texture lightmap = mats[i].GetTexture("_DetailAlbedoMap");
                 Texture normal = mats[i].GetTexture("_BumpMap");
                 string sideTex; bool nor = false;
@@ -59,15 +87,23 @@ namespace AevenScnTool
                 if (lightmap)
                 {
                     sideTex = AssetDatabase.GetAssetPath(lightmap);
+                    if (sideTex == string.Empty)
+                    {
+                        sideTex = lightmap.name;
+                    }
                 }
                 else if (normal)
                 {
                     sideTex = AssetDatabase.GetAssetPath(normal);
+                    if (sideTex == string.Empty)
+                    {
+                        sideTex = normal.name;
+                    }
                     nor = true;
                 }
                 else
                 {
-                    sideTex = String.Empty;
+                    sideTex = string.Empty;
                 }
                 string n = (mainTexture != null) ? mainTexture.name : "EmptyTexture";
                 textures.Add(new TextureItem( n, mainTex, sideTex, nor ));
@@ -396,7 +432,7 @@ namespace AevenScnTool
 */
         bool HasLightmap()
         {
-			if (ignoreLightmaps)
+			if (ignoreLightmaps || ScnToolData.Instance.ignoreLightmapsGlobally)
 			{
                 return false;
 			}

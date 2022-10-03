@@ -39,6 +39,8 @@ namespace AevenScnTool.Menus
 
 			ScnToolData.Instance.uv_flipVertical_lm = EditorGUILayout.Toggle("Flip UVs Vertically for lightmaps", ScnToolData.Instance.uv_flipVertical_lm);
 			ScnToolData.Instance.uv_flipHorizontal_lm = EditorGUILayout.Toggle("Flip UVs Horizontally for lightmaps", ScnToolData.Instance.uv_flipHorizontal_lm);
+			GUILayout.Space(10f);
+			ScnToolData.Instance.ignoreLightmapsGlobally = EditorGUILayout.Toggle("Ignore all lightmaps!", ScnToolData.Instance.ignoreLightmapsGlobally);
 
 			GUILayout.Space(40);
 			if (GUILayout.Button(new GUIContent("Ultimate Modding Power!!",

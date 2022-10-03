@@ -10,7 +10,7 @@ namespace NetsphereScnTool.Scene
 {
     public class SceneContainer : SortableBindingList<SceneChunk>
     {
-        public static bool verbose = true;
+        public static bool verbose = false;
 
         public SceneHeader Header { get; set; }
 

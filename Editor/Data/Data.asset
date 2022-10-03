@@ -20,4 +20,5 @@ MonoBehaviour:
   uv_flipHorizontal: 0
   uv_flipVertical_lm: 1
   uv_flipHorizontal_lm: 0
+  ignoreLightmapsGlobally: 0
   base_mat: {fileID: 0}

@@ -112,12 +112,17 @@ namespace AevenScnTool.IO
 		{
 			GameObject go = CreateGameObject(model);
 			go.transform.SetParent(parent.transform);
+
+			go.transform.localPosition = model.Matrix.GetPosition() / ScnToolData.Instance.scale;
+			go.transform.localRotation = model.Matrix.rotation;
+			go.transform.localScale = model.Matrix.lossyScale;
 			if (identityMatrix)
 			{
 				go.transform.position = Vector3.zero;
 				go.transform.rotation = Quaternion.identity;
 				go.transform.localScale = Vector3.one;
 			}
+
 
 			Mesh mesh = ModelChunkImporter.CreateMesh(model);
 
@@ -255,6 +260,8 @@ namespace AevenScnTool.IO
 		{
 			GameObject go = CreateGameObject(shape);
 			go.transform.SetParent(parent.transform);
+			go.transform.localPosition = shape.Matrix.GetPosition() / ScnToolData.Instance.scale;
+			go.transform.localRotation = shape.Matrix.rotation;
 
 			LineRenderer lr = go.AddComponent<LineRenderer>();
 			lr.widthMultiplier = 0.01f;
@@ -996,7 +1003,7 @@ namespace AevenScnTool.IO
 
 			if (lr.transform.parent != null) shape.SubName = lr.transform.parent.name;
 
-			shape.Matrix = Matrix4x4.TRS(lr.transform.localPosition, lr.transform.localRotation, lr.transform.localScale);
+			shape.Matrix = Matrix4x4.TRS(lr.transform.localPosition * ScnToolData.Instance.scale, lr.transform.localRotation, lr.transform.localScale);
 
 			for (int i = 0; i < lr.positionCount; i += 2)
 			{

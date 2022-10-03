@@ -76,7 +76,7 @@ namespace NetsphereScnTool.Scene.Chunks
 
                 WeightBone = r.DeserializeArray<WeightBone>(r.ReadInt32()).ToList();
 
-                Debug.Log("Animation Count position " + r.BaseStream.Position);
+                SceneContainer.Log("Animation Count position " + r.BaseStream.Position);
                 int count = r.ReadInt32();
                 for (int i = 0; i < count; ++i)
                 {

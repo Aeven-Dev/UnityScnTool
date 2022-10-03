@@ -9,29 +9,15 @@ public class ButtonDrawer : PropertyDrawer
 {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
-		if (property.managedReferenceValue is not ButtonAction)
-		{
-            EditorGUILayout.LabelField("Not a button action");
-            return;
-		}
-
-        float height = base.GetPropertyHeight(property, label);
-        Rect originalPos = new Rect(position);
-        originalPos.height = height;
-        Rect buttonPos = new Rect(position);
-        buttonPos.y = originalPos.y + originalPos.height;
-        buttonPos.height = 25f;
-
-        EditorGUI.PropertyField(originalPos, property,label); 
-        ButtonAction ba = (ButtonAction)property.managedReferenceValue;
-        if (GUILayout.Button( ba.label))
-		{
+        ButtonAction ba = (ButtonAction)(fieldInfo.GetValue(property.serializedObject.targetObject));
+        EditorGUI.BeginProperty(position, label, property);
+        bool button = GUI.Button(position, ba.label);
+        EditorGUI.EndProperty();
+        if (button)
+        {
             ba.action.Invoke();
+            GUIUtility.ExitGUI();
         }
+        return;
     }
-
-	public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-	{
-		return base.GetPropertyHeight(property, label) + 25f;
-	}
 }
