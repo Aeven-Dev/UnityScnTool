@@ -500,6 +500,11 @@ namespace AevenScnTool.IO
 
 			ExtractBoneWeightData(model, bones, bindPoses, bonesPerVertex, weights);
 
+			for (int i = 0; i < bindPoses.Count; i++)
+			{
+				var pose = bindPoses[i];
+				bindPoses[i] = Matrix4x4.TRS(pose.GetPosition() / ScnToolData.Instance.scale, pose.rotation, pose.lossyScale);
+			}
 			List<BoneWeight1> w = new List<BoneWeight1>();
 			for (int i = 0; i < weights.Length; i++)
 			{
@@ -1351,7 +1356,8 @@ namespace AevenScnTool.IO
 			}
 			for (int i = 0; i < smr.sharedMesh.bindposes.Length; i++)
 			{
-				model.WeightBone[i].Matrix = smr.sharedMesh.bindposes[i];
+				var pose = smr.sharedMesh.bindposes[i];
+				model.WeightBone[i].Matrix = Matrix4x4.TRS( pose.GetPosition() * ScnToolData.Instance.scale, pose.rotation,pose.lossyScale);
 			}
 			NativeArray<byte> bpv = smr.sharedMesh.GetBonesPerVertex();
 			NativeArray<BoneWeight1> bw = smr.sharedMesh.GetAllBoneWeights();

@@ -180,7 +180,7 @@ public class PaperDoll : MonoBehaviour
                 }
                 for (int i = 0; i < smr.bones.Length; i++)
                 {
-                    DestroyImmediate(smr.bones[i]);
+                    //DestroyImmediate(smr.bones[i].gameObject);
                 }
 
                 smr.bones = newBones.ToArray();
