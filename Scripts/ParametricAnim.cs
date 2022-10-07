@@ -29,13 +29,13 @@ public abstract class ParametricAnim : S4Animations
 
         for (int i = 0; i < repetitions; i++)
         {
-            ProcessRepetition(i, anim.TransformKeyData2, (keyData, frame, factor)=>KeyModelAt(keyData as TransformKeyData2,frame,factor) );
+            ProcessRepetition(i, anim.TransformKeyData2, (keyData, frame, factor) => KeyModelAt(keyData as TransformKeyData2, frame, factor));
         }
         anims.Add(anim);
         return anims;
     }
 
-    public abstract void Setup();
+    public virtual void Setup() { }
 
     public new List<BoneAnimation> ToBoneAnimation()
     {
@@ -94,49 +94,49 @@ public abstract class ParametricAnim : S4Animations
                 break;
         }
     }
-    
 
-    void LinearEase(int step, TransformKeyData keyData, Action<TransformKeyData,int,float> function)
+
+    void LinearEase(int step, TransformKeyData keyData, Action<TransformKeyData, int, float> function)
     {
-        function(keyData,step * stepDuration, step);
+        function(keyData, step * stepDuration, step);
         function(keyData, (step + 1) * stepDuration, step + 1);
     }
 
     void StepEase(int step, TransformKeyData keyData, Action<TransformKeyData, int, float> function)
     {
-        function(keyData,step * stepDuration, step);
-        function(keyData,(step + 1) * stepDuration - 1, step);
+        function(keyData, step * stepDuration, step);
+        function(keyData, (step + 1) * stepDuration - 1, step);
     }
 
     void EaseInEase(int step, TransformKeyData keyData, Action<TransformKeyData, int, float> function)
     {
-        function(keyData,step * stepDuration, step);
-        function(keyData,step * stepDuration + (int)(stepDuration * 0.5f), step + 0.25f);
-        function(keyData,step * stepDuration + (int)(stepDuration * 0.75f), step + 0.5f);
-        function(keyData,step * stepDuration + (int)(stepDuration * 0.875f), step + 0.75f);
-        function(keyData,(step + 1) * stepDuration, step + 1);
+        function(keyData, step * stepDuration, step);
+        function(keyData, step * stepDuration + (int)(stepDuration * 0.5f), step + 0.25f);
+        function(keyData, step * stepDuration + (int)(stepDuration * 0.75f), step + 0.5f);
+        function(keyData, step * stepDuration + (int)(stepDuration * 0.875f), step + 0.75f);
+        function(keyData, (step + 1) * stepDuration, step + 1);
     }
 
     void EaseOutEase(int step, TransformKeyData keyData, Action<TransformKeyData, int, float> function)
     {
-        function(keyData,step * stepDuration, step);
-        function(keyData,step * stepDuration + (int)(stepDuration * 0.125f), step + 0.25f);
-        function(keyData,step * stepDuration + (int)(stepDuration * 0.25f), step + 0.5f);
-        function(keyData,step * stepDuration + (int)(stepDuration * 0.5f), step + 0.75f);
-        function(keyData,(step + 1) * stepDuration, step + 1);
+        function(keyData, step * stepDuration, step);
+        function(keyData, step * stepDuration + (int)(stepDuration * 0.125f), step + 0.25f);
+        function(keyData, step * stepDuration + (int)(stepDuration * 0.25f), step + 0.5f);
+        function(keyData, step * stepDuration + (int)(stepDuration * 0.5f), step + 0.75f);
+        function(keyData, (step + 1) * stepDuration, step + 1);
     }
 
     void EaseInOutEase(int step, TransformKeyData keyData, Action<TransformKeyData, int, float> function)
     {
-        function(keyData,step * stepDuration, step);
-        function(keyData,step * stepDuration + (int)(stepDuration * 0.125f), step + 0.05f);
-        function(keyData,step * stepDuration + (int)(stepDuration * 0.25f), step + 0.15f);
-        function(keyData,step * stepDuration + (int)(stepDuration * 0.5f), step + 0.5f);
-        function(keyData,step * stepDuration + (int)(stepDuration * 0.75f), step + 0.85f);
-        function(keyData,step * stepDuration + (int)(stepDuration * 0.875f), step + 0.95f);
-        function(keyData,(step + 1) * stepDuration, step + 1);
+        function(keyData, step * stepDuration, step);
+        function(keyData, step * stepDuration + (int)(stepDuration * 0.125f), step + 0.05f);
+        function(keyData, step * stepDuration + (int)(stepDuration * 0.25f), step + 0.15f);
+        function(keyData, step * stepDuration + (int)(stepDuration * 0.5f), step + 0.5f);
+        function(keyData, step * stepDuration + (int)(stepDuration * 0.75f), step + 0.85f);
+        function(keyData, step * stepDuration + (int)(stepDuration * 0.875f), step + 0.95f);
+        function(keyData, (step + 1) * stepDuration, step + 1);
     }
 
-    public abstract void KeyModelAt(TransformKeyData2 keyData, int frame, float factor);
-    public abstract void KeyBoneAt(TransformKeyData keyData, int frame, float factor);
+    public virtual void KeyModelAt(TransformKeyData2 keyData, int frame, float factor) { }
+    public virtual void KeyBoneAt(TransformKeyData keyData, int frame, float factor) { }
 }
