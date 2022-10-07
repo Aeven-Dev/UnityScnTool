@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
+[AddComponentMenu("S4 scn/Animations!/UVScroll")]
 [System.Serializable]
 public class UVScroll : UVAnimBase
 {

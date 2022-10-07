@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+[AddComponentMenu("S4 scn/Animations!/TranslateOffset")]
 public class TranslateOffset : TranslateAnimBase
 {
 	public Vector3 offset;

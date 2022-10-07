@@ -170,7 +170,6 @@ public class PaperDoll : MonoBehaviour
             var smr = item.GetComponent<SkinnedMeshRenderer>();
             if (smr)
             {
-                smr.rootBone = attachTo.transform.Find("Bip01");
                 List<Transform> newBones = new List<Transform>();
                 for (int i = 0; i < smr.bones.Length; i++)
                 {
@@ -180,9 +179,17 @@ public class PaperDoll : MonoBehaviour
                 }
                 for (int i = 0; i < smr.bones.Length; i++)
                 {
-                    //DestroyImmediate(smr.bones[i].gameObject);
+					if (smr.bones[i])
+					{
+                        if (smr.bones[i].GetComponent<Bone>())
+                        {
+                            DestroyImmediate(smr.bones[i].gameObject);
+                        }
+                    }
                 }
 
+
+                smr.rootBone = attachTo.transform.Find("Bip01");
                 smr.bones = newBones.ToArray();
             }
         }
