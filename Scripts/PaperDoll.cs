@@ -177,16 +177,16 @@ public class PaperDoll : MonoBehaviour
                     
                     newBones.Add(b);
                 }
-                for (int i = 0; i < smr.bones.Length; i++)
-                {
-					if (smr.bones[i])
-					{
-                        if (smr.bones[i].GetComponent<Bone>())
-                        {
-                            DestroyImmediate(smr.bones[i].gameObject);
-                        }
-                    }
-                }
+                //for (int i = 0; i < smr.bones.Length; i++)
+                //{
+				//	if (smr.bones[i])
+				//	{
+                //        if (smr.bones[i].GetComponent<Bone>())
+                //        {
+                //            DestroyImmediate(smr.bones[i].gameObject);
+                //        }
+                //    }
+                //}
 
 
                 smr.rootBone = attachTo.transform.Find("Bip01");
