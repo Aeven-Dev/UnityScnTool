@@ -443,7 +443,12 @@ namespace AevenScnTool
                     return true;
                 }
             }
-            return GetComponent<MeshRenderer>().lightmapIndex != -1;
+            var mr = GetComponent<MeshRenderer>();
+			if (mr)
+			{
+                return mr.lightmapIndex != -1;
+            }
+            return false;
         }
     }
 

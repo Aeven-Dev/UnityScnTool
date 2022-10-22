@@ -1338,7 +1338,7 @@ namespace AevenScnTool.IO
 
 			(Vector3 position, Quaternion rotation, Vector3 scale) = DealWithModelParenting(smr.transform, relativeParent, model, parentChunk, container);
 
-			Mesh mesh = smr.GetComponent<MeshFilter>().sharedMesh;
+			Mesh mesh = smr.sharedMesh;
 
 
 			TextureReference tr = smr.GetComponent<TextureReference>();
@@ -1494,14 +1494,16 @@ namespace AevenScnTool.IO
 							else
 							{
 								var mr = textures.GetComponent<MeshRenderer>();
-								if (mr.lightmapIndex != -1)
+								if (mr)
 								{
+									if (mr.lightmapIndex != -1)
+									{
 
-									var lm = LightmapSettings.lightmaps[mr.lightmapIndex];
-									te.FileName2 = lm.lightmapColor.name + ".tga";
-									ScnFileExporter.lightmaps.Add(lm.lightmapColor);
+										var lm = LightmapSettings.lightmaps[mr.lightmapIndex];
+										te.FileName2 = lm.lightmapColor.name + ".tga";
+										ScnFileExporter.lightmaps.Add(lm.lightmapColor);
+									}
 								}
-
 							}
 						}
 					}
