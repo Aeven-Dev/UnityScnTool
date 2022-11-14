@@ -5,13 +5,32 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-[System.Serializable]
-public class ModelAnimation
+[Serializable]
+public class ModelAnimation : IManualSerializer
 {
     public string Name;
-    public TransformKeyData2 TransformKeyData2;
+    public TransformKeyData2 transformKeyData2;
+
+    public void Serialize(Stream stream)
+    {
+        using (var w = stream.ToBinaryWriter(true))
+        {
+            w.Serialize(transformKeyData2);
+
+            NetsphereScnTool.Scene.SceneContainer.Log("MorphKey Count: " + MorphKeys.Count);
+            w.Write(MorphKeys.Count);
+            w.Serialize(MorphKeys);
+        }
+    }
+
+	public void Deserialize(Stream stream)
+	{
+		throw new NotImplementedException();
+	}
+
+	public List<MorphKey> MorphKeys { get; set; }
 }
-[System.Serializable]
+[Serializable]
 public class TransformKeyData2 : TransformKeyData
 {
     public List<MorphKey> MorphKeys { get; set; }
@@ -45,7 +64,7 @@ public class TransformKeyData2 : TransformKeyData
     
 }
 
-[System.Serializable]
+[Serializable]
 public class BoneAnimation
 {
     public string Name;
@@ -53,7 +72,7 @@ public class BoneAnimation
     public TransformKeyData TransformKeyData;
 }
 
-[System.Serializable]
+[Serializable]
 public class TransformKeyData : IManualSerializer
 {
     public int duration;
@@ -217,7 +236,7 @@ public class TransformKeyData : IManualSerializer
     }
 }
 
-[System.Serializable]
+[Serializable]
 public class TransformKey : IManualSerializer
 {
     public Vector3 Translation;
@@ -321,7 +340,7 @@ public class TransformKey : IManualSerializer
     }
 }
 
-[System.Serializable]
+[Serializable]
 public struct TKey
 {
     public TKey(int frame, Vector3 Translation) { this.frame = frame; this.Translation = Translation; }
@@ -333,7 +352,7 @@ public struct TKey
 	}
 }
 
-[System.Serializable]
+[Serializable]
 public struct RKey
 {
     public RKey(int frame, Quaternion Rotation) { this.frame = frame; this.Rotation = Rotation; }
@@ -345,7 +364,7 @@ public struct RKey
     }
 }
 
-[System.Serializable]
+[Serializable]
 public struct SKey
 {
     public SKey(int frame, Vector3 Scale) { this.frame = frame; this.Scale = Scale; }
@@ -357,7 +376,7 @@ public struct SKey
     }
 }
 
-[System.Serializable]
+[Serializable]
 public class FloatKey : IManualSerializer
 {
     public int frame;
@@ -382,7 +401,7 @@ public class FloatKey : IManualSerializer
     }
 }
 
-[System.Serializable]
+[Serializable]
 public class MorphKey : IManualSerializer
 {
     public int frame;

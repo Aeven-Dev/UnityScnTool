@@ -11,6 +11,7 @@ namespace AevenScnTool
     [ExecuteInEditMode]
     public class TextureReference : MonoBehaviour
     {
+        [Range(0f,1f)]public float transparency = 1f;
         public RenderFlag renderFlags;
 
         public bool flipUvVertical = false;
@@ -25,23 +26,25 @@ namespace AevenScnTool
 
         public bool hasLightmap { get { return HasLightmap(); } }
 
-        [Button("Test")] public ButtonAction loadFromMaterial;
-        [Button("Test")] public ButtonAction loadToMaterial;
-        [Button("Test")] public ButtonAction saveMesh;
-        [Button("Test")] public ButtonAction copyTextures;
-        [Button("Test")] public ButtonAction saveTexturesDDS;
-        [Button("Test")] public ButtonAction saveTexturesTGA;
-        [Button("Test")] public ButtonAction removeLightmaps;
+        [Button("Load From Material! <3")] public ButtonAction loadFromMaterial;
+        [Button("Load To Material! :>")] public ButtonAction loadToMaterial;
+        [Button("Save Mesh! :3")] public ButtonAction saveMesh;
+        [Button("Copy Textures! o.O")] public ButtonAction copyTextures;
+        [Button("Save Textures! o.O/DDS! (experimental)")] public ButtonAction saveTexturesDDS;
+        [Button("Save Textures! o.O/TGA!")] public ButtonAction saveTexturesTGA;
+        [Button("Remove Lightmap! U.u'")] public ButtonAction removeLightmaps;
+
         private void OnEnable()
         {
-            loadFromMaterial = new ButtonAction("Load From Material! <3", LoadFromMaterial);
-            loadToMaterial = new ButtonAction("Load To Material! :>", LoadToMaterial);
-            saveMesh = new ButtonAction("Save Mesh! :3", SaveMesh);
-            copyTextures = new ButtonAction("Copy Textures! o.O", CopyTextures);
-            saveTexturesDDS = new ButtonAction("Save Textures! o.O/DDS! (experimental)", SaveTexturesDds);
-            saveTexturesTGA = new ButtonAction("Save Textures! o.O/TGA!", SaveTexturesTga);
-            removeLightmaps = new ButtonAction("Remove Lightmap! U.u'", RemoveLightmap);
+            loadFromMaterial = new ButtonAction(LoadFromMaterial);
+            loadToMaterial = new ButtonAction(LoadToMaterial);
+            saveMesh = new ButtonAction(SaveMesh);
+            copyTextures = new ButtonAction(CopyTextures);
+            saveTexturesDDS = new ButtonAction(SaveTexturesDds);
+            saveTexturesTGA = new ButtonAction(SaveTexturesTga);
+            removeLightmaps = new ButtonAction(RemoveLightmap);
         }
+
 		[ContextMenu("Load from materials! <3")]
         public void LoadFromMaterial()
         {

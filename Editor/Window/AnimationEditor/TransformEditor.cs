@@ -242,7 +242,7 @@ public class TransformEditor : VisualElement
                 Vector3 oldSca = part.transform.localScale;
                 Vector3 newSca = copy.TransformKeyData.SampleScale(frame);
                 if (oldSca != newSca)
-                    part.transform.localScale = newPos;
+                    part.transform.localScale = newSca;
             }
 			else
             {
@@ -261,7 +261,7 @@ public class TransformEditor : VisualElement
                 Vector3 newSca = tkd.TransformKeyData.SampleScale(frame);
                 //Debug.Log(oldSca + " - " + newSca);
                 if (oldSca != newSca)
-                    part.transform.localScale = oldSca;
+                    part.transform.localScale = newSca;
             }
         }
         return state;

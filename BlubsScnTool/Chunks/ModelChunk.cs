@@ -51,7 +51,7 @@ namespace NetsphereScnTool.Scene.Chunks
                 {
                     SceneContainer.Log("Animation.Name: " + pair.Name);
                     w.WriteCString(pair.Name);
-                    w.Serialize(pair.TransformKeyData2);
+                    w.Serialize(pair.transformKeyData2);
                 }
             }
         }
@@ -81,7 +81,7 @@ namespace NetsphereScnTool.Scene.Chunks
                 for (int i = 0; i < count; ++i)
                 {
                     Debug.Log(r.BaseStream.Position);
-                    Animation.Add(new ModelAnimation { Name = r.ReadCString(), TransformKeyData2 = r.Deserialize<TransformKeyData2>() });
+                    Animation.Add(new ModelAnimation { Name = r.ReadCString(), transformKeyData2 = r.Deserialize<TransformKeyData2>() });
                 }
             }
         }

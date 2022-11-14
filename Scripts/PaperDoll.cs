@@ -29,7 +29,6 @@ public class PaperDoll : MonoBehaviour
         NONE
     }
 
-
     public static Type GetType(string id_string)
     {
         if (int.TryParse(id_string, out int id))
@@ -42,8 +41,7 @@ public class PaperDoll : MonoBehaviour
         return Type.NONE;
     }
 
-
-    [HideInInspector]public bool isGirl;
+    public bool isGirl { get; set; }
 
     [HideInInspector]public List<Container> attachedHair = new List<Container>();
     [HideInInspector]public List<Container> attachedFaces = new List<Container>();
@@ -83,7 +81,7 @@ public class PaperDoll : MonoBehaviour
 		};
 	}
 
-    public void SelectClotheItem(Type type, string rootFolder, string to_part_scene_file, (string,string,string)[] nodes, string hiding_option, string icon_image)
+    public Container SelectClotheItem(Type type, string rootFolder, string to_part_scene_file, (string,string,string)[] nodes, string hiding_option, string icon_image)
     {
         List<ScnData> parts = new();
         if (to_part_scene_file != null)
@@ -123,6 +121,7 @@ public class PaperDoll : MonoBehaviour
 
         GetAttachedParts(type).Add(cont);
 
+        return cont;
     }
 
     public void SelectWeapon(Type type, string rootFolder, (string scnFile,string attackAttach,string idleAttach)[] values, string icon_image)
@@ -203,6 +202,24 @@ public class PaperDoll : MonoBehaviour
         addon.transform.localScale = Vector3.one;
     }
 
+    public void ReloadPaperdoll()
+	{
+		foreach (var item in GetAttachedParts(Type.hair))
+		{
+            List<string> files = item.parts.ConvertAll(x => x.filePath);
+            DeleteItem(item);
+            List<ScnData> parts = new();
+            foreach (var file in files)
+			{
+                ScnData obj = ScnFileImporter.LoadModel(file);
+                MergeBoneSystem(GetComponent<ScnData>(), obj);
+                SetBaseAnimation();
+                parts.Add(obj);
+            }
+
+        }
+	}
+
     public void ClearPaperdoll()
 	{
         foreach (var item in Enum.GetValues(typeof(Type)))
@@ -277,25 +294,28 @@ public class PaperDoll : MonoBehaviour
         public Type type;
         public List<ScnData> parts;
         public Texture2D icon;
+        public Item item_info;
 
         public Container(Texture2D icon, Type type)
         {
             this.icon = icon;
             parts = new List<ScnData>();
             this.type = type;
+            item_info = new Item();
         }
         public Container(Texture2D icon, List<ScnData> parts, Type type)
         {
             this.icon = icon;
             this.parts = parts;
             this.type = type;
+            item_info = new Item();
         }
         public Container(Texture2D icon, ScnData part, Type type)
         {
             this.icon = icon;
-            this.parts = new List<ScnData>();
-            parts.Add(part);
+            this.parts = new List<ScnData>() { part };
             this.type = type;
+            item_info = new Item();
         }
     }
 }

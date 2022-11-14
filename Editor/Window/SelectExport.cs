@@ -134,7 +134,7 @@ namespace AevenScnTool.Menus
                 }
             }
 
-            SceneContainer container = ScnFileExporter.CreateContainerFromScenes(fileInfo, scnData.ToArray());
+            SceneContainer container = ScnFileExporter.CreateContainerFromScenes(fileInfo.Name, scnData.ToArray());
             container.Write(fileInfo.FullName);
 
 			if (saveLightmaps)

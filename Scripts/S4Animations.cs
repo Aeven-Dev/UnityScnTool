@@ -98,10 +98,10 @@ public class S4Animation
     {
         Name = anim.Name;
         TransformKeyData = new TransformKeyData();
-        TransformKeyData.duration = anim.TransformKeyData2.duration;
-        TransformKeyData.FloatKeys = anim.TransformKeyData2.FloatKeys;
-        TransformKeyData.TransformKey = anim.TransformKeyData2.TransformKey;
-        MorphKeys = anim.TransformKeyData2.MorphKeys;
+        TransformKeyData.duration = anim.transformKeyData2.duration;
+        TransformKeyData.FloatKeys = anim.transformKeyData2.FloatKeys;
+        TransformKeyData.TransformKey = anim.transformKeyData2.TransformKey;
+        MorphKeys = anim.transformKeyData2.MorphKeys;
     }
     public S4Animation(BoneAnimation anim)
     {
@@ -114,37 +114,37 @@ public class S4Animation
     {
         ModelAnimation anim = new ModelAnimation();
         anim.Name = Name;
-        anim.TransformKeyData2 = new TransformKeyData2();
-        anim.TransformKeyData2.duration = TransformKeyData.duration;
-        anim.TransformKeyData2.FloatKeys = new List<FloatKey>();
+        anim.transformKeyData2 = new TransformKeyData2();
+        anim.transformKeyData2.duration = TransformKeyData.duration;
+        anim.transformKeyData2.FloatKeys = new List<FloatKey>();
 
         for (int i = 0; i < TransformKeyData.FloatKeys.Count; i++)
         {
             FloatKey key = new FloatKey();
             key.frame = TransformKeyData.FloatKeys[i].frame;
             key.Alpha = TransformKeyData.FloatKeys[i].Alpha;
-            anim.TransformKeyData2.FloatKeys.Add(key);
+            anim.transformKeyData2.FloatKeys.Add(key);
         }
-        anim.TransformKeyData2.TransformKey = new TransformKey();
-        anim.TransformKeyData2.TransformKey.Translation = TransformKeyData.TransformKey.Translation * ScnToolData.Instance.scale;
-        anim.TransformKeyData2.TransformKey.Rotation = TransformKeyData.TransformKey.Rotation;
-        anim.TransformKeyData2.TransformKey.Scale = TransformKeyData.TransformKey.Scale;
+        anim.transformKeyData2.TransformKey = new TransformKey();
+        anim.transformKeyData2.TransformKey.Translation = TransformKeyData.TransformKey.Translation * ScnToolData.Instance.scale;
+        anim.transformKeyData2.TransformKey.Rotation = TransformKeyData.TransformKey.Rotation;
+        anim.transformKeyData2.TransformKey.Scale = TransformKeyData.TransformKey.Scale;
         for (int i = 0; i < TransformKeyData.TransformKey.TKey.Count; i++)
         {
             TKey key = new TKey(TransformKeyData.TransformKey.TKey[i].frame, TransformKeyData.TransformKey.TKey[i].Translation * ScnToolData.Instance.scale);
-            anim.TransformKeyData2.TransformKey.TKey.Add(key);
+            anim.transformKeyData2.TransformKey.TKey.Add(key);
         }
         for (int i = 0; i < TransformKeyData.TransformKey.RKey.Count; i++)
         {
             RKey key = new RKey(TransformKeyData.TransformKey.RKey[i].frame, TransformKeyData.TransformKey.RKey[i].Rotation);
-            anim.TransformKeyData2.TransformKey.RKey.Add(key);
+            anim.transformKeyData2.TransformKey.RKey.Add(key);
         }
         for (int i = 0; i < TransformKeyData.TransformKey.SKey.Count; i++)
         {
             SKey key = new SKey(TransformKeyData.TransformKey.SKey[i].frame, TransformKeyData.TransformKey.SKey[i].Scale);
-            anim.TransformKeyData2.TransformKey.SKey.Add(key);
+            anim.transformKeyData2.TransformKey.SKey.Add(key);
         }
-        anim.TransformKeyData2.MorphKeys = new List<MorphKey>(); 
+        anim.transformKeyData2.MorphKeys = new List<MorphKey>(); 
         for (int i = 0; i < MorphKeys.Count; i++)
         {
             MorphKey key = new MorphKey();
@@ -160,7 +160,7 @@ public class S4Animation
                 key.UVs.Add(new MorphKey.UVMorph(MorphKeys[i].UVs[j].index, MorphKeys[i].UVs[j].position));
 
             }
-            anim.TransformKeyData2.MorphKeys.Add(key);
+            anim.transformKeyData2.MorphKeys.Add(key);
         }
         return anim;
     }

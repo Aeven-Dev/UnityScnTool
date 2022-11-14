@@ -107,7 +107,7 @@ namespace AevenScnTool.Menus
             if (!sceneObj)
             {
                 sceneObj = new GameObject(container.Header.Name);
-                sceneObj.AddComponent<ScnData>().folderPath = container.fileInfo.Directory.FullName;
+                sceneObj.AddComponent<ScnData>().filePath = container.fileInfo.FullName;
             }
 
             ScnFileImporter.BuildFromContainer(newContainer, sceneObj, ScnToolMenu.identityMatrix);

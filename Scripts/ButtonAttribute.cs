@@ -13,11 +13,9 @@ public class ButtonAttribute : PropertyAttribute
 [Serializable]
 public class ButtonAction
 {
-    public string label;
     public Action action;
-    public ButtonAction(string label, Action action)
+    public ButtonAction( Action action)
 	{
-        this.label = label;
         this.action = action;
 
     }

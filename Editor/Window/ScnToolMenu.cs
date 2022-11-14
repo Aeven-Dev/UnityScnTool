@@ -412,7 +412,7 @@ namespace AevenScnTool.Menus
 					container.fileInfo = new FileInfo(resourcesFolder + "\\model\\background\\" + scnName);
 
 					GameObject sceneObj = new GameObject(container.Header.Name);
-					sceneObj.AddComponent<ScnData>().folderPath = container.fileInfo.Directory.FullName;
+					sceneObj.AddComponent<ScnData>().filePath = container.fileInfo.FullName;
 
 
 					ScnFileImporter.BuildFromContainer(container, sceneObj);

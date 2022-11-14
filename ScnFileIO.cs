@@ -151,17 +151,20 @@ namespace AevenScnTool.IO
 			int isAnim = ModelChunkImporter.ModelAnimationIsTransform(model.Animation);
 			if (isAnim == 1)
 			{
-				go.transform.localPosition = model.Animation[0].TransformKeyData2.TransformKey.Translation / ScnToolData.Instance.scale;
-				go.transform.localRotation = model.Animation[0].TransformKeyData2.TransformKey.Rotation;
-				go.transform.localScale = model.Animation[0].TransformKeyData2.TransformKey.Scale;
+				go.transform.localPosition = model.Animation[0].transformKeyData2.TransformKey.Translation / ScnToolData.Instance.scale;
+				go.transform.localRotation = model.Animation[0].transformKeyData2.TransformKey.Rotation;
+				go.transform.localScale = model.Animation[0].transformKeyData2.TransformKey.Scale;
+
 			}
 			else if (isAnim == 2)
 			{
-				go.transform.localPosition = model.Animation[0].TransformKeyData2.TransformKey.Translation / ScnToolData.Instance.scale;
-				go.transform.localRotation = model.Animation[0].TransformKeyData2.TransformKey.Rotation;
-				go.transform.localScale = model.Animation[0].TransformKeyData2.TransformKey.Scale;
+				go.transform.localPosition = model.Animation[0].transformKeyData2.TransformKey.Translation / ScnToolData.Instance.scale;
+				go.transform.localRotation = model.Animation[0].transformKeyData2.TransformKey.Rotation;
+				go.transform.localScale = model.Animation[0].transformKeyData2.TransformKey.Scale;
 
-				go.AddComponent<S4Animations>().FromModelAnimation(model.Animation);
+				tr.transparency = model.Animation[0].transformKeyData2.FloatKeys[0].Alpha;
+
+				//go.AddComponent<S4Animations>().FromModelAnimation(model.Animation);
 			}
 			else if (isAnim == -1)
 			{
@@ -444,7 +447,7 @@ namespace AevenScnTool.IO
 			var go = new GameObject(container.Header.Name);
 			container.fileInfo = new FileInfo(path);
 			ScnData sd = go.AddComponent<ScnData>();
-			sd.folderPath = path;
+			sd.filePath = path;
 
 			BuildFromContainer(container, go, identityMatrix);
 
@@ -735,25 +738,28 @@ namespace AevenScnTool.IO
 			else if (anims.Count == 1)
 			{
 				var anim = anims[0];
-				if (anim.TransformKeyData2.TransformKey.TKey.Count != 0)
+				if (anim.transformKeyData2.TransformKey.TKey.Count != 0)
 				{
 					return 0;
 				}
-				if (anim.TransformKeyData2.TransformKey.RKey.Count != 0)
+				if (anim.transformKeyData2.TransformKey.RKey.Count != 0)
 				{
 					return 0;
 				}
-				if (anim.TransformKeyData2.TransformKey.SKey.Count != 0)
+				if (anim.transformKeyData2.TransformKey.SKey.Count != 0)
 				{
 					return 0;
 				}
-				if (anim.TransformKeyData2.FloatKeys.Count != 0)
-				{
-					return 2;
-				}
-				if (anim.TransformKeyData2.MorphKeys.Count != 0)
+				if (anim.transformKeyData2.MorphKeys.Count != 0)
 				{
 					return 0;
+				}
+				if (anim.transformKeyData2.FloatKeys.Count == 1)
+				{
+					if (anim.transformKeyData2.FloatKeys[0].Alpha != 1f)
+					{
+						return 2;
+					}
 				}
 				return 1;
 			}
@@ -820,12 +826,12 @@ namespace AevenScnTool.IO
 
 		public static List<Texture2D> lightmaps = new List<Texture2D>();
 
-		public static SceneContainer CreateContainerFromScenes(FileInfo fileInfo, ScnData[] scenes)
+		public static SceneContainer CreateContainerFromScenes(string name, ScnData[] scenes)
 		{
 			usedNames.Clear();
 			lightmaps.Clear();
 			SceneContainer container = new SceneContainer();
-			container.Header.Name = fileInfo.Name;
+			container.Header.Name = name;
 			foreach (var scene in scenes)
 			{
 				CreateChunksFromChildren(scene.transform,scene.transform, container, null);
@@ -1216,12 +1222,12 @@ namespace AevenScnTool.IO
 
 				model.Animation = new List<ModelAnimation>();
 				ModelAnimation ma = new ModelAnimation();
-				ma.TransformKeyData2 = new TransformKeyData2();
+				ma.transformKeyData2 = new TransformKeyData2();
 				ma.Name = ScnToolData.Instance.main_animation_name;
-				ma.TransformKeyData2.TransformKey = new TransformKey();
-				ma.TransformKeyData2.TransformKey.Translation = transform.localPosition * ScnToolData.Instance.scale;
-				ma.TransformKeyData2.TransformKey.Rotation = transform.localRotation;
-				ma.TransformKeyData2.TransformKey.Scale = transform.localScale;
+				ma.transformKeyData2.TransformKey = new TransformKey();
+				ma.transformKeyData2.TransformKey.Translation = transform.localPosition * ScnToolData.Instance.scale;
+				ma.transformKeyData2.TransformKey.Rotation = transform.localRotation;
+				ma.transformKeyData2.TransformKey.Scale = transform.localScale;
 				model.Animation.Add(ma);
 
 				return model;
@@ -1315,11 +1321,15 @@ namespace AevenScnTool.IO
 			{
 				model.Animation = new List<ModelAnimation>();
 				ModelAnimation ma = new ModelAnimation();
-				ma.TransformKeyData2 = new TransformKeyData2();
+				ma.transformKeyData2 = new TransformKeyData2();
 				ma.Name = ScnToolData.Instance.main_animation_name;
-				ma.TransformKeyData2.TransformKey.Translation = position;
-				ma.TransformKeyData2.TransformKey.Rotation = rotation;
-				ma.TransformKeyData2.TransformKey.Scale = scale;
+				ma.transformKeyData2.TransformKey.Translation = position;
+				ma.transformKeyData2.TransformKey.Rotation = rotation;
+				ma.transformKeyData2.TransformKey.Scale = scale;
+				if (tr.transparency != 1f)
+				{
+					ma.transformKeyData2.FloatKeys.Add(new FloatKey() { Alpha = tr.transparency, frame = 0 });
+				}
 				model.Animation.Add(ma);
 			}
 
@@ -1383,19 +1393,19 @@ namespace AevenScnTool.IO
 				}
 				else
 				{
-					model.Animation[0].TransformKeyData2.TransformKey.Translation *= ScnToolData.Instance.scale;
+					model.Animation[0].transformKeyData2.TransformKey.Translation *= ScnToolData.Instance.scale;
 				}
 			}
 			else
 			{
 				model.Animation = new List<ModelAnimation>();
 				ModelAnimation ma = new ModelAnimation();
-				ma.TransformKeyData2 = new TransformKeyData2();
+				ma.transformKeyData2 = new TransformKeyData2();
 				ma.Name = ScnToolData.Instance.main_animation_name;
-				ma.TransformKeyData2.TransformKey = new TransformKey();
-				ma.TransformKeyData2.TransformKey.Translation = position;
-				ma.TransformKeyData2.TransformKey.Rotation = rotation;
-				ma.TransformKeyData2.TransformKey.Scale = scale;
+				ma.transformKeyData2.TransformKey = new TransformKey();
+				ma.transformKeyData2.TransformKey.Translation = position;
+				ma.transformKeyData2.TransformKey.Rotation = rotation;
+				ma.transformKeyData2.TransformKey.Scale = scale;
 				model.Animation.Add(ma);
 			}
 
@@ -1660,12 +1670,12 @@ namespace AevenScnTool.IO
 			var a = new List<ModelAnimation>();
 			var anim = new ModelAnimation();
 			anim.Name = ScnToolData.Instance.main_animation_name;
-			anim.TransformKeyData2 = new TransformKeyData2();
-			anim.TransformKeyData2.TransformKey = new TransformKey();
+			anim.transformKeyData2 = new TransformKeyData2();
+			anim.transformKeyData2.TransformKey = new TransformKey();
 			
-			anim.TransformKeyData2.TransformKey.Translation = position * ScnToolData.Instance.scale;
-			anim.TransformKeyData2.TransformKey.Rotation = rotation;
-			anim.TransformKeyData2.TransformKey.Scale = scale;
+			anim.transformKeyData2.TransformKey.Translation = position * ScnToolData.Instance.scale;
+			anim.transformKeyData2.TransformKey.Rotation = rotation;
+			anim.transformKeyData2.TransformKey.Scale = scale;
 
 			a.Add(anim);
 			return a;

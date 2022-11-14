@@ -209,12 +209,26 @@ public class CharacterLoader : EditorWindow
             return;
         }
 
-		if (!ReadFiles(path))
+        var res = ReadFiles(path);
+
+        if (res != 0)
 		{
-            EditorUtility.DisplayDialog("Goodness!", "I couldnt find a item.x7 in a xml folder in that S4 client! Maybe the file is missing or it could be that you extracted the resources diferently!", "D:");
+            var message = "";
+			switch (res)
+            {
+                case 1:
+                    message = path + "\\xml\\item.x7 cant be found!";
+                    break;
+                case 2:
+                    message = path + "\\xml\\_eu_weapon.x7 cant be found!";
+                    break;
+                case 3:
+                    message = path + "\\xml\\weapon_attach.x7 cant be found!";
+                    break;
+            }
+			EditorUtility.DisplayDialog("Goodness!", "I couldnt find a item.x7 in a xml folder in that S4 client! Maybe the file is missing or it could be that you extracted the resources diferently!\n" + message, "D:");
             return;
         }
-        Debug.Log("File read!");
         Root.style.display = DisplayStyle.Flex;
         folder_text.text = path;
         rootFolder = path;
@@ -366,26 +380,26 @@ public class CharacterLoader : EditorWindow
 
 
 
-    bool ReadFiles(string folder)
+    int ReadFiles(string folder)
     {
         XmlDocument item_doc = new XmlDocument();
         if (!File.Exists(folder + "\\xml\\item.x7"))
         {
-            return false;
+            return 1;
         }
         item_doc.Load(folder + "\\xml\\item.x7");
 
         XmlDocument _eu_weapon_doc = new XmlDocument();
         if (!File.Exists(folder + "\\xml\\_eu_weapon.x7"))
         {
-            return false;
+            return 2;
         }
         _eu_weapon_doc.Load(folder + "\\xml\\_eu_weapon.x7");
 
         XmlDocument weapon_attach_doc = new XmlDocument();
         if (!File.Exists(folder + "\\xml\\weapon_attach.x7"))
         {
-            return false;
+            return 3;
         }
         weapon_attach_doc.Load(folder + "\\xml\\weapon_attach.x7");
 
@@ -543,7 +557,7 @@ public class CharacterLoader : EditorWindow
             }
         }
 
-        return true;
+        return 0;
     }
 
     void InitLists()
@@ -740,7 +754,7 @@ class WeaponAttachFile
 	}
 }
 
-struct Item
+public struct Item
 {
     public string item_key;
     public Base @base;

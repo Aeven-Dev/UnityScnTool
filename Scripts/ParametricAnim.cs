@@ -17,19 +17,19 @@ public abstract class ParametricAnim : S4Animations
         var anims = new List<ModelAnimation>();
         ModelAnimation anim = new ModelAnimation();
         anim.Name = ScnToolData.Instance.main_animation_name;
-        anim.TransformKeyData2 = new TransformKeyData2();
-        anim.TransformKeyData2.duration = stepDuration * repetitions;
-        anim.TransformKeyData2.FloatKeys = new List<FloatKey>();
+        anim.transformKeyData2 = new TransformKeyData2();
+        anim.transformKeyData2.duration = stepDuration * repetitions;
+        anim.transformKeyData2.FloatKeys = new List<FloatKey>();
 
-        anim.TransformKeyData2.TransformKey = new TransformKey();
-        anim.TransformKeyData2.TransformKey.Translation = transform.position * ScnToolData.Instance.scale;
-        anim.TransformKeyData2.TransformKey.Rotation = transform.rotation;
-        anim.TransformKeyData2.TransformKey.Scale = transform.lossyScale;
-        anim.TransformKeyData2.MorphKeys = new List<MorphKey>();
+        anim.transformKeyData2.TransformKey = new TransformKey();
+        anim.transformKeyData2.TransformKey.Translation = transform.position * ScnToolData.Instance.scale;
+        anim.transformKeyData2.TransformKey.Rotation = transform.rotation;
+        anim.transformKeyData2.TransformKey.Scale = transform.lossyScale;
+        anim.transformKeyData2.MorphKeys = new List<MorphKey>();
 
         for (int i = 0; i < repetitions; i++)
         {
-            ProcessRepetition(i, anim.TransformKeyData2, (keyData, frame, factor) => KeyModelAt(keyData as TransformKeyData2, frame, factor));
+            ProcessRepetition(i, anim.transformKeyData2, (keyData, frame, factor) => KeyModelAt(keyData as TransformKeyData2, frame, factor));
         }
         anims.Add(anim);
         return anims;
