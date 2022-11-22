@@ -34,8 +34,8 @@
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement style="flex-grow: 1; flex-direction: row;">
-                <TransformEditor name="TransformEditor" style="width: 452px; flex-grow: 1; flex-direction: column;" />
-                <UVAnimEditor name="UVAnimEditor" style="display: none; flex-grow: 1;" />
+                <AevenScnTool.TransformEditor name="TransformEditor" style="width: 452px; flex-grow: 1; flex-direction: column;" />
+                <AevenScnTool.UVAnimEditor name="UVAnimEditor" style="display: none; flex-grow: 1;" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

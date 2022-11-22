@@ -77,13 +77,13 @@ public class TransformKeyData : IManualSerializer
 {
     public int duration;
     public TransformKey TransformKey;
-    public List<FloatKey> FloatKeys;
+    public List<FloatKey> AlphaKeys;
 
     public TransformKeyData()
     {
         TransformKey = new TransformKey();
         duration = 0;
-        FloatKeys = new List<FloatKey>();
+        AlphaKeys = new List<FloatKey>();
     }
 
     public virtual void Serialize(Stream stream)
@@ -98,9 +98,9 @@ public class TransformKeyData : IManualSerializer
             if (TransformKey != null)
                 w.Serialize(TransformKey);
 
-            w.Write(FloatKeys.Count);
-            NetsphereScnTool.Scene.SceneContainer.Log("FloatKeys.Count: " + FloatKeys.Count);
-            w.Serialize(FloatKeys);
+            w.Write(AlphaKeys.Count);
+            NetsphereScnTool.Scene.SceneContainer.Log("FloatKeys.Count: " + AlphaKeys.Count);
+            w.Serialize(AlphaKeys);
         }
     }
 
@@ -114,9 +114,9 @@ public class TransformKeyData : IManualSerializer
             if (flag)
                 TransformKey = r.Deserialize<TransformKey>();
 
-            FloatKeys = r.DeserializeArray<FloatKey>(r.ReadInt32()).ToList();
+            AlphaKeys = r.DeserializeArray<FloatKey>(r.ReadInt32()).ToList();
         }
-        NetsphereScnTool.Scene.SceneContainer.Log("FloatKeys.Count: " + FloatKeys.Count);
+        NetsphereScnTool.Scene.SceneContainer.Log("FloatKeys.Count: " + AlphaKeys.Count);
     }
 
     public Vector3 SamplePosition(float frame)
@@ -163,6 +163,26 @@ public class TransformKeyData : IManualSerializer
             }
         }
         return TransformKey.Scale;
+    }
+
+    public float SampleTransparency(float frame)
+    {
+		if (AlphaKeys.Count == 0)
+            return 1;
+        if (frame < AlphaKeys.First().frame) return AlphaKeys.First().Alpha;
+       
+        for (int i = 0; i < AlphaKeys.Count - 1; i++)
+        {
+            if (frame >= AlphaKeys[i].frame && frame < AlphaKeys[i + 1].frame)
+            {
+                float tra1 = AlphaKeys[i].Alpha;
+                float tra2 = AlphaKeys[i + 1].Alpha;
+                float range = AlphaKeys[i + 1].frame - AlphaKeys[i].frame;
+                float t = frame - AlphaKeys[i].frame;
+                return Mathf.Lerp(tra1, tra2, t / range);
+            }
+        }
+        return AlphaKeys.Last().Alpha;
     }
 
     public bool KeyTranslation(Vector3 pos, int frame)

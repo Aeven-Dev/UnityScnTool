@@ -162,7 +162,7 @@ namespace AevenScnTool.IO
 				go.transform.localRotation = model.Animation[0].transformKeyData2.TransformKey.Rotation;
 				go.transform.localScale = model.Animation[0].transformKeyData2.TransformKey.Scale;
 
-				tr.transparency = model.Animation[0].transformKeyData2.FloatKeys[0].Alpha;
+				tr.transparency = model.Animation[0].transformKeyData2.AlphaKeys[0].Alpha;
 
 				//go.AddComponent<S4Animations>().FromModelAnimation(model.Animation);
 			}
@@ -332,7 +332,7 @@ namespace AevenScnTool.IO
 				{
 					return 0;
 				}
-				if (anim.TransformKeyData.FloatKeys.Count != 0)
+				if (anim.TransformKeyData.AlphaKeys.Count != 0)
 				{
 					return 2;
 				}
@@ -606,9 +606,10 @@ namespace AevenScnTool.IO
 					{
 						mainTex = di.FullName + "\\" + texEntry.FileName.Replace(".tga", ".dds");
 
-						if (File.Exists(mainTex))
+						mat_x.mainTexture = LoadTexture(mainTex);
+						/*if (File.Exists(mainTex))
 						{
-							mat_x.mainTexture = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(mainTex));
+							mat_x.mainTexture = LoadTexture(mainTex);
 							mat_x.mainTexture.name = texEntry.FileName.Replace("tga", "dds");
 						}
 						else
@@ -616,7 +617,7 @@ namespace AevenScnTool.IO
 							Debug.Log($"Gosh! Texture {mainTex} doesnt exist!");
 
 							mat_x.mainTexture = Texture2D.whiteTexture;
-						}
+						}*/
 					}
 
 					string sideTex = string.Empty;
@@ -625,7 +626,20 @@ namespace AevenScnTool.IO
 					if (texEntry.FileName2 != string.Empty)
 					{
 						sideTex = di.FullName + "\\" + texEntry.FileName2;
-						if (File.Exists(sideTex))
+						var st = LoadTexture(sideTex);
+						if (model.TextureData.ExtraUV == 1)
+						{
+							mat_x.SetTexture("_DetailAlbedoMap", st);
+							mat_x.EnableKeyword("_DETAIL_MULX2");
+						}
+						else
+						{
+							mat_x.SetTexture("_BumpMap", st);
+							mat_x.EnableKeyword("_NORMALMAP");
+							normal = true;
+						}
+
+						/*if (File.Exists(sideTex))
 						{
 							Texture2D st = ScnFileImporter.LoadTGA(sideTex);
 							st.name = texEntry.FileName2;
@@ -661,7 +675,7 @@ namespace AevenScnTool.IO
 									normal = true;
 								}
 							}
-						}
+						}*/
 					}
 					tr.textures.Add(new TextureItem(texEntry.FileName, mainTex, sideTex, normal));
 					mats[i] = mat_x;
@@ -675,6 +689,44 @@ namespace AevenScnTool.IO
 			}
 
 			return mats;
+		}
+
+		static Texture2D LoadTexture(string path )
+		{
+			if (path.EndsWith(".tga"))
+			{
+				if (File.Exists(path))
+				{
+					return ScnFileImporter.LoadTGA(path);
+				}
+				else
+				{
+					path = path.Replace(".tga", ".dds");
+
+					if (File.Exists(path))
+					{
+						return ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(path));
+					}
+					return Texture2D.whiteTexture;
+				}
+			}
+			else if (path.EndsWith(".dds"))
+			{
+				if (File.Exists(path))
+				{
+					return ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(path));
+				}
+				else
+				{
+					path = path.Replace(".dds", ".tga");
+
+					if (File.Exists(path))
+					{
+						return ScnFileImporter.LoadTGA(path);
+					}
+				}
+			}
+			return Texture2D.whiteTexture;
 		}
 
 		public static int GetBoneIndexFromBoneName(string name, List<Transform> bones)
@@ -754,9 +806,9 @@ namespace AevenScnTool.IO
 				{
 					return 0;
 				}
-				if (anim.transformKeyData2.FloatKeys.Count == 1)
+				if (anim.transformKeyData2.AlphaKeys.Count == 1)
 				{
-					if (anim.transformKeyData2.FloatKeys[0].Alpha != 1f)
+					if (anim.transformKeyData2.AlphaKeys[0].Alpha != 1f)
 					{
 						return 2;
 					}
@@ -1328,7 +1380,7 @@ namespace AevenScnTool.IO
 				ma.transformKeyData2.TransformKey.Scale = scale;
 				if (tr.transparency != 1f)
 				{
-					ma.transformKeyData2.FloatKeys.Add(new FloatKey() { Alpha = tr.transparency, frame = 0 });
+					ma.transformKeyData2.AlphaKeys.Add(new FloatKey() { Alpha = tr.transparency, frame = 0 });
 				}
 				model.Animation.Add(ma);
 			}

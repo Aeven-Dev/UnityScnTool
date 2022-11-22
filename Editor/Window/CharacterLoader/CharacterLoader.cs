@@ -525,7 +525,6 @@ public class CharacterLoader : EditorWindow
 		foreach (var item in item_file.items)
 		{
             PaperDoll.Type type = PaperDoll.GetType(item.item_key.Substring(0, 3));
-            Debug.Log(type);
 			if (type == PaperDoll.Type.NONE)
 			{
                 continue;

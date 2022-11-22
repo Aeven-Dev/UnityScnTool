@@ -19,7 +19,7 @@ public abstract class ParametricAnim : S4Animations
         anim.Name = ScnToolData.Instance.main_animation_name;
         anim.transformKeyData2 = new TransformKeyData2();
         anim.transformKeyData2.duration = stepDuration * repetitions;
-        anim.transformKeyData2.FloatKeys = new List<FloatKey>();
+        anim.transformKeyData2.AlphaKeys = new List<FloatKey>();
 
         anim.transformKeyData2.TransformKey = new TransformKey();
         anim.transformKeyData2.TransformKey.Translation = transform.position * ScnToolData.Instance.scale;
@@ -46,7 +46,7 @@ public abstract class ParametricAnim : S4Animations
         anim.Name = ScnToolData.Instance.main_animation_name;
         anim.TransformKeyData = new TransformKeyData();
         anim.TransformKeyData.duration = stepDuration;
-        anim.TransformKeyData.FloatKeys = new List<FloatKey>();
+        anim.TransformKeyData.AlphaKeys = new List<FloatKey>();
 
         anim.TransformKeyData.TransformKey = new TransformKey();
         anim.TransformKeyData.TransformKey.Translation = transform.position * ScnToolData.Instance.scale;

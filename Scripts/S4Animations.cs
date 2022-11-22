@@ -99,7 +99,7 @@ public class S4Animation
         Name = anim.Name;
         TransformKeyData = new TransformKeyData();
         TransformKeyData.duration = anim.transformKeyData2.duration;
-        TransformKeyData.FloatKeys = anim.transformKeyData2.FloatKeys;
+        TransformKeyData.AlphaKeys = anim.transformKeyData2.AlphaKeys;
         TransformKeyData.TransformKey = anim.transformKeyData2.TransformKey;
         MorphKeys = anim.transformKeyData2.MorphKeys;
     }
@@ -116,14 +116,14 @@ public class S4Animation
         anim.Name = Name;
         anim.transformKeyData2 = new TransformKeyData2();
         anim.transformKeyData2.duration = TransformKeyData.duration;
-        anim.transformKeyData2.FloatKeys = new List<FloatKey>();
+        anim.transformKeyData2.AlphaKeys = new List<FloatKey>();
 
-        for (int i = 0; i < TransformKeyData.FloatKeys.Count; i++)
+        for (int i = 0; i < TransformKeyData.AlphaKeys.Count; i++)
         {
             FloatKey key = new FloatKey();
-            key.frame = TransformKeyData.FloatKeys[i].frame;
-            key.Alpha = TransformKeyData.FloatKeys[i].Alpha;
-            anim.transformKeyData2.FloatKeys.Add(key);
+            key.frame = TransformKeyData.AlphaKeys[i].frame;
+            key.Alpha = TransformKeyData.AlphaKeys[i].Alpha;
+            anim.transformKeyData2.AlphaKeys.Add(key);
         }
         anim.transformKeyData2.TransformKey = new TransformKey();
         anim.transformKeyData2.TransformKey.Translation = TransformKeyData.TransformKey.Translation * ScnToolData.Instance.scale;
@@ -171,14 +171,14 @@ public class S4Animation
         anim.Copy = Copy;
         anim.TransformKeyData = new TransformKeyData();
         anim.TransformKeyData.duration = TransformKeyData.duration;
-        anim.TransformKeyData.FloatKeys = new List<FloatKey>();
+        anim.TransformKeyData.AlphaKeys = new List<FloatKey>();
 
-        for (int i = 0; i < TransformKeyData.FloatKeys.Count; i++)
+        for (int i = 0; i < TransformKeyData.AlphaKeys.Count; i++)
         {
             FloatKey key = new FloatKey();
-            key.frame = TransformKeyData.FloatKeys[i].frame;
-            key.Alpha = TransformKeyData.FloatKeys[i].Alpha;
-            anim.TransformKeyData.FloatKeys.Add(key);
+            key.frame = TransformKeyData.AlphaKeys[i].frame;
+            key.Alpha = TransformKeyData.AlphaKeys[i].Alpha;
+            anim.TransformKeyData.AlphaKeys.Add(key);
         }
         anim.TransformKeyData.TransformKey = new TransformKey();
         anim.TransformKeyData.TransformKey.Translation = TransformKeyData.TransformKey.Translation * ScnToolData.Instance.scale;

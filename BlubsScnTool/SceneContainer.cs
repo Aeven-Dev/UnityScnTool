@@ -103,10 +103,10 @@ namespace NetsphereScnTool.Scene
                     var type = r.ReadEnum<ChunkType>();
                     string name = r.ReadCString();
 
-                    Debug.Log("Chunk name: " + name);
+                    //Debug.Log("Chunk name: " + name);
                     string subName = r.ReadCString();
 
-                    Debug.Log("Chunk subName: " + subName);
+                    //Debug.Log("Chunk subName: " + subName);
                     switch (type)
                     {
                         case ChunkType.ModelData:

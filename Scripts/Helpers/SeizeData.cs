@@ -6,10 +6,10 @@ using UnityEngine;
 
 public class SeizeData : MonoBehaviour
 {
-    string ally_seq;
-    string enemy_seq;
-    string neutral_seq;
-    int seize_slot;
+    public string ally_seq;
+    public string enemy_seq;
+    public string neutral_seq;
+    public int seize_slot;
 
 	public void Parse(StringBuilder sb, int index)
 	{

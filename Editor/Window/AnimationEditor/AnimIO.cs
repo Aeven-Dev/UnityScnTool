@@ -36,7 +36,7 @@ namespace AevenScnTool
 			SetPositionCurves(clip, pathToObj, tkd.TransformKey.Translation, tkd.TransformKey.TKey);
 			SetRotationCurves(clip, pathToObj, tkd.TransformKey.Rotation, tkd.TransformKey.RKey);
 			SetScaleCurves(clip, pathToObj, tkd.TransformKey.Scale, tkd.TransformKey.SKey);
-			SetVisibilityCurves(clip, pathToObj, tkd.FloatKeys);
+			SetVisibilityCurves(clip, pathToObj, tkd.AlphaKeys);
 		}
 		static void SetPositionCurves(AnimationClip clip, string pathToObj, Vector3 initial, List<TKey> tKeys)
 		{
@@ -412,7 +412,7 @@ namespace AevenScnTool
 				FloatKey key = new FloatKey();
 				key.frame = (int)(curve.keys[i].time * 1000f);
 				key.Alpha = curve.keys[i].value;
-				anim.TransformKeyData.FloatKeys.Add(key);
+				anim.TransformKeyData.AlphaKeys.Add(key);
 			}
 		}
 	}

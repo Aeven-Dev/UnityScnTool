@@ -106,7 +106,7 @@ namespace AevenScnTool.Menus
             Parent(go);
         }
 
-        [MenuItem("GameObject/S4 Scn/Box/Create Fumbi Spawn! (o)")]
+        [MenuItem("GameObject/S4 Scn/Box/TD/Create Fumbi Spawn! (o)")]
         static void CreateBallSpawn()
         {
             GameObject go = new GameObject("ball_spawn_pos");
@@ -115,7 +115,7 @@ namespace AevenScnTool.Menus
             Parent(go);
         }
 
-        [MenuItem("GameObject/S4 Scn/Box/Create Alpha Goal! ((_))")]
+        [MenuItem("GameObject/S4 Scn/Box/TD/Create Alpha Goal! ((_))")]
         static void CreateAlphaGoal()
         {
             GameObject go = new GameObject("alpha_net");
@@ -124,7 +124,7 @@ namespace AevenScnTool.Menus
             Parent(go);
         }
 
-        [MenuItem("GameObject/S4 Scn/Box/Create Beta Goal! ((_))")]
+        [MenuItem("GameObject/S4 Scn/Box/TD/Create Beta Goal! ((_))")]
         static void CreateBetaGoal()
         {
             GameObject go = new GameObject("beta_net");
@@ -190,25 +190,42 @@ namespace AevenScnTool.Menus
             Parent(go);
         }
 
-        [MenuItem("GameObject/S4 Scn/Bone/Create Breakable! [#]")]
+        [MenuItem("GameObject/S4 Scn/Create Breakable! [#]")]
         static void CreateBlast()
         {
             GameObject go = new GameObject("New Breakable! [#]");
-            go.AddComponent<Bone>().s4Animations = go.AddComponent<S4Animations>();
+            go.AddComponent<Bone>();
             go.AddComponent<BlastData>();
 
-            GameObject mesh = new GameObject("New Mesh! :D");
-            mesh.AddComponent<MeshFilter>();
-            mesh.AddComponent<MeshRenderer>();
+            GameObject mesh = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            Object.DestroyImmediate(mesh.GetComponent<BoxCollider>());
+            mesh.name = "New Mesh! :D";
             mesh.AddComponent<TextureReference>();
 
             GameObject coll = new GameObject("New Collider! :O");
-            coll.AddComponent<MeshCollider>();
+            coll.AddComponent<MeshCollider>().sharedMesh = mesh.GetComponent<MeshFilter>().sharedMesh;
             coll.AddComponent<CollisionData>().ground = GroundFlag.blast;
             coll.AddComponent<TextureReference>();
 
             coll.transform.SetParent(mesh.transform);
             mesh.transform.SetParent(go.transform);
+
+            Parent(go);
+        }
+
+        [MenuItem("GameObject/S4 Scn/Siege/Create Siege Point! _º_")]
+        static void CreateSiegePoint()
+        {
+            GameObject go = new GameObject("Point holder!");
+            GameObject smolbox = new GameObject("seize_xx");
+            GameObject beegbox = new GameObject("seize_outbox_xx");
+
+            go.AddComponent<SeizeData>().seize_slot = 1;
+            smolbox.AddComponent<BoxCollider>().size = Vector3.one * 1000f / ScnToolData.Instance.scale;
+            beegbox.AddComponent<BoxCollider>().size = Vector3.one * 1000f / ScnToolData.Instance.scale;
+
+            beegbox.transform.SetParent(go.transform);
+            smolbox.transform.SetParent(go.transform);
 
             Parent(go);
         }
