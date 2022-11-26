@@ -17,7 +17,7 @@ namespace AevenScnTool
 
 			AnimationClip clip = new AnimationClip();
 			clip.frameRate = 30f;
-			clip.legacy = true;
+			clip.legacy = false;
 			var parts = anim.GetParts(animName);
 			foreach (var item in parts.Keys)
 			{
