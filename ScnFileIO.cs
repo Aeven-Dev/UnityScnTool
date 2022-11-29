@@ -343,37 +343,45 @@ namespace AevenScnTool.IO
 
 		public static Texture2D ParseTextureDXT(byte[] ddsBytes)
 		{
-			byte a = ddsBytes[84];
-			byte b = ddsBytes[85];
-			byte c = ddsBytes[86];
-			byte d = ddsBytes[87];
-
-			string format = System.Text.Encoding.ASCII.GetString(new byte[] { a, b, c, d });
-			//Debug.Log(format);
-			TextureFormat textureFormat = TextureFormat.DXT1;
-
-			if (format == "DXT3" || format == "DXT5")
+			try
 			{
-				textureFormat = TextureFormat.DXT5;
+				byte a = ddsBytes[84];
+				byte b = ddsBytes[85];
+				byte c = ddsBytes[86];
+				byte d = ddsBytes[87];
+
+				string format = System.Text.Encoding.ASCII.GetString(new byte[] { a, b, c, d });
+				//Debug.Log(format);
+				TextureFormat textureFormat = TextureFormat.DXT1;
+
+				if (format == "DXT3" || format == "DXT5")
+				{
+					textureFormat = TextureFormat.DXT5;
+				}
+				byte ddsSizeCheck = ddsBytes[4];
+				if (ddsSizeCheck != 124)
+				{
+					Debug.Log("Invalid DDS DXTn texture. Unable to read. Oh no, looks like the file wasnt a dds, or maybe it's corrupted, check it out!");  //this header byte should be 124 for DDS image files
+					return Texture2D.whiteTexture;
+				}
+				int height = ddsBytes[13] * 256 + ddsBytes[12];
+				int width = ddsBytes[17] * 256 + ddsBytes[16];
+
+				int DDS_HEADER_SIZE = 128;
+				byte[] dxtBytes = new byte[ddsBytes.Length - DDS_HEADER_SIZE];
+				Buffer.BlockCopy(ddsBytes, DDS_HEADER_SIZE, dxtBytes, 0, ddsBytes.Length - DDS_HEADER_SIZE);
+
+				Texture2D texture = new Texture2D(width, height, textureFormat, false);
+				texture.LoadRawTextureData(dxtBytes);
+				texture.Apply();
+
+				return texture;
 			}
-			byte ddsSizeCheck = ddsBytes[4];
-			if (ddsSizeCheck != 124)
+			catch (Exception e)
 			{
-				Debug.Log("Invalid DDS DXTn texture. Unable to read. Oh no, looks like the file wasnt a dds, or maybe it's corrupted, check it out!");  //this header byte should be 124 for DDS image files
+				Debug.LogError("Oopsie daisy! Something went wrong!\n\n" + e.Message);
 				return Texture2D.whiteTexture;
 			}
-			int height = ddsBytes[13] * 256 + ddsBytes[12];
-			int width = ddsBytes[17] * 256 + ddsBytes[16];
-
-			int DDS_HEADER_SIZE = 128;
-			byte[] dxtBytes = new byte[ddsBytes.Length - DDS_HEADER_SIZE];
-			Buffer.BlockCopy(ddsBytes, DDS_HEADER_SIZE, dxtBytes, 0, ddsBytes.Length - DDS_HEADER_SIZE);
-
-			Texture2D texture = new Texture2D(width, height, textureFormat, false);
-			texture.LoadRawTextureData(dxtBytes);
-			texture.Apply();
-
-			return (texture);
 		}
 
 		public static Texture2D LoadTGA(string fileName)
@@ -386,57 +394,66 @@ namespace AevenScnTool.IO
 
 		public static Texture2D LoadTGA(Stream TGAStream)
 		{
-
-			using (BinaryReader r = new BinaryReader(TGAStream))
+			try
 			{
-				// Skip some header info we don't care about.
-				// Even if we did care, we have to move the stream seek point to the beginning,
-				// as the previous method in the workflow left it at the end.
-				r.BaseStream.Seek(12, SeekOrigin.Begin);
-
-				short width = r.ReadInt16();
-				short height = r.ReadInt16();
-				int bitDepth = r.ReadByte();
-
-				// Skip a byte of header information we don't care about.
-				r.BaseStream.Seek(1, SeekOrigin.Current);
-
-				Texture2D tex = new Texture2D(width, height);
-				Color32[] pulledColors = new Color32[width * height];
-
-				if (bitDepth == 32)
+				using (BinaryReader r = new BinaryReader(TGAStream))
 				{
-					for (int i = 0; i < width * height; i++)
+					// Skip some header info we don't care about.
+					// Even if we did care, we have to move the stream seek point to the beginning,
+					// as the previous method in the workflow left it at the end.
+					r.BaseStream.Seek(12, SeekOrigin.Begin);
+
+					short width = r.ReadInt16();
+					short height = r.ReadInt16();
+					int bitDepth = r.ReadByte();
+
+					// Skip a byte of header information we don't care about.
+					r.BaseStream.Seek(1, SeekOrigin.Current);
+
+					Texture2D tex = new Texture2D(width, height);
+					Color32[] pulledColors = new Color32[width * height];
+
+					if (bitDepth == 32)
 					{
-						byte red = r.ReadByte();
-						byte green = r.ReadByte();
-						byte blue = r.ReadByte();
-						byte alpha = r.ReadByte();
+						for (int i = 0; i < width * height; i++)
+						{
+							byte red = r.ReadByte();
+							byte green = r.ReadByte();
+							byte blue = r.ReadByte();
+							byte alpha = r.ReadByte();
 
-						pulledColors[i] = new Color32(blue, green, red, alpha);
+							pulledColors[i] = new Color32(blue, green, red, alpha);
+						}
 					}
-				}
-				else if (bitDepth == 24)
-				{
-					for (int i = 0; i < width * height; i++)
+					else if (bitDepth == 24)
 					{
-						byte red = r.ReadByte();
-						byte green = r.ReadByte();
-						byte blue = r.ReadByte();
+						for (int i = 0; i < width * height; i++)
+						{
+							byte red = r.ReadByte();
+							byte green = r.ReadByte();
+							byte blue = r.ReadByte();
 
-						pulledColors[i] = new Color32(blue, green, red, 1);
+							pulledColors[i] = new Color32(blue, green, red, 1);
+						}
 					}
-				}
-				else
-				{
-					throw new Exception("TGA texture had non 32/24 bit depth.");
-				}
+					else
+					{
+						Debug.Log("TGA texture had non 32/24 bit depth.");
+						return Texture2D.whiteTexture;
+					}
 
-				tex.SetPixels32(pulledColors);
-				tex.Apply();
-				return tex;
+					tex.SetPixels32(pulledColors);
+					tex.Apply();
+					return tex;
 
+				}
 			}
+			catch (Exception e)
+			{
+				Debug.LogError("Oopsie daisy! Something went wrong!\n\n" + e.Message);
+				return Texture2D.whiteTexture;
+			}
+			
 		}
 
 
