@@ -15,7 +15,7 @@ namespace AevenScnTool.Menus
         SelectableItem[] scenesInHierarchy = null;
 
         bool saveLightmaps = false;
-
+        string lightmapName = "";
         void OnGUI()
         {
 			if (scenesInHierarchy == null)
@@ -56,6 +56,10 @@ namespace AevenScnTool.Menus
 
             GUILayout.Space(10);
             saveLightmaps = GUILayout.Toggle(saveLightmaps, "Save Lightmaps too!");
+            GUI.enabled = saveLightmaps;
+            lightmapName = GUILayout.TextField(lightmapName).Trim();
+
+            GUI.enabled = true;
             GUILayout.Space(10);
 
 
@@ -159,12 +163,18 @@ namespace AevenScnTool.Menus
                 }
 
                 AssetDatabase.Refresh();
-                foreach (var tex in ScnFileExporter.lightmaps)
-                {
+				for (int i = 0; i < ScnFileExporter.lightmaps.Count; i++)
+				{
+                    var tex = ScnFileExporter.lightmaps[i];
                     try
                     {
                         var bytes = tex.EncodeToTGA();
-                        File.WriteAllBytes(fileInfo.Directory.FullName + "\\" + tex.name + ".tga", bytes);
+                        string textureName = tex.name;
+						if (lightmapName != string.Empty)
+						{
+                            textureName = lightmapName + "_" + i;
+						}
+                        File.WriteAllBytes(fileInfo.Directory.FullName + "\\" + textureName + ".tga", bytes);
                     }
                     catch (System.Exception e)
                     {

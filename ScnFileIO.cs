@@ -345,6 +345,7 @@ namespace AevenScnTool.IO
 		{
 			try
 			{
+
 				byte a = ddsBytes[84];
 				byte b = ddsBytes[85];
 				byte c = ddsBytes[86];
@@ -398,6 +399,7 @@ namespace AevenScnTool.IO
 			{
 				using (BinaryReader r = new BinaryReader(TGAStream))
 				{
+
 					// Skip some header info we don't care about.
 					// Even if we did care, we have to move the stream seek point to the beginning,
 					// as the previous method in the workflow left it at the end.
