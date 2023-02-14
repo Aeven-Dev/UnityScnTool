@@ -324,13 +324,13 @@ namespace NetsphereScnTool.Scene.Chunks
                 w.Write(Textures.Count);
                 foreach (var texture in Textures)
                 {
-                    SceneContainer.Log("texture.FileName: " + texture.FileName);
-                    w.WriteCString(texture.FileName, 1024);
+                    SceneContainer.Log("texture.FileName: " + texture.main_texture);
+                    w.WriteCString(texture.main_texture, 1024);
                     if (Version >= 0.2000000029802322f)
-                        w.WriteCString(texture.FileName2, 1024);
+                        w.WriteCString(texture.side_texture, 1024);
 
-                    w.Write(texture.FaceOffset);
-                    w.Write(texture.FaceCount);
+                    w.Write(texture.face_offset);
+                    w.Write(texture.face_count);
                 }
             }
         }
@@ -349,15 +349,15 @@ namespace NetsphereScnTool.Scene.Chunks
                 {
                     var textureData = new TextureEntry
                     {
-                        FileName = ReadString(r,1024),
-                        FileName2 = ""
+                        main_texture = ReadString(r,1024),
+                        side_texture = ""
                     };
 
                     if (Version >= 0.2000000029802322f)
-                        textureData.FileName2 = ReadString(r,1024);
+                        textureData.side_texture = ReadString(r,1024);
 
-                    textureData.FaceOffset = r.ReadInt32();
-                    textureData.FaceCount = r.ReadInt32();
+                    textureData.face_offset = r.ReadInt32();
+                    textureData.face_count = r.ReadInt32();
 
                     Textures.Add(textureData);
                 }
@@ -384,9 +384,9 @@ namespace NetsphereScnTool.Scene.Chunks
 
     public struct TextureEntry
     {
-        public string FileName;
-        public string FileName2;
-        public int FaceOffset;
-        public int FaceCount;
+        public string main_texture;
+        public string side_texture;
+        public int face_offset;
+        public int face_count;
     }
 }

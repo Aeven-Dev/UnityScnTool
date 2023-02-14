@@ -49,5 +49,28 @@ namespace NetsphereScnTool
             w.Write(value.b);
             w.Write(value.a);
         }
+
+        internal static void Write(this BinaryWriter w, Vector3 value)
+        {
+            w.Write(value.x);
+            w.Write(value.y);
+            w.Write(value.z);
+        }
+
+        internal static Vector3 ReadVector3(this BinaryReader r)
+		{
+            return new Vector3(r.ReadSingle(),r.ReadSingle(),r.ReadSingle());
+		}
+
+        internal static void Write(this BinaryWriter w, Vector2 value)
+        {
+            w.Write(value.x);
+            w.Write(value.y);
+        }
+
+        internal static Vector2 ReadVector2(this BinaryReader r)
+        {
+            return new Vector2(r.ReadSingle(), r.ReadSingle());
+        }
     }
 }

@@ -2,6 +2,7 @@ using AevenScnTool.IO;
 using NetsphereScnTool.Scene;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,16 +22,29 @@ public class ScnData : MonoBehaviour
 	{
 		if (filePath == string.Empty)
 		{
-			filePath = EditorUtility.OpenFilePanel("Save your scn file!", "", "scn");
+			var file = new FileInfo(filePath);
+			filePath = EditorUtility.SaveFilePanel("Save your scn file!", file.DirectoryName,name, "scn");
+			if (filePath == string.Empty)
+			{
+				return;
+			}
 		}
 		SceneContainer container = ScnFileExporter.CreateContainerFromScenes(new System.IO.FileInfo(filePath).Name, new ScnData[] { this });
 		container.Write(filePath);
 	}
 	void SaveScnFileAs()
 	{
-		filePath = EditorUtility.OpenFilePanel("Save your scn file!", "", "scn");
-		
-		SceneContainer container = ScnFileExporter.CreateContainerFromScenes(new System.IO.FileInfo(filePath).Name, new ScnData[] { this });
-		container.Write(filePath);
+		var dir = "";
+		if (filePath != string.Empty)
+		{
+			dir = new FileInfo(filePath).DirectoryName;
+		}
+		var result = EditorUtility.SaveFilePanel("Save your scn file!", dir, name, "scn");
+		if (result != string.Empty)
+		{
+			filePath = result;
+			SceneContainer container = ScnFileExporter.CreateContainerFromScenes(new System.IO.FileInfo(filePath).Name, new ScnData[] { this });
+			container.Write(filePath);
+		}
 	}
 }

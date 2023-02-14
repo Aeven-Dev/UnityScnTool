@@ -255,7 +255,7 @@ namespace AevenScnTool.IO
 		{
 			GameObject go = CreateGameObject(boneSys);
 			go.transform.SetParent(parent.transform);
-
+			go.AddComponent<Bonesystem>();
 			return go;
 		}
 
@@ -617,13 +617,13 @@ namespace AevenScnTool.IO
 				for (int i = 0; i < model.TextureData.Textures.Count; i++)
 				{
 					TextureEntry texEntry = model.TextureData.Textures[i];
-					mesh.SetTriangles(tris, texEntry.FaceOffset * 3, texEntry.FaceCount * 3, i);
+					mesh.SetTriangles(tris, texEntry.face_offset * 3, texEntry.face_count * 3, i);
 
 					Material mat_x = new Material(mat);
 					string mainTex = string.Empty;
-					if (texEntry.FileName != string.Empty)
+					if (texEntry.main_texture != string.Empty)
 					{
-						mainTex = di.FullName + "\\" + texEntry.FileName.Replace(".tga", ".dds");
+						mainTex = di.FullName + "\\" + texEntry.main_texture.Replace(".tga", ".dds");
 
 						mat_x.mainTexture = LoadTexture(mainTex);
 						/*if (File.Exists(mainTex))
@@ -642,9 +642,9 @@ namespace AevenScnTool.IO
 					string sideTex = string.Empty;
 					bool normal = false;
 
-					if (texEntry.FileName2 != string.Empty)
+					if (texEntry.side_texture != string.Empty)
 					{
-						sideTex = di.FullName + "\\" + texEntry.FileName2;
+						sideTex = di.FullName + "\\" + texEntry.side_texture;
 						var st = LoadTexture(sideTex);
 						if (model.TextureData.ExtraUV == 1)
 						{
@@ -696,7 +696,7 @@ namespace AevenScnTool.IO
 							}
 						}*/
 					}
-					tr.textures.Add(new TextureItem(texEntry.FileName, mainTex, sideTex, normal));
+					tr.textures.Add(new TextureItem(texEntry.main_texture, mainTex, sideTex, normal));
 					mats[i] = mat_x;
 				}
 
@@ -726,7 +726,6 @@ namespace AevenScnTool.IO
 					{
 						return ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(path));
 					}
-					return Texture2D.whiteTexture;
 				}
 			}
 			else if (path.EndsWith(".dds"))
@@ -895,7 +894,7 @@ namespace AevenScnTool.IO
 	{
 		static List<string> usedNames = new List<string>();
 
-		public static List<Texture2D> lightmaps = new List<Texture2D>();
+		public static List<(string name,Texture2D tex)> lightmaps = new List<(string name, Texture2D tex)>();
 
 		public static SceneContainer CreateContainerFromScenes(string name, ScnData[] scenes)
 		{
@@ -941,7 +940,7 @@ namespace AevenScnTool.IO
 			if (bone) return CreateBoneChunk(bone, container, parentChunk);
 			
 			Bonesystem bonesystem = child.GetComponent<Bonesystem>();
-			if (bone) return CreateBoneSystemChunk(bonesystem, container, parentChunk);
+			if (bonesystem) return CreateBoneSystemChunk(bonesystem, container, parentChunk);
 
 			SkinnedMeshRenderer smr = child.GetComponent<SkinnedMeshRenderer>();
 			if (smr) return ModelChunkExporter.CreateModelChunkSkinned(smr, container, parentChunk, relativeParent);
@@ -1548,42 +1547,67 @@ namespace AevenScnTool.IO
 				Debug.Log($"Oh no! {textures.gameObject.name} has more submeshes in it's mesh than textures intexture reference!", textures.gameObject);
 			}
 
+			string lightmapName = Menus.SelectExport.lightmapName;
 			for (int i = 0; i < mesh.subMeshCount; i++)
 			{
 				TextureEntry te = new TextureEntry();
-				te.FaceCount = mesh.GetSubMesh(i).indexCount / 3;
-				te.FaceOffset = mesh.GetSubMesh(i).indexStart / 3;
+				te.face_count = mesh.GetSubMesh(i).indexCount / 3;
+				te.face_offset = mesh.GetSubMesh(i).indexStart / 3;
 
 				if (i >= textures.textures.Count)
 				{
-					te.FileName = "MissingTexture.tga";
+					te.main_texture = "MissingTexture.tga";
 				}
 				else
 				{
-					if (textures.textures[i] != null)
+					var ti = textures.textures[i];
+					//Main Texture
+					if (ti == null)
 					{
-						if (textures.textures[i].mainTexturePath != string.Empty)
+						te.main_texture = "NullTexture.tga";
+					}
+					else if (ti.mainTexturePath != string.Empty)
+					{
+						te.main_texture = new FileInfo(ti.mainTexturePath).Name;
+					}
+					else
+					{
+						te.main_texture = "EmptyTexture.tga";
+					}
+
+					//Side Texture
+					if (ti.sideTextureIsNormal)
+					{
+						if (ti.sideTexturePath != string.Empty)
 						{
-							te.FileName = new FileInfo(textures.textures[i].mainTexturePath).Name;
+							te.side_texture = new FileInfo(ti.sideTexturePath).Name;
 						}
-						if (textures.ignoreLightmaps == false)
+					}
+					else
+					{
+						if (!textures.ignoreLightmaps)
 						{
-							if (textures.textures[i].sideTexturePath != string.Empty)
+							if (ti.sideTexturePath != string.Empty)
 							{
-								te.FileName2 = new FileInfo(textures.textures[i].sideTexturePath).Name;
+								te.side_texture = new FileInfo(ti.sideTexturePath).Name;
 							}
 							else
 							{
 								var mr = textures.GetComponent<MeshRenderer>();
-								if (mr)
+								if (mr != null && mr.lightmapIndex != -1 && mr.lightmapIndex >= LightmapSettings.lightmaps.Length)
 								{
-									if (mr.lightmapIndex != -1)
-									{
+									var lm = LightmapSettings.lightmaps[mr.lightmapIndex].lightmapColor;
 
-										var lm = LightmapSettings.lightmaps[mr.lightmapIndex];
-										te.FileName2 = lm.lightmapColor.name + ".tga";
-										ScnFileExporter.lightmaps.Add(lm.lightmapColor);
+
+									string textureName = lm.name;
+									if (lightmapName != string.Empty)
+									{
+										textureName = lightmapName + "_" + (ScnFileExporter.lightmaps.Count);
 									}
+
+									ScnFileExporter.lightmaps.Add((lm.name, lm));
+
+									te.side_texture = textureName + ".tga";
 								}
 							}
 						}
@@ -1602,7 +1626,7 @@ namespace AevenScnTool.IO
 			chunk.SubName = container.Header.Name;
 			if (parentChunk != null)
 			{
-				if (parentChunk.ChunkType == ChunkType.Bone ||
+				if (parentChunk.ChunkType == ChunkType.Bone || parentChunk.ChunkType == ChunkType.BoneSystem ||
 					(parentChunk.ChunkType == ChunkType.ModelData/* &&
 					transform.name.StartsWith("oct_")
 					&& !transform.name.StartsWith("oct_land") &&
