@@ -23,7 +23,7 @@ namespace AevenScnTool.Menus
                 Close();
 			}
 			GUILayout.Label("Select the scenes to compile! <3", EditorStyles.boldLabel);
-            scrollPos = EditorGUILayout.BeginScrollView(scrollPos, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUI.skin.box, GUILayout.MinHeight(position.height - 105f));
+            scrollPos = EditorGUILayout.BeginScrollView(scrollPos, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUI.skin.box, GUILayout.MinHeight(position.height - 125f));
 
             DrawItems();
 
