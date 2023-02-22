@@ -10,6 +10,7 @@ using UnityEngine;
 public class ScnData : MonoBehaviour
 {
     public string filePath;
+	public int version = 1045220557;
 
 	[Button("Save Scn File! :D")] public ButtonAction saveScnfile;
 	[Button("Save Scn File as...! :3")] public ButtonAction saveScnfileAs;

@@ -21,7 +21,7 @@ namespace NetsphereScnTool.Scene.Chunks
         {
             Name = "";
             SubName = "";
-            Version = 0.1f;
+            Version = 0.200000002980232f;
             Matrix = Matrix4x4.identity;
             Container = container;
         }
