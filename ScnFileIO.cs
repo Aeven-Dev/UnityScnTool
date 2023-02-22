@@ -1594,7 +1594,7 @@ namespace AevenScnTool.IO
 							else
 							{
 								var mr = textures.GetComponent<MeshRenderer>();
-								if (mr != null && mr.lightmapIndex != -1 && mr.lightmapIndex >= LightmapSettings.lightmaps.Length)
+								if (mr != null && mr.lightmapIndex != -1 && mr.lightmapIndex < LightmapSettings.lightmaps.Length)
 								{
 									var lm = LightmapSettings.lightmaps[mr.lightmapIndex].lightmapColor;
 
