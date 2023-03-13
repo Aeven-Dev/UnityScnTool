@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using UnityEditor;
 using UnityEngine;
 
 namespace AevenScnTool
@@ -8,6 +9,8 @@ namespace AevenScnTool
     [ExecuteInEditMode]
     public class CameraScreenshot : MonoBehaviour
     {
+        [Tooltip("By default it will create the file in the Asset folder, make sure the folders you set here exists. ^^")]
+        public string image_name = "Picture.png";
         [Button("Say Cheese!")] public ButtonAction takeScreenShot;
 
         #region private fields
@@ -23,6 +26,11 @@ namespace AevenScnTool
 
         void TakeScreenShot()
 		{
+			if (!EditorApplication.isPlaying)
+			{
+                Debug.LogError("Sorry but due to unity's derpines you must use this script in play mode");
+                return;
+			}
             var old_flag = mainCam.clearFlags;
             var old_color = mainCam.backgroundColor;
 
@@ -49,6 +57,8 @@ namespace AevenScnTool
             Texture2D tex = new Texture2D(cam.pixelWidth, cam.pixelHeight, TextureFormat.RGB24, false);
 
             cam.Render();
+            
+            Debug.Log("Snap!");
             tex.ReadPixels(new Rect(0, 0, cam.pixelWidth, cam.pixelHeight), 0, 0);
             tex.Apply();
 
@@ -91,7 +101,7 @@ namespace AevenScnTool
 
         void SavePng(Texture2D texture)
         {
-            File.WriteAllBytes("Picture.png", texture.EncodeToPNG());
+            File.WriteAllBytes(image_name, texture.EncodeToPNG());
         }
     }
 }

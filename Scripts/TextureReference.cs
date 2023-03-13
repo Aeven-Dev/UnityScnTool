@@ -453,6 +453,7 @@ namespace AevenScnTool
             }
             return false;
         }
+
     }
 
     [Serializable]
@@ -464,12 +465,49 @@ namespace AevenScnTool
         //[Path]
         public string sideTexturePath;
         public bool sideTextureIsNormal;
-        public TextureItem(string name, string mainTexturePath, string sideTexturePath, bool sideTextureIsNormal) 
+
+        //[Button("Select Main Tex O.O")] public ButtonAction selectMainTex;
+        //[Button("Select Side Tex 0.0")] public ButtonAction selectSideTex;
+
+        public TextureItem(string name, string mainTexturePath, string sideTexturePath, bool sideTextureIsNormal)
         { 
             this.name = name;
             this.mainTexturePath = mainTexturePath;
             this.sideTexturePath = sideTexturePath;
             this.sideTextureIsNormal = sideTextureIsNormal;
+            //selectMainTex = new ButtonAction(SelectMainTex);
+            //selectSideTex = new ButtonAction(SelectSideTex);
+        }
+
+        public void SelectMainTex()
+        {
+			if (mainTexturePath != string.Empty)
+			{
+                mainTexturePath = EditorUtility.OpenFilePanel("Select Main Tex O.O", new FileInfo(mainTexturePath).DirectoryName, "");
+            }
+			else
+			{
+                var path = EditorUtility.OpenFilePanel("Select Main Tex O.O", "", "");
+				if (path != string.Empty)
+				{
+                    mainTexturePath = path;
+				}
+            }
+        }
+        public void SelectSideTex()
+        {
+            if (sideTexturePath != string.Empty)
+            {
+                sideTexturePath = EditorUtility.OpenFilePanel("Select Side Tex O.O", new FileInfo(sideTexturePath).DirectoryName, "");
+            }
+            else
+            {
+                var path = EditorUtility.OpenFilePanel("Select Side Tex O.O", "", "");
+                if (path != string.Empty)
+                {
+                    sideTexturePath = path;
+                }
+            }
         }
     }
 }
