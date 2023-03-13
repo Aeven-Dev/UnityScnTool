@@ -10,7 +10,7 @@ namespace AevenScnTool
     public class CameraScreenshot : MonoBehaviour
     {
         [Tooltip("By default it will create the file in the Asset folder, make sure the folders you set here exists. ^^")]
-        public string image_name = "Picture.png";
+        public string image_name = "Assets\\Picture.png";
         [Button("Say Cheese!")] public ButtonAction takeScreenShot;
 
         #region private fields
@@ -57,8 +57,6 @@ namespace AevenScnTool
             Texture2D tex = new Texture2D(cam.pixelWidth, cam.pixelHeight, TextureFormat.RGB24, false);
 
             cam.Render();
-            
-            Debug.Log("Snap!");
             tex.ReadPixels(new Rect(0, 0, cam.pixelWidth, cam.pixelHeight), 0, 0);
             tex.Apply();
 
