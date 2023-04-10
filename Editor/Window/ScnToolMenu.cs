@@ -42,6 +42,9 @@ namespace AevenScnTool.Menus
 			GUILayout.Space(10f);
 			ScnToolData.Instance.ignoreLightmapsGlobally = EditorGUILayout.Toggle("Ignore all lightmaps!", ScnToolData.Instance.ignoreLightmapsGlobally);
 
+			GUILayout.Space(10f);
+			ScnToolData.Instance.importCollisionAsVisual = EditorGUILayout.Toggle("Import Collision as MeshRenderers", ScnToolData.Instance.importCollisionAsVisual);
+
 			GUILayout.Space(40);
 			if (GUILayout.Button(new GUIContent("Ultimate Modding Power!!",
 				"A powerful mode where every little change is saved to the file, dangerous but useful!"),

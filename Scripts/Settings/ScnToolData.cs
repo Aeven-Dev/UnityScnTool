@@ -33,25 +33,40 @@ namespace AevenScnTool
 
 		public bool ignoreLightmapsGlobally = false;
 
+		public bool importCollisionAsVisual = false;
+
+		public bool export_map = true;
+
 		public Material base_mat;
 		public static Material GetMatFromShader(RenderFlag shader)
 		{
+			Material mat;
+			if (shader.HasFlag(RenderFlag.NoLight))
+				mat = AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Lit.mat");
+			else
+				mat = AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Lit.mat");
+
 			if (shader.HasFlag(RenderFlag.Transparent))
 			{
-				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_Transparent.mat");
+				//Set surface type to transparent
+				mat.SetOverrideTag("RenderType", "Transparent");
 			}
 			if (shader.HasFlag(RenderFlag.Cutout))
 			{
-				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_Cutout.mat");
+				//Enable alpha clipping
+				mat.SetFloat("_BUILTIN_AlphaClip", 1);
 			}
-			if (shader.HasFlag(RenderFlag.NoLight))
+			if (shader.HasFlag(RenderFlag.NoCulling))
 			{
-				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_NoLight.mat");
+				//Set render face to both
+				mat.SetFloat("_BUILTIN_CullMode", 0);
 			}
-			else
+			if (shader.HasFlag(RenderFlag.Glow))
 			{
-				return AssetDatabase.LoadAssetAtPath<Material>(RootPath + "Editor/Materials/S4_Base_Mat_Opaque.mat");
+				//Enable glow
+				mat.SetFloat("_Glow", 1);
 			}
+			return mat;
 		}
 
 		static ScnToolData instance;
