@@ -57,14 +57,14 @@ namespace AevenScnTool
                 var mr = GetComponent<MeshRenderer>();
                 if (mr)
                 {
-                    mat = mr.material;
+                    mat = mr.sharedMaterial;
                 }
 				else
 				{
                     var smr = GetComponent<SkinnedMeshRenderer>();
                     if (smr)
                     {
-                        mat = smr.material;
+                        mat = smr.sharedMaterial;
                     }
 					else
 					{

@@ -17,7 +17,7 @@ namespace AevenScnTool.Menus
 	{
 		public static bool identityMatrix = false;
 		bool bottomFoldeout = false;
-
+		Vector2 scroll_pos = Vector2.zero;
 		private void OnSelectionChange()
 		{
 			Repaint();
@@ -28,33 +28,35 @@ namespace AevenScnTool.Menus
 			Undo.RecordObject(ScnToolData.Instance, "Changed Scn Tool Menu Data");
 
 			EditorGUILayout.LabelField("S4 Scn Window <3<3", EditorStyles.boldLabel);
+			scroll_pos = EditorGUILayout.BeginScrollView(scroll_pos,false,true);
 			if (position.width > 300)
 				WideGUI();
 			else
 				SlimGUI();
 
-			ScnToolData.Instance.uv_flipVertical = EditorGUILayout.Toggle("Flip UVs Vertically .-.", ScnToolData.Instance.uv_flipVertical);
-			ScnToolData.Instance.uv_flipHorizontal = EditorGUILayout.Toggle("Flip UVs Horizontally q:", ScnToolData.Instance.uv_flipHorizontal);
+			var lay = GUILayout.Width(position.width - 22);
+			ScnToolData.Instance.uv_flipVertical = EditorGUILayout.Toggle("Flip UVs Vertically .-.", ScnToolData.Instance.uv_flipVertical, lay);
+			ScnToolData.Instance.uv_flipHorizontal = EditorGUILayout.Toggle("Flip UVs Horizontally q:", ScnToolData.Instance.uv_flipHorizontal, lay);
 
 
-			ScnToolData.Instance.uv_flipVertical_lm = EditorGUILayout.Toggle("Flip UVs Vertically for lightmaps", ScnToolData.Instance.uv_flipVertical_lm);
-			ScnToolData.Instance.uv_flipHorizontal_lm = EditorGUILayout.Toggle("Flip UVs Horizontally for lightmaps", ScnToolData.Instance.uv_flipHorizontal_lm);
+			ScnToolData.Instance.uv_flipVertical_lm = EditorGUILayout.Toggle("Flip UVs Vertically for lightmaps", ScnToolData.Instance.uv_flipVertical_lm, lay);
+			ScnToolData.Instance.uv_flipHorizontal_lm = EditorGUILayout.Toggle("Flip UVs Horizontally for lightmaps", ScnToolData.Instance.uv_flipHorizontal_lm, lay);
 			GUILayout.Space(10f);
-			ScnToolData.Instance.ignoreLightmapsGlobally = EditorGUILayout.Toggle("Ignore all lightmaps!", ScnToolData.Instance.ignoreLightmapsGlobally);
+			ScnToolData.Instance.ignoreLightmapsGlobally = EditorGUILayout.Toggle("Ignore all lightmaps!", ScnToolData.Instance.ignoreLightmapsGlobally, lay);
 
 			GUILayout.Space(10f);
-			ScnToolData.Instance.importCollisionAsVisual = EditorGUILayout.Toggle("Import Collision as MeshRenderers", ScnToolData.Instance.importCollisionAsVisual);
+			ScnToolData.Instance.importCollisionAsVisual = EditorGUILayout.Toggle("Import Collision as MeshRenderers", ScnToolData.Instance.importCollisionAsVisual, lay);
 
 			GUILayout.Space(40);
 			if (GUILayout.Button(new GUIContent("Ultimate Modding Power!!",
 				"A powerful mode where every little change is saved to the file, dangerous but useful!"),
-				GUILayout.Height(35)))
+				GUILayout.Height(35), lay))
 			{
 				Set_UMP();
 			}
 			GUILayout.Space(5);
 			if (GUILayout.Button(new GUIContent("Generate MapInfo text! [].[]",
-				"Opens a window to generate a text that you can paste inside the mapinfo ini to configure your DOTs, Warps, Blasts and such!")))
+				"Opens a window to generate a text that you can paste inside the mapinfo ini to configure your DOTs, Warps, Blasts and such!"), lay))
 			{
 				MapInfoWindow.Init();
 			}
@@ -70,7 +72,7 @@ namespace AevenScnTool.Menus
 				else
 					SlimBottom();
 
-				ScnToolData.Instance.main_animation_name = EditorGUILayout.TextField("Main anim name!", ScnToolData.Instance.main_animation_name);
+				ScnToolData.Instance.main_animation_name = EditorGUILayout.TextField("Main anim name!", ScnToolData.Instance.main_animation_name, lay);
 				EditorGUI.indentLevel -= 2;
 			}
 
@@ -87,6 +89,8 @@ namespace AevenScnTool.Menus
 				}
 			}
 
+			EditorGUILayout.EndScrollView();
+
 			EditorUtility.SetDirty(ScnToolData.Instance);
 		}
 
@@ -94,7 +98,7 @@ namespace AevenScnTool.Menus
 		{
 			GUILayout.Space(20);
 			EditorGUILayout.BeginHorizontal();
-			float width = position.width / 2f;
+			float width = (position.width / 2f) - 11;
 			if (GUILayout.Button(new GUIContent("Open... :¬)", "Opens a scn file into a new SceneData root object of the same name!"), GUILayout.Width(width)))
 			{
 				Open();
@@ -118,7 +122,7 @@ namespace AevenScnTool.Menus
 			EditorGUIUtility.labelWidth = old;
 
 			EditorGUILayout.BeginHorizontal();
-			if (GUILayout.Button(new GUIContent("Save... :3", "Saves the SceneData root objects to a the specified file!"), GUILayout.Width(position.width)))
+			if (GUILayout.Button(new GUIContent("Save... :3", "Saves the SceneData root objects to a the specified file!"), GUILayout.Width(position.width - 22)))
 			{
 				SaveCurrent();
 			}
@@ -141,14 +145,15 @@ namespace AevenScnTool.Menus
 
 		void SlimGUI()
 		{
+			float width = (position.width / 2f) - 11;
 			GUILayout.Space(20);
 			if (GUILayout.Button(new GUIContent("Open... :¬)",
-				"Opens a scn file into a new SceneData root object of the same name!")))
+				"Opens a scn file into a new SceneData root object of the same name!"), GUILayout.Width(width)))
 			{
 				Open();
 			}
 			if (GUILayout.Button(new GUIContent("Append... :D",
-				"Opens a scn file into into a window where you can select what objects to import!")))
+				"Opens a scn file into into a window where you can select what objects to import!"), GUILayout.Width(width)))
 			{
 				Append();
 			}
@@ -156,19 +161,19 @@ namespace AevenScnTool.Menus
 
 
 			if (GUILayout.Button(new GUIContent("Save... :3",
-				"Saves the SceneData root objects to a the specified file!")))
+				"Saves the SceneData root objects to a the specified file!"), GUILayout.Width(width)))
 			{
 				SaveCurrent();
 			}
 			GUI.enabled = ScnIsSelected();
 			if (GUILayout.Button(new GUIContent("Set Scene! \\(> W <)",
-				"Sets up all of the monobehaviours needed for the proper functionality of the tool in the current scene!")))
+				"Sets up all of the monobehaviours needed for the proper functionality of the tool in the current scene!"), GUILayout.Width(width)))
 			{
 				SetScene(Selection.activeGameObject.GetComponent<ScnData>());
 			}
 			GUI.enabled = true;
 			if (GUILayout.Button(new GUIContent("Set Scenes! \\(> W <)<)<)",
-				"Sets up all of the monobehaviours needed for the proper functionality of the tool in all the loaded scenes!")))
+				"Sets up all of the monobehaviours needed for the proper functionality of the tool in all the loaded scenes!"), GUILayout.Width(width)))
 			{
 				SetAllOpenScenes();
 			}
@@ -176,6 +181,7 @@ namespace AevenScnTool.Menus
 
 		void WideBottom()
 		{
+			float width = (position.width / 2f) - 11;
 			ScnToolData.Instance.scale = EditorGUILayout.FloatField("Scale!", ScnToolData.Instance.scale);
 			if (ScnToolData.Instance.scale <= 0f)
 			{
@@ -197,7 +203,7 @@ namespace AevenScnTool.Menus
 			ScnToolData.Instance.s4_startup_file = EditorGUILayout.DelayedTextField("S4 Executable", ScnToolData.Instance.s4_startup_file);
 			if (GUILayout.Button("open...", GUILayout.Width(75)))
 			{
-				ScnToolData.Instance.s4_startup_file = EditorUtility.OpenFilePanel("Select the your S4 Launcher!", ScnToolData.Instance.s4_startup_file, "exe,bat");
+				ScnToolData.Instance.s4_startup_file = EditorUtility.OpenFilePanel("Select the your S4 Launcher!", ScnToolData.Instance.s4_startup_file, "exe,bat, com, cmd, inf, ipa, osx, pif, run, wsh,sh");
 			}
 			EditorGUILayout.EndHorizontal();
 		}
