@@ -132,7 +132,10 @@ namespace AevenScnTool.IO
 			tr.renderFlags = model.Shader;
 
 			Material[] mats = ModelChunkImporter.SetFaceData(mesh, model, di, tr);
-
+			if (mats.Length == 0)
+			{
+				mats = new Material[1];
+			}
 
 			if (model.WeightBone.Count > 0)
 			{
