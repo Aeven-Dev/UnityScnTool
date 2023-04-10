@@ -41,7 +41,9 @@ public class PaperDoll : MonoBehaviour
         return Type.NONE;
     }
 
-    public bool isGirl { get; set; }
+    public string path = "";
+
+    public bool isGirl = true;
 
     [HideInInspector]public List<Container> attachedHair = new List<Container>();
     [HideInInspector]public List<Container> attachedFaces = new List<Container>();
