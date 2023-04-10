@@ -32,7 +32,7 @@ namespace AevenScnTool.IO
 		}
 
 
-		static List<TreeItem<SceneChunk>> GetRootItems(SceneContainer container)
+		public static List<TreeItem<SceneChunk>> GetRootItems(SceneContainer container)
 		{
 			List<SceneChunk> chunks = new();
 			foreach (var item in container)
@@ -133,11 +133,12 @@ namespace AevenScnTool.IO
 
 			Material[] mats = ModelChunkImporter.SetFaceData(mesh, model, di, tr);
 
+
 			if (model.WeightBone.Count > 0)
 			{
 				ModelChunkImporter.SetSkinnedMesh(go, model, mesh, mats);
 			}
-			else if (model.Name.StartsWith("oct_"))
+			else if (model.Name.StartsWith("oct_") && ScnToolData.Instance.importCollisionAsVisual == false)
 			{
 				ModelChunkImporter.SetOctMesh(go, model, mesh);
 			}
@@ -474,7 +475,7 @@ namespace AevenScnTool.IO
 		}
 	}
 
-	class TreeItem<T>
+	public class TreeItem<T>
 	{
 		public T item;
 		public List<TreeItem<T>> childs;
@@ -888,6 +889,58 @@ namespace AevenScnTool.IO
 			return (mainMat, sideMat);
 		}
 
+	}
+
+	public static class AnimationImporter
+	{
+		public static List<TreeItem<(string Object_Name, List<S4Animation> anims)>> LoadAnimations(string path)
+		{
+			SceneContainer sc = SceneContainer.ReadFrom(path);
+			if (sc != null)
+			{
+				return LoadAnimations(sc);
+			}
+			return null;
+		}
+		public static List<TreeItem<(string Object_Name, List<S4Animation> anims)>> LoadAnimations(SceneContainer container)
+		{
+			List<TreeItem<SceneChunk>> root = ScnFileImporter.GetRootItems(container);
+			List<TreeItem<(string Object_Name, List<S4Animation>)>> anims = new();
+			for (int i = 0; i < root.Count; i++)
+			{
+				anims.Add(Transcript(root[i]));
+			}
+			return anims;
+
+		}
+
+		static TreeItem<(string Object_Name, List<S4Animation> anims)> Transcript(TreeItem<SceneChunk> node)
+		{
+			TreeItem<(string Object_Name, List<S4Animation> anims)> anim_node = new();
+			anim_node.item.Object_Name = node.item.Name;
+			anim_node.item.anims = new();
+			if (node.item is ModelChunk mc)
+			{
+				for (int i = 0; i < mc.Animation.Count; i++)
+				{
+					anim_node.item.anims.Add(new S4Animation(mc.Animation[i]));
+				}
+			}
+			else if (node.item is BoneChunk bc)
+			{
+				for (int i = 0; i < bc.Animation.Count; i++)
+				{
+					anim_node.item.anims.Add(new S4Animation(bc.Animation[i]));
+				}
+			}
+			for (int i = 0; i < node.childs.Count; i++)
+			{
+				var child = Transcript(node.childs[i]);
+				anim_node.childs.Add(child);
+				child.parent = anim_node;
+			}
+			return anim_node;
+		}
 	}
 
 	public static class ScnFileExporter
