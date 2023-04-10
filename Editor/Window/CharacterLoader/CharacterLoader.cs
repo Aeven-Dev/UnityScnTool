@@ -50,7 +50,18 @@ public class CharacterLoader : EditorWindow
     WeaponFile weapon_file;
     WeaponAttachFile weapon_attach_file;
 
-    string rootFolder = string.Empty;
+    string s4_folder = "";
+    string S4_Folder
+    {
+        get { return s4_folder; }
+        set {
+            s4_folder = value;
+            if (paperdoll != null)
+            {
+                paperdoll.path = value;
+            }
+        }
+    }
 
     [MenuItem("Window/S4 Scn/CharacterLoader")]
     public static void Open()
@@ -65,6 +76,13 @@ public class CharacterLoader : EditorWindow
         wnd.titleContent = new GUIContent("CharacterLoader");
 
         wnd.paperdoll = pd;
+		if (pd.path!= null && pd.path != string.Empty)
+		{
+            wnd.SetS4Folder(pd.path);
+
+
+        }
+        wnd.folder_text.text = pd.path;
         wnd.GoToClotheTypeSelection();
         wnd.Root.style.display = DisplayStyle.Flex;
         wnd.RedrawAllItems();
@@ -107,18 +125,16 @@ public class CharacterLoader : EditorWindow
 
 
         boyButton.clicked += () => {
-            if (rootFolder == null || rootFolder == string.Empty)
+            if (!CheckS4Folder())
             {
-                EditorUtility.DisplayDialog("Oooopsie!", "Haha, you have to select an s4 client folder first, silly!", "Alright! :)");
                 return;
             }
             SpawnBiped(false);
             Root.style.left = new StyleLength(new Length(-100, LengthUnit.Percent));
         };
         girlButton.clicked += () => {
-			if (rootFolder == null || rootFolder == string.Empty)
-			{
-                EditorUtility.DisplayDialog("Oooopsie!", "Haha, you have to select an s4 client folder first, silly!", "Alright! :)");
+            if (!CheckS4Folder())
+            {
                 return;
             }
             SpawnBiped(true);
@@ -208,13 +224,18 @@ public class CharacterLoader : EditorWindow
         {
             return;
         }
+        SetS4Folder( path);
 
+
+    }
+    void SetS4Folder(string path)
+	{
         var res = ReadFiles(path);
 
         if (res != 0)
-		{
+        {
             var message = "";
-			switch (res)
+            switch (res)
             {
                 case 1:
                     message = path + "\\xml\\item.x7 cant be found!";
@@ -226,19 +247,30 @@ public class CharacterLoader : EditorWindow
                     message = path + "\\xml\\weapon_attach.x7 cant be found!";
                     break;
             }
-			EditorUtility.DisplayDialog("Goodness!", "I couldnt find a item.x7 in a xml folder in that S4 client! Maybe the file is missing or it could be that you extracted the resources diferently!\n" + message, "D:");
+            EditorUtility.DisplayDialog("Goodness!", "I couldnt find a item.x7 in a xml folder in that S4 client! Maybe the file is missing or it could be that you extracted the resources diferently!\n" + message, "D:");
             return;
         }
         Root.style.display = DisplayStyle.Flex;
         folder_text.text = path;
-        rootFolder = path;
+        S4_Folder = path;
+    }
+    bool CheckS4Folder()
+	{
+        if (S4_Folder == string.Empty || paperdoll == null || paperdoll.path == null || paperdoll.path == string.Empty)
+        {
+            if (EditorUtility.DisplayDialog("Oooopsie!", "Haha, you have to select an s4 client folder first, silly!", "Alright, let me choose now! :)", "Oppsie! x3"))
+            {
+                SelectS4Folder();
+            }
+            return S4_Folder == string.Empty || paperdoll == null || paperdoll.path == null || paperdoll.path == string.Empty;
+        }
+        return true;
     }
 
     void SelectClothes(PaperDoll.Type type)
     {
-		if (rootFolder == string.Empty)
-		{
-            EditorUtility.DisplayDialog("Oooopsie!", "Haha, you have to select an s4 client folder first, silly!", "Alright! :)");
+        if (!CheckS4Folder())
+        {
             return;
         }
         ItemSelector.Clear();
@@ -254,7 +286,7 @@ public class CharacterLoader : EditorWindow
             if (item.graphic.icon_image != null && item.graphic.icon_image != string.Empty)
             {
                 var file = item.graphic.icon_image.Replace(".tga", ".dds");
-                string path = rootFolder + $@"\resources\image\costume\{file}";
+                string path = paperdoll.path + $@"\resources\image\costume\{file}";
                 if (File.Exists(path))
                 {
                     tex = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(path));
@@ -268,9 +300,8 @@ public class CharacterLoader : EditorWindow
 
     void SelectWeapons(PaperDoll.Type type)
 	{
-        if (rootFolder == string.Empty)
+        if (!CheckS4Folder())
         {
-            EditorUtility.DisplayDialog("Oooopsie!", "Haha, you have to select an s4 client folder first, silly!", "Alright! :)");
             return;
         }
         ItemSelector.Clear();
@@ -285,7 +316,7 @@ public class CharacterLoader : EditorWindow
             if (item.graphic.icon_image != null && item.graphic.icon_image != string.Empty)
             {
                 var file = item.graphic.icon_image.Replace(".tga", ".dds");
-                string path = rootFolder + $@"\resources\image\costume\{file}";
+                string path = paperdoll.path + $@"\resources\image\costume\{file}";
                 if (File.Exists(path))
                 {
                     tex = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(path));
@@ -329,7 +360,7 @@ public class CharacterLoader : EditorWindow
     void SelectClotheItem(PaperDoll.Type type, Item item)
     {
 
-        paperdoll.SelectClotheItem(type, rootFolder, item.graphic.to_part_scene_file, item.graphic.nodes, item.graphic.hiding_option, item.graphic.icon_image);
+        paperdoll.SelectClotheItem(type, paperdoll.path, item.graphic.to_part_scene_file, item.graphic.nodes, item.graphic.hiding_option, item.graphic.icon_image);
 
         RedrawItems(type);
     }
@@ -344,7 +375,7 @@ public class CharacterLoader : EditorWindow
             var a = attach.Find(x => x.sceneIndex == i.ToString());
             values[i] = (weap.scene.values[i], a.attackAttach, a.idleAttach);
 		}
-        paperdoll.SelectWeapon(type, rootFolder, values, item.graphic.icon_image);
+        paperdoll.SelectWeapon(type, paperdoll.path, values, item.graphic.icon_image);
 	}
 
 
@@ -632,13 +663,14 @@ public class CharacterLoader : EditorWindow
         {
             ClearBiped();
 
-            var sceneObj = ScnFileImporter.LoadModel(rootFolder + $@"\resources\model\character\{(isGirl ? "female" : "male")}_bip.scn");
+            ScnData sceneObj = ScnFileImporter.LoadModel(S4_Folder + $@"\resources\model\character\{(isGirl ? "female" : "male")}_bip.scn");
             paperdoll = sceneObj.gameObject.AddComponent<PaperDoll>();
             paperdoll.isGirl = isGirl;
+            paperdoll.path = S4_Folder;
             if (false)
             {
                 //load the other bip with newer animations
-                ScnData extrAnimations = ScnFileImporter.LoadModel(rootFolder + $@"\resources\model\character\bip_{(paperdoll.isGirl ? "female" : "male")}\{(paperdoll.isGirl ? "female" : "male")}_bip_0000.scn");
+                ScnData extrAnimations = ScnFileImporter.LoadModel(S4_Folder + $@"\resources\model\character\bip_{(paperdoll.isGirl ? "female" : "male")}\{(paperdoll.isGirl ? "female" : "male")}_bip_0000.scn");
             }
         }
         //Play Base Animation

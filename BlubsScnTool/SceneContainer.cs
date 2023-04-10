@@ -10,7 +10,7 @@ namespace NetsphereScnTool.Scene
 {
     public class SceneContainer : SortableBindingList<SceneChunk>
     {
-        public static bool verbose = true;
+        public static bool verbose = false;
 
         public SceneHeader Header { get; set; }
 
@@ -74,6 +74,7 @@ namespace NetsphereScnTool.Scene
 
         public static SceneContainer ReadFrom(string fileName)
         {
+            Log("Opening file: " + fileName);
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                 return ReadFrom(fs);
         }
@@ -92,13 +93,7 @@ namespace NetsphereScnTool.Scene
             {
                 container.Header.Deserialize(stream);
 
-                // CoreLib::Scene::CSceneGroup
-                uint chunkCount = r.ReadUInt32();
-
-                if (container.Header.Version2 >= 1045220557)
-                    r.ReadByte(); // ToDo ReadString
-
-                for (int i = 0; i < chunkCount; i++)
+                for (int i = 0; i < container.Header.Chunk_Counk; i++)
                 {
                     var type = r.ReadEnum<ChunkType>();
                     string name = r.ReadCString();
@@ -232,6 +227,10 @@ namespace NetsphereScnTool.Scene
         public int Version { get; set; }
         public int Version2 { get; set; }
         public Matrix4x4 Matrix { get; set; }
+        public uint Chunk_Counk { get => chunk_count; }
+        public string Anim_Copy { get; set; }
+
+        private uint chunk_count = 0;
 
         internal SceneHeader()
         {
@@ -240,6 +239,7 @@ namespace NetsphereScnTool.Scene
             Version = 1036831949;
             Version2 = 1045220557;
             Matrix = Matrix4x4.identity;
+            Anim_Copy = "";
         }
 
         public void Serialize(Stream stream)
@@ -279,6 +279,14 @@ namespace NetsphereScnTool.Scene
 
                 // CoreLib::Scene::CSceneGroup
                 Version2 = r.ReadInt32();
+
+                // CoreLib::Scene::CSceneGroup
+                chunk_count = r.ReadUInt32();
+
+                if (Version2 >= 1045220557)
+                {
+                    Anim_Copy = r.ReadCString(); // ToDo ReadString
+                }
             }
         }
     }

@@ -12,7 +12,8 @@ namespace AevenScnTool
     public class TextureReference : MonoBehaviour
     {
         [Range(0f,1f)]public float transparency = 1f;
-        public RenderFlag renderFlags;
+        [HideInInspector]public RenderFlag renderFlags;
+        [SerializeField]private RenderFlag RenderFlags;
 
         public bool flipUvVertical = false;
         public bool flipUvHorizontal = false;
@@ -44,6 +45,49 @@ namespace AevenScnTool
             saveTexturesTGA = new ButtonAction(SaveTexturesTga);
             removeLightmaps = new ButtonAction(RemoveLightmap);
         }
+
+		private void OnValidate()
+		{
+			if (renderFlags != RenderFlags)
+			{
+                renderFlags = RenderFlags;
+
+                //Update material
+                Material mat;
+                var mr = GetComponent<MeshRenderer>();
+                if (mr)
+                {
+                    mat = mr.material;
+                }
+				else
+				{
+                    var smr = GetComponent<SkinnedMeshRenderer>();
+                    if (smr)
+                    {
+                        mat = smr.material;
+                    }
+					else
+					{
+                        return;
+					}
+                }
+                
+
+                mat.SetOverrideTag("RenderType", renderFlags.HasFlag(RenderFlag.Transparent) ? "Transparent" : "Opaque");
+                mat.SetFloat("_BUILTIN_AlphaClip", renderFlags.HasFlag(RenderFlag.Cutout) ? 1 : 0);
+                mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
+                mat.SetFloat("_BUILTIN_ZWriteControl", renderFlags.HasFlag(RenderFlag.ZWriteOff) ? 2 : 1);
+				if (renderFlags.HasFlag(RenderFlag.Flare))
+                {
+                    mat.SetOverrideTag("RenderType","Transparent");
+
+                }
+                mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
+                mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
+                mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
+                mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
+            }
+		}
 
 		[ContextMenu("Load from materials! <3")]
         public void LoadFromMaterial()
@@ -498,11 +542,11 @@ namespace AevenScnTool
         {
             if (sideTexturePath != string.Empty)
             {
-                sideTexturePath = EditorUtility.OpenFilePanel("Select Side Tex O.O", new FileInfo(sideTexturePath).DirectoryName, "");
+                sideTexturePath = EditorUtility.OpenFilePanel("Select Side Tex 0.0", new FileInfo(sideTexturePath).DirectoryName, "");
             }
             else
             {
-                var path = EditorUtility.OpenFilePanel("Select Side Tex O.O", "", "");
+                var path = EditorUtility.OpenFilePanel("Select Side Tex 0.0", "", "");
                 if (path != string.Empty)
                 {
                     sideTexturePath = path;
@@ -519,22 +563,27 @@ public enum RenderFlag
     NoLight = 1,
     Transparent = 2,
     Cutout = 4,
+
     NoCulling = 8,
     Billboard = 16,
     Flare = 32,
     ZWriteOff = 64,
+
     Shader = 128,
     NoPrerender = 256,
     NoFog = 512,
     Unknown = 1024,
+
     NoMipmap = 2048,
     VertexAnim = 4096,
     Shadow = 8192,
     Glow = 16384,
+
     Water = 32768,
     Distortion = 65536,
     Dark = 131072,
     Unk1 = 262144,
+
     Unk2 = 524288,
     Unk3 = 1048576
 }
