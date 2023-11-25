@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using Unity.VisualScripting.YamlDotNet.Core.Tokens;
 
 public abstract class AnimationWrapper
 {
@@ -17,6 +18,30 @@ public abstract class AnimationWrapper
     public abstract void RemoveAnimation(string name );
 
     public abstract void SetTotalFrames(string name, int frames);
+
+	public void CopyAnimation(S4Animation from, S4Animation to)
+	{
+		to.TransformKeyData.duration = from.TransformKeyData.duration;
+		from.TransformKeyData.AlphaKeys.ForEach(key => {
+			to.TransformKeyData.AlphaKeys.Add(new FloatKey() { frame = key.frame, Alpha = key.Alpha });
+		});
+		to.TransformKeyData.TransformKey.Translation = from.TransformKeyData.TransformKey.Translation;
+		to.TransformKeyData.TransformKey.Rotation = from.TransformKeyData.TransformKey.Rotation;
+		to.TransformKeyData.TransformKey.Scale = from.TransformKeyData.TransformKey.Scale;
+
+		to.TransformKeyData.TransformKey.TKey.AddRange(from.TransformKeyData.TransformKey.TKey);
+		to.TransformKeyData.TransformKey.RKey.AddRange(from.TransformKeyData.TransformKey.RKey);
+		to.TransformKeyData.TransformKey.SKey.AddRange(from.TransformKeyData.TransformKey.SKey);
+	}
+	public void CopyMorphKeys(S4Animation from, S4Animation to)
+	{
+		from.MorphKeys.ForEach(key => {
+			MorphKey morph = new MorphKey() { frame = key.frame };
+			morph.Vertices.AddRange(key.Vertices);
+			morph.UVs.AddRange(key.UVs);
+			to.MorphKeys.Add(morph);
+		});
+	}
 }
 
 class SingleAnimationWrapper : AnimationWrapper
@@ -89,17 +114,29 @@ class SingleAnimationWrapper : AnimationWrapper
 
     public override void AddAnimation(string name)
     {
+        S4Animation base_anim = null;
+        if (data.animations.Count > 0)base_anim = data.animations[0];
+
         var anim = new S4Animation();
         anim.Name = name;
 		if (isMesh)
         {
             anim.TransformKeyData = new TransformKeyData2();
             anim.MorphKeys = new List<MorphKey>();
+            if(base_anim != null)
+            {
+                CopyAnimation(base_anim, anim);
+                CopyMorphKeys(base_anim, anim);
+			}
         }
 		else
 		{
             anim.TransformKeyData = new TransformKeyData();
-        }
+			if (base_anim != null)
+			{
+				CopyAnimation(base_anim, anim);
+			}
+		}
         data.animations.Add(anim);
     }
     public override void RemoveAnimation(string name)
@@ -199,18 +236,32 @@ class ArmatureAnimationWrapper : AnimationWrapper
     public override void AddAnimation(string name)
     {
         foreach (var bone in bones)
-        {
-            var anim = new S4Animation();
+		{
+			S4Animation base_anim = null;
+			if (bone.animations.Count > 0) base_anim = bone.animations[0];
+
+			var anim = new S4Animation();
             anim.Name = name;
             if (isMesh)
             {
                 anim.TransformKeyData = new TransformKeyData2();
                 anim.MorphKeys = new List<MorphKey>();
-            }
+
+				if (base_anim != null)
+				{
+					CopyAnimation(base_anim, anim);
+					CopyMorphKeys(base_anim, anim);
+				}
+			}
             else
             {
                 anim.TransformKeyData = new TransformKeyData();
-            }
+
+				if (base_anim != null)
+				{
+					CopyAnimation(base_anim, anim);
+				}
+			}
             bone.animations.Add(anim);
         }
         
@@ -318,18 +369,32 @@ class SceneAnimationWrapper : AnimationWrapper
     public override void AddAnimation(string name)
     {
         foreach (var bone in objects)
-        {
-            var anim = new S4Animation();
+		{
+			S4Animation base_anim = null;
+			if (bone.animations.Count > 0) base_anim = bone.animations[0];
+
+			var anim = new S4Animation();
             anim.Name = name;
             if (isMesh)
             {
                 anim.TransformKeyData = new TransformKeyData2();
                 anim.MorphKeys = new List<MorphKey>();
-            }
+
+				if (base_anim != null)
+				{
+					CopyAnimation(base_anim, anim);
+					CopyMorphKeys(base_anim, anim);
+				}
+			}
             else
             {
                 anim.TransformKeyData = new TransformKeyData();
-            }
+
+				if (base_anim != null)
+				{
+					CopyAnimation(base_anim, anim);
+				}
+			}
             bone.animations.Add(anim);
         }
 

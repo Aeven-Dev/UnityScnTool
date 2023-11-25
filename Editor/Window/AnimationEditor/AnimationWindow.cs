@@ -484,6 +484,7 @@ namespace AevenScnTool
 
         void AddAnimation()
         {
+
             animation.AddAnimation(new string[] { "SWAY", "SPIN", "WHIRL", "TWIRL", "PIROUETTE", "PRANCE", "JIG", "HOP", "BOB", "BOUNCE" }[Random.Range(0, 10)] + "_" + animationNames.Count);
             animationNames = animation.GetAnimationNames();
             animationList.SetSelection(animationNames.Count - 1);

@@ -630,17 +630,6 @@ namespace AevenScnTool.IO
 						mainTex = di.FullName + "\\" + texEntry.main_texture.Replace(".tga", ".dds");
 
 						mat_x.mainTexture = LoadTexture(mainTex);
-						/*if (File.Exists(mainTex))
-						{
-							mat_x.mainTexture = LoadTexture(mainTex);
-							mat_x.mainTexture.name = texEntry.FileName.Replace("tga", "dds");
-						}
-						else
-						{
-							Debug.Log($"Gosh! Texture {mainTex} doesnt exist!");
-
-							mat_x.mainTexture = Texture2D.whiteTexture;
-						}*/
 					}
 
 					string sideTex = string.Empty;
@@ -971,6 +960,10 @@ namespace AevenScnTool.IO
 			for (int i = 0; i < parent.childCount; i++)
 			{
 				Transform child = parent.GetChild(i);
+				if (!child.gameObject.activeInHierarchy)
+				{
+					continue;
+				}
 
 				SceneChunk childChunk = CreateChunk(child, container, parentChunk, relativeParent);
 
@@ -1661,7 +1654,7 @@ namespace AevenScnTool.IO
 										textureName = lightmapName + "_" + (ScnFileExporter.lightmaps.Count);
 									}
 
-									ScnFileExporter.lightmaps.Add((lm.name, lm));
+									ScnFileExporter.lightmaps.Add((textureName, lm));
 
 									te.side_texture = textureName + ".tga";
 								}

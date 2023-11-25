@@ -73,7 +73,7 @@ namespace AevenScnTool.Menus
         static void CreateCollider()
         {
             GameObject go = new GameObject("New Collider! :O");
-            go.AddComponent<MeshCollider>();
+            go.AddComponent<MeshCollider>().cookingOptions = MeshColliderCookingOptions.None;
             go.AddComponent<CollisionData>();
             Parent(go);
         }
@@ -286,6 +286,44 @@ namespace AevenScnTool.Menus
                 }
             }
         }
+        [MenuItem("GameObject/S4 Scn/Mesh to Collider! :D => :O")]
+        static void MeshToCollider()
+		{
+            for (int i = 0; i < Selection.gameObjects.Length; i++)
+            {
+                if (Selection.activeTransform == null)
+                {
+                    Debug.Log("You need to have an object selected, silly! :P");
+                    return;
+                }
+                var go = Selection.gameObjects[i];
+
+                var mf = go.GetComponent<MeshFilter>();
+				if (!mf)
+				{
+                    continue;
+				}
+                var tr = go.GetComponent<TextureReference>();
+                var mr = go.GetComponent<MeshRenderer>();
+                var mc = go.AddComponent<MeshCollider>();
+                mc.cookingOptions = MeshColliderCookingOptions.None;
+                mc.sharedMesh = mf.sharedMesh;
+                go.AddComponent<CollisionData>();
+                if (tr)
+                {
+					Object.DestroyImmediate(tr);
+                }
+				if (mr)
+				{
+                    Object.DestroyImmediate(mr);
+				}
+				if (mf)
+				{
+                    Object.DestroyImmediate(mf);
+				}
+            }
+        }
+
 
         public static GameObject[] GetAllGameObjectsFromScene(Scene scene)
         {

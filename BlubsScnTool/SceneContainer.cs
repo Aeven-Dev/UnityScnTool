@@ -272,15 +272,9 @@ namespace NetsphereScnTool.Scene
 
                 Name = r.ReadCString();
                 SubName = r.ReadCString();
-
-                // CoreLib::Scene::CSceneNode
                 Version = r.ReadInt32();
                 Matrix = r.ReadMatrix();
-
-                // CoreLib::Scene::CSceneGroup
                 Version2 = r.ReadInt32();
-
-                // CoreLib::Scene::CSceneGroup
                 chunk_count = r.ReadUInt32();
 
                 if (Version2 >= 1045220557)

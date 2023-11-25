@@ -14,6 +14,9 @@ public class ScnData : MonoBehaviour
 	public string animationCopy = "";
 	public int version = 1045220557;
 
+	public Vector3 octTreeBox = Vector3.one * 30;
+	public Rect minimapCoverage = new Rect(Vector2.zero, Vector2.one * 30);
+
 	[Button("Save Scn File! :D")] public ButtonAction saveScnfile;
 	[Button("Save Scn File as...! :3")] public ButtonAction saveScnfileAs;
 	private void OnEnable()
@@ -49,5 +52,19 @@ public class ScnData : MonoBehaviour
 			SceneContainer container = ScnFileExporter.CreateContainerFromScenes(new System.IO.FileInfo(filePath).Name, new ScnData[] { this });
 			container.Write(filePath);
 		}
+	}
+	private void OnDrawGizmos()
+	{
+		Gizmos.matrix = transform.localToWorldMatrix;
+		Gizmos.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+		Gizmos.DrawWireCube(Vector3.zero, octTreeBox);
+	}
+	private void OnDrawGizmosSelected()
+	{
+		Gizmos.matrix = transform.localToWorldMatrix;
+		Gizmos.color = Color.white;
+		Gizmos.DrawWireCube(Vector3.zero, octTreeBox);
+		Gizmos.color = Color.cyan;
+		Gizmos.DrawWireCube(minimapCoverage.position,new Vector3(minimapCoverage.size.x, 0f, minimapCoverage.size.y));
 	}
 }

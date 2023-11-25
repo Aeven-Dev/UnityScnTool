@@ -50,44 +50,60 @@ namespace AevenScnTool
 		{
 			if (renderFlags != RenderFlags)
 			{
+                Debug.Log("Yay");
                 renderFlags = RenderFlags;
 
                 //Update material
-                Material mat;
+                Material[] mats;
                 var mr = GetComponent<MeshRenderer>();
                 if (mr)
                 {
-                    mat = mr.sharedMaterial;
+                    mats = mr.sharedMaterials;
+                    foreach (var mat in mats)
+                    {
+                        SetMaterialFlags(mat);
+                    }
+                    mr.materials = mats;
                 }
 				else
 				{
                     var smr = GetComponent<SkinnedMeshRenderer>();
                     if (smr)
                     {
-                        mat = smr.sharedMaterial;
+                        mats = smr.sharedMaterials;
+                        foreach (var mat in mats)
+                        {
+                            SetMaterialFlags(mat);
+                        }
+                        smr.materials = mats;
                     }
 					else
-					{
+                    {
+                        Debug.Log("Nyo");
                         return;
 					}
                 }
-                
-
-                mat.SetOverrideTag("RenderType", renderFlags.HasFlag(RenderFlag.Transparent) ? "Transparent" : "Opaque");
-                mat.SetFloat("_BUILTIN_AlphaClip", renderFlags.HasFlag(RenderFlag.Cutout) ? 1 : 0);
-                mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
-                mat.SetFloat("_BUILTIN_ZWriteControl", renderFlags.HasFlag(RenderFlag.ZWriteOff) ? 2 : 1);
-				if (renderFlags.HasFlag(RenderFlag.Flare))
-                {
-                    mat.SetOverrideTag("RenderType","Transparent");
-
-                }
-                mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
-                mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
-                mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
-                mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
+				
             }
 		}
+
+        void SetMaterialFlags(Material mat)
+		{
+            mat.SetOverrideTag("RenderType", renderFlags.HasFlag(RenderFlag.Transparent) ? "Transparent" : "Opaque");
+            Debug.Log(renderFlags);
+            mat.SetFloat("_BUILTIN_AlphaClip", renderFlags.HasFlag(RenderFlag.Cutout) ? 1 : 0);
+            mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
+            mat.SetFloat("_BUILTIN_ZWriteControl", renderFlags.HasFlag(RenderFlag.ZWriteOff) ? 2 : 1);
+            if (renderFlags.HasFlag(RenderFlag.Flare))
+            {
+                mat.SetOverrideTag("RenderType", "Transparent");
+
+            }
+            mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.Glow) ? 0 : 2);
+            mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
+            mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
+            mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
+        }
 
 		[ContextMenu("Load from materials! <3")]
         public void LoadFromMaterial()
@@ -199,8 +215,16 @@ namespace AevenScnTool
                     }
                     else
                     {
-                        mainTexture = IO.ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(item.mainTexturePath));
-                        mainTexture.name = new FileInfo(item.mainTexturePath).Name;
+						if (File.Exists(item.mainTexturePath))
+                        {
+                            mainTexture = IO.ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(item.mainTexturePath));
+                            mainTexture.name = new FileInfo(item.mainTexturePath).Name;
+                        }
+						else
+						{
+                            mainTexture = Texture2D.whiteTexture;
+                            mainTexture.name = "missing texture";
+                        }
                     }
                 }
 
