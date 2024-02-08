@@ -618,6 +618,11 @@ namespace AevenScnTool.IO
 					}
 				}
 
+				if (model.TextureData.ExtraUV == 2)
+				{
+					tr.isNormal = true
+				}
+
 				for (int i = 0; i < model.TextureData.Textures.Count; i++)
 				{
 					TextureEntry texEntry = model.TextureData.Textures[i];
@@ -1584,7 +1589,10 @@ namespace AevenScnTool.IO
 			textureData.ExtraUV = 0;
 			if (textures == null)return;
 			
-			if (textures.hasLightmap)
+			if (textures.isNormal){
+				textureData.ExtraUV = 2
+			}
+			else if (textures.hasLightmap)
 				textureData.ExtraUV = (mesh.uv2.Length != 0) ? (uint)1 : (uint)0;
 
 			if (textures.textures.Count > mesh.subMeshCount)

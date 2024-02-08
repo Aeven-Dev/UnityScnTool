@@ -23,6 +23,8 @@ namespace AevenScnTool
 
         public bool ignoreLightmaps = false;
 
+        public bool isNormal = false;
+
         public List<TextureItem> textures = new List<TextureItem>();
 
         public bool hasLightmap { get { return HasLightmap(); } }
