@@ -505,17 +505,13 @@ namespace AevenScnTool
 */
         bool HasLightmap()
         {
+            if(isNormal){
+                return false;
+            }
 			if (ignoreLightmaps || ScnToolData.Instance.ignoreLightmapsGlobally)
 			{
                 return false;
 			}
-            foreach (var item in textures)
-            {
-                if (item.sideTexturePath != string.Empty && !item.sideTextureIsNormal)
-                {
-                    return true;
-                }
-            }
             var mr = GetComponent<MeshRenderer>();
 			if (mr)
 			{
@@ -534,7 +530,6 @@ namespace AevenScnTool
         public string mainTexturePath;
         //[Path]
         public string sideTexturePath;
-        public bool sideTextureIsNormal;
 
         //[Button("Select Main Tex O.O")] public ButtonAction selectMainTex;
         //[Button("Select Side Tex 0.0")] public ButtonAction selectSideTex;
