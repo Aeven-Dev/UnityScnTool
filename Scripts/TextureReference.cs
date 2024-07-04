@@ -171,7 +171,7 @@ namespace AevenScnTool
                     sideTex = string.Empty;
                 }
                 string n = (mainTexture != null) ? mainTexture.name : "EmptyTexture";
-                textures.Add(new TextureItem( n, mainTex, sideTex, nor ));
+                textures.Add(new ( n, mainTex, sideTex, nor ));
             }
 
             if (mesh != null)
@@ -204,7 +204,7 @@ namespace AevenScnTool
             List<Material> materials = new List<Material>();
             for (int i = 0; i < textures.Count; i++)
             {
-                TextureItem item = textures[i];
+                 item = textures[i];
                 Material mat = new Material(base_mat);
 
                 Texture mainTexture = null;
@@ -305,7 +305,7 @@ namespace AevenScnTool
         public void CopyTextures()
         {
             string path = EditorUtility.SaveFolderPanel("Save Textures!", "", "");
-            foreach (TextureItem item in textures)
+            foreach ( item in textures)
             {
                 if (File.Exists(item.mainTexturePath))
                     File.Copy(item.mainTexturePath, path + "/" + new FileInfo(item.mainTexturePath).Name);
@@ -531,15 +531,17 @@ namespace AevenScnTool
         //[Path]
         public string sideTexturePath;
 
+	public bool sideTextureIsNormal;
+
         //[Button("Select Main Tex O.O")] public ButtonAction selectMainTex;
         //[Button("Select Side Tex 0.0")] public ButtonAction selectSideTex;
 
-        public TextureItem(string name, string mainTexturePath, string sideTexturePath, bool sideTextureIsNormal)
+        public TextureItem(string name, string _mainTexturePath, string _sideTexturePath, bool _sideTextureIsNormal)
         { 
             this.name = name;
-            this.mainTexturePath = mainTexturePath;
-            this.sideTexturePath = sideTexturePath;
-            this.sideTextureIsNormal = sideTextureIsNormal;
+            this.mainTexturePath = _mainTexturePath;
+            this.sideTexturePath = _sideTexturePath;
+            this.sideTextureIsNormal = _sideTextureIsNormal;
             //selectMainTex = new ButtonAction(SelectMainTex);
             //selectSideTex = new ButtonAction(SelectSideTex);
         }
