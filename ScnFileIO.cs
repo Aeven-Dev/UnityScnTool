@@ -620,7 +620,7 @@ namespace AevenScnTool.IO
 
 				if (model.TextureData.ExtraUV == 2)
 				{
-					tr.isNormal = true
+					tr.isNormal = true;
 				}
 
 				for (int i = 0; i < model.TextureData.Textures.Count; i++)
