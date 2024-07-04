@@ -204,7 +204,7 @@ namespace AevenScnTool
             List<Material> materials = new List<Material>();
             for (int i = 0; i < textures.Count; i++)
             {
-                 item = textures[i];
+                TextureItem item = textures[i];
                 Material mat = new Material(base_mat);
 
                 Texture mainTexture = null;
@@ -305,7 +305,7 @@ namespace AevenScnTool
         public void CopyTextures()
         {
             string path = EditorUtility.SaveFolderPanel("Save Textures!", "", "");
-            foreach ( item in textures)
+            foreach ( var item in textures)
             {
                 if (File.Exists(item.mainTexturePath))
                     File.Copy(item.mainTexturePath, path + "/" + new FileInfo(item.mainTexturePath).Name);
