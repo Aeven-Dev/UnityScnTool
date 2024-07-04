@@ -530,8 +530,7 @@ namespace AevenScnTool
         public string mainTexturePath;
         //[Path]
         public string sideTexturePath;
-
-	public bool sideTextureIsNormal;
+        public bool sideTextureIsNormal;
 
         //[Button("Select Main Tex O.O")] public ButtonAction selectMainTex;
         //[Button("Select Side Tex 0.0")] public ButtonAction selectSideTex;
