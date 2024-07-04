@@ -1590,7 +1590,7 @@ namespace AevenScnTool.IO
 			if (textures == null)return;
 			
 			if (textures.isNormal){
-				textureData.ExtraUV = 2
+				textureData.ExtraUV = 2;
 			}
 			else if (textures.hasLightmap)
 				textureData.ExtraUV = (mesh.uv2.Length != 0) ? (uint)1 : (uint)0;
