@@ -773,11 +773,20 @@ namespace AevenScnTool.IO
 			MeshCollider mc = go.AddComponent<MeshCollider>();
 			CollisionData cd = go.AddComponent<CollisionData>();
 
-			if (Enum.TryParse(model.Name[4..], out GroundFlag result1))
+			string oct_name = model.Name[4..];
+			if (oct_name == "NONE")
+			{
+				cd.ground = GroundFlag.blast;
+			}
+			else if (Double.TryParse(oct_name, out _))
+			{
+				cd.ground = GroundFlag.blast;
+			}
+			else if (Enum.TryParse(oct_name, out GroundFlag result1))
 			{
 				cd.ground = result1;
 			}
-			else if (Enum.TryParse(model.Name[4..], out WeaponFlag result2))
+			else if (Enum.TryParse(oct_name, out WeaponFlag result2))
 			{
 				cd.weapon = result2;
 			}
@@ -1267,10 +1276,14 @@ namespace AevenScnTool.IO
 		{
 			if (cd.ground == GroundFlag.blast)//Dealing with the special case of breakables
 			{
+				string blast_name = cd.name;
+				if(blast_name.StartsWith("oct_") == false){
+					blast_name = "oct_" + blast_name;
+				}
 				return CreateModelChunkFromMeshBlast(
 					cd.transform,
 					cd.GetComponent<MeshCollider>().sharedMesh,
-					"oct_" + cd.name, parentChunk);
+					blast_name, parentChunk);
 			}
 			else if (cd.ground != GroundFlag.NONE)
 			{
@@ -1370,14 +1383,13 @@ namespace AevenScnTool.IO
 			Mesh mesh;
 
 			TextureReference tr = mr.GetComponent<TextureReference>();
-			bool lightmap = tr.hasLightmap;
-			
 			MeshFilter mf = mr.GetComponent<MeshFilter>();
+
 #if PROBUILDER
 			ProBuilderMesh pbm = mr.GetComponent<ProBuilderMesh>();
 			if (pbm)
 			{
-				mesh = GetMeshFromPBM(pbm, lightmap);
+				mesh = GetMeshFromPBM(pbm, tr?tr.hasLightmap:false);
 			}
 			else
 #endif
@@ -1394,12 +1406,12 @@ namespace AevenScnTool.IO
 			if (tr)
 			{
 				model.Shader = tr.renderFlags;
-				SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal, mr.gameObject, uv2: lightmap);
+				SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal, mr.gameObject, uv2: tr.hasLightmap);
 			}
 			else
 			{
 				model.Shader = RenderFlag.None;
-				SetMesh(model.Mesh, mesh, false, false, mr.gameObject, uv2: lightmap);
+				SetMesh(model.Mesh, mesh, false, false, mr.gameObject, uv2: false);
 
 
 
@@ -1414,23 +1426,27 @@ namespace AevenScnTool.IO
 				model.Mesh.UV2[i] = new Vector2(x, y);
 			}
 
-			if (ScnToolData.Instance.uv_flipVertical_lm ^ tr.flipUvVertical_lm)
+			if (tr)
 			{
-				for (int i = 0; i < model.Mesh.UV2.Count; i++)
+				if (ScnToolData.Instance.uv_flipVertical_lm ^ tr.flipUvVertical_lm)
 				{
-					model.Mesh.UV2[i] = new Vector2(model.Mesh.UV2[i].x, -model.Mesh.UV2[i].y);
+					for (int i = 0; i < model.Mesh.UV2.Count; i++)
+					{
+						model.Mesh.UV2[i] = new Vector2(model.Mesh.UV2[i].x, -model.Mesh.UV2[i].y);
+					}
 				}
-			}
-			if (ScnToolData.Instance.uv_flipHorizontal_lm ^ tr.flipUvHorizontal_lm)
-			{
-				for (int i = 0; i < model.Mesh.UV2.Count; i++)
+				if (ScnToolData.Instance.uv_flipHorizontal_lm ^ tr.flipUvHorizontal_lm)
 				{
-					model.Mesh.UV2[i] = new Vector2(-model.Mesh.UV2[i].x, model.Mesh.UV2[i].y);
+					for (int i = 0; i < model.Mesh.UV2.Count; i++)
+					{
+						model.Mesh.UV2[i] = new Vector2(-model.Mesh.UV2[i].x, model.Mesh.UV2[i].y);
+					}
 				}
+
+				SetTextureData(model.TextureData, mesh, tr);
 			}
+			
 
-
-			SetTextureData(model.TextureData, mesh, tr);
 
 
 
@@ -1599,12 +1615,13 @@ namespace AevenScnTool.IO
 			{
 				Debug.Log($"Oh no! {textures.gameObject.name} has more textures in texture reference than submeshes in it's mesh!", textures.gameObject);
 			}
-			if (textures.textures.Count < mesh.subMeshCount)
+			else if (textures.textures.Count < mesh.subMeshCount)
 			{
 				Debug.Log($"Oh no! {textures.gameObject.name} has more submeshes in it's mesh than textures intexture reference!", textures.gameObject);
 			}
 
 			string lightmapName = Menus.SelectExport.lightmapName;
+			string lightmapFolder = Menus.SelectExport.lightmapFolder;
 			for (int i = 0; i < mesh.subMeshCount; i++)
 			{
 				TextureEntry te = new TextureEntry();

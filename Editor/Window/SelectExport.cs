@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using AevenScnTool.IO;
+using NetsphereScnTool.Scene.Chunks;
 
 namespace AevenScnTool.Menus
 {
@@ -16,6 +17,7 @@ namespace AevenScnTool.Menus
 
         bool saveLightmaps = false;
         public static string lightmapName = "";
+        public static string lightmapFolder = "";
         void OnGUI()
         {
 			if (scenesInHierarchy == null)
@@ -137,12 +139,15 @@ namespace AevenScnTool.Menus
                     scnData.Add(scn.element as ScnData);
                 }
             }
+            lightmapFolder = fileInfo.Name.Replace(".scn", "") + "_lm";
 
             SceneContainer container = ScnFileExporter.CreateContainerFromScenes(fileInfo.Name, scnData.ToArray());
+
             container.Write(fileInfo.FullName);
 
 			if (saveLightmaps)
 			{
+
                 foreach (var tex in ScnFileExporter.lightmaps)
                 {
 					if (tex.tex.isReadable)
@@ -163,13 +168,15 @@ namespace AevenScnTool.Menus
                 }
 
                 AssetDatabase.Refresh();
+                Directory.CreateDirectory(fileInfo.Directory.FullName + Path.DirectorySeparatorChar + lightmapFolder);
 				for (int i = 0; i < ScnFileExporter.lightmaps.Count; i++)
 				{
                     var tex = ScnFileExporter.lightmaps[i];
                     try
                     {
                         var bytes = tex.tex.EncodeToTGA();
-                        File.WriteAllBytes(fileInfo.Directory.FullName + "\\" + tex.name + ".tga", bytes);
+                        var path = fileInfo.Directory.FullName + Path.DirectorySeparatorChar + lightmapFolder + Path.DirectorySeparatorChar + tex.name + ".tga";
+                        File.WriteAllBytes(path, bytes);
                     }
                     catch (System.Exception e)
                     {

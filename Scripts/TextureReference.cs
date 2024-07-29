@@ -52,7 +52,6 @@ namespace AevenScnTool
 		{
 			if (renderFlags != RenderFlags)
 			{
-                Debug.Log("Yay");
                 renderFlags = RenderFlags;
 
                 //Update material
@@ -92,7 +91,6 @@ namespace AevenScnTool
         void SetMaterialFlags(Material mat)
 		{
             mat.SetOverrideTag("RenderType", renderFlags.HasFlag(RenderFlag.Transparent) ? "Transparent" : "Opaque");
-            Debug.Log(renderFlags);
             mat.SetFloat("_BUILTIN_AlphaClip", renderFlags.HasFlag(RenderFlag.Cutout) ? 1 : 0);
             mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
             mat.SetFloat("_BUILTIN_ZWriteControl", renderFlags.HasFlag(RenderFlag.ZWriteOff) ? 2 : 1);

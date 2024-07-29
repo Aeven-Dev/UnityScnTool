@@ -310,6 +310,7 @@ namespace NetsphereScnTool.Scene.Chunks
             ModelChunk = modelChunk;
             Textures = new List<TextureEntry>();
             ExtraUV = 0;
+            Version = 0.2000000029802322f;
         }
 
         public virtual void Serialize(Stream stream)
