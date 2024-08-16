@@ -23,7 +23,7 @@ namespace AevenScnTool
 			{
 				string pathToObj = AnimationUtility.CalculateTransformPath(item.transform, anim.GetRoot().transform);
 				TransformKeyData tkd = parts[item].TransformKeyData;
-				SetTransformCurves(clip, pathToObj, tkd);
+				SetTransformCurves(clip, pathToObj, tkd,1);
 			}
 
 			//clip.EnsureQuaternionContinuity();
@@ -31,12 +31,12 @@ namespace AevenScnTool
 			AssetDatabase.SaveAssets();
 		}
 
-		static void SetTransformCurves(AnimationClip clip, string pathToObj, TransformKeyData tkd)
+		public static void SetTransformCurves(AnimationClip clip, string pathToObj, TransformKeyData tkd, float transparency)
 		{
 			SetPositionCurves(clip, pathToObj, tkd.TransformKey.Translation, tkd.TransformKey.TKey);
 			SetRotationCurves(clip, pathToObj, tkd.TransformKey.Rotation, tkd.TransformKey.RKey);
 			SetScaleCurves(clip, pathToObj, tkd.TransformKey.Scale, tkd.TransformKey.SKey);
-			SetVisibilityCurves(clip, pathToObj, tkd.AlphaKeys);
+			SetVisibilityCurves(clip, pathToObj, tkd.AlphaKeys, transparency);
 		}
 		static void SetPositionCurves(AnimationClip clip, string pathToObj, Vector3 initial, List<TKey> tKeys)
 		{
@@ -118,16 +118,16 @@ namespace AevenScnTool
 			clip.SetCurve(pathToObj, typeof(Transform), "localScale.y", curveY);
 			clip.SetCurve(pathToObj, typeof(Transform), "localScale.z", curveZ);
 		}
-		static void SetVisibilityCurves(AnimationClip clip, string pathToObj, List<FloatKey> fKeys)
+		static void SetVisibilityCurves(AnimationClip clip, string pathToObj, List<FloatKey> fKeys, float transparency)
 		{
-			AnimationCurve curve = new AnimationCurve();
+			AnimationCurve curve = new AnimationCurve(new Keyframe[] { new Keyframe(0f, transparency) });
 
 			foreach (var key in fKeys)
 			{
 				curve.AddKey(key.frame, key.Alpha);
 			}
 
-			//clip.SetCurve(pathToObj , typeof(Transform), "idk,hehe", curve);
+			clip.SetCurve(pathToObj , typeof(TextureReference), "transparency", curve);
 		}
 
 		public static void Import(AnimationWrapper anim)
@@ -143,11 +143,12 @@ namespace AevenScnTool
 			tkd.TransformKey = new TransformKey();
 
 			string animName = "";
+			var root = anim.GetRoot();
 
 			EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(clip);
 			foreach (var item in curveBindings)
 			{
-				var part = anim.GetRoot().transform.Find(item.path);
+				var part = root.transform.Find(item.path);
 				if (part == null) continue;
 
 				var s4a = part.gameObject.GetComponent<S4Animations>();
@@ -164,255 +165,327 @@ namespace AevenScnTool
 				}
 
 				AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, item);
-				switch (item.propertyName)
-				{
-					case "localPosition.x":
-						AddCurvePosX(a, curve);
-						break;
-					case "localPosition.y":
-						AddCurvePosY(a, curve);
-						break;
-					case "localPosition.z":
-						AddCurvePosZ(a, curve);
-						break;
-					case "localRotation.x":
-						AddCurveRotX(a, curve);
-						break;
-					case "localRotation.y":
-						AddCurveRotY(a, curve);
-						break;
-					case "localRotation.z":
-						AddCurveRotZ(a, curve);
-						break;
-					case "localRotation.w":
-						AddCurveRotW(a, curve);
-						break;
-					case "localScale.x":
-						AddCurveScaX(a, curve);
-						break;
-					case "localScale.y":
-						AddCurveScaY(a, curve);
-						break;
-					case "localScale.z":
-						AddCurveScaZ(a, curve);
-						break;
-					case "idk,hehe":
-						AddCurveVis(a, curve);
-						break;
-					default:
-						break;
-				}
+				AddPropertyToKeyData(a.TransformKeyData, curve, item);
 			}
 		}
 
-		static void AddCurvePosX(S4Animation anim, AnimationCurve curve)
-		{
+		public static void AddPropertyToKeyData(TransformKeyData tkd, AnimationCurve curve, EditorCurveBinding item){
+			
+			switch (item.propertyName)
+			{
+				case "m_LocalPosition.x":
+					AddCurvePosX(tkd, curve);
+					break;
+				case "m_LocalPosition.y":
+					AddCurvePosY(tkd, curve);
+					break;
+				case "m_LocalPosition.z":
+					AddCurvePosZ(tkd, curve);
+					break;
+				case "m_LocalRotation.x":
+					AddCurveRotX(tkd, curve);
+					break;
+				case "m_LocalRotation.y":
+					AddCurveRotY(tkd, curve);
+					break;
+				case "m_LocalRotation.z":
+					AddCurveRotZ(tkd, curve);
+					break;
+				case "m_LocalRotation.w":
+					AddCurveRotW(tkd, curve);
+					break;
+				case "m_LocalScale.x":
+					AddCurveScaX(tkd, curve);
+					break;
+				case "m_LocalScale.y":
+					AddCurveScaY(tkd, curve);
+					break;
+				case "m_LocalScale.z":
+					AddCurveScaZ(tkd, curve);
+					break;
+				case "transparency":
+					AddCurveVis(tkd, curve);
+					break;
+				default:
+					Debug.Log(item.propertyName);
+					break;
+			}
+		}
 
+		static void AddCurvePosX(TransformKeyData tkd, AnimationCurve curve)
+		{
+			if(curve.keys.Length == 1){
+				tkd.TransformKey.Translation.x = curve.keys[0].value * ScnToolData.Instance.scale;
+				return;
+			}
+			else if(curve.keys.Length > 1){
+				tkd.TransformKey.Translation.x = curve.keys[0].value * ScnToolData.Instance.scale;
+			}
 			for (int i = 0; i < curve.keys.Length; i++)
 			{
-				if (anim.TransformKeyData.TransformKey.TKey.Count < curve.keys.Length)
+				if (tkd.TransformKey.TKey.Count < curve.keys.Length)
 				{
 					TKey key = new TKey();
 					key.frame = (int)(curve.keys[i].time * 1000f);
-					key.Translation.x = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.TKey.Add(key);
+					key.Translation.x = curve.keys[i].value * ScnToolData.Instance.scale;
+					tkd.TransformKey.TKey.Add(key);
 				}
 				else
 				{
-					var v = anim.TransformKeyData.TransformKey.TKey[i];
-					v.Translation.x = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.TKey[i] = v;
+					var v = tkd.TransformKey.TKey[i];
+					v.Translation.x = curve.keys[i].value * ScnToolData.Instance.scale;
+					tkd.TransformKey.TKey[i] = v;
 				}
 			}
 		}
-		static void AddCurvePosY(S4Animation anim, AnimationCurve curve)
+		static void AddCurvePosY(TransformKeyData tkd, AnimationCurve curve)
 		{
-
+			if(curve.keys.Length == 1){
+				tkd.TransformKey.Translation.y = curve.keys[0].value * ScnToolData.Instance.scale;
+				return;
+			}
+			else if(curve.keys.Length > 1){
+				tkd.TransformKey.Translation.y = curve.keys[0].value * ScnToolData.Instance.scale;
+			}
 			for (int i = 0; i < curve.keys.Length; i++)
 			{
-				if (anim.TransformKeyData.TransformKey.TKey.Count < curve.keys.Length)
+				if (tkd.TransformKey.TKey.Count < curve.keys.Length)
 				{
 					TKey key = new TKey();
 					key.frame = (int)(curve.keys[i].time * 1000f);
-					key.Translation.y = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.TKey.Add(key);
+					key.Translation.y = curve.keys[i].value * ScnToolData.Instance.scale;
+					tkd.TransformKey.TKey.Add(key);
 				}
 				else
 				{
-					var v = anim.TransformKeyData.TransformKey.TKey[i];
-					v.Translation.y = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.TKey[i] = v;
+					var v = tkd.TransformKey.TKey[i];
+					v.Translation.y = curve.keys[i].value * ScnToolData.Instance.scale;
+					tkd.TransformKey.TKey[i] = v;
 				}
 			}
 		}
-		static void AddCurvePosZ(S4Animation anim, AnimationCurve curve)
+		static void AddCurvePosZ(TransformKeyData tkd, AnimationCurve curve)
 		{
-
+			if(curve.keys.Length == 1){
+				tkd.TransformKey.Translation.z = curve.keys[0].value * ScnToolData.Instance.scale;
+				return;
+			}
+			else if(curve.keys.Length > 1){
+				tkd.TransformKey.Translation.z = curve.keys[0].value * ScnToolData.Instance.scale;
+			}
 			for (int i = 0; i < curve.keys.Length; i++)
 			{
-				if (anim.TransformKeyData.TransformKey.TKey.Count < curve.keys.Length)
+				if (tkd.TransformKey.TKey.Count < curve.keys.Length)
 				{
 					TKey key = new TKey();
 					key.frame = (int)(curve.keys[i].time * 1000f);
-					key.Translation.z = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.TKey.Add(key);
+					key.Translation.z = curve.keys[i].value * ScnToolData.Instance.scale;
+					tkd.TransformKey.TKey.Add(key);
 				}
 				else
 				{
-					var v = anim.TransformKeyData.TransformKey.TKey[i];
-					v.Translation.z = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.TKey[i] = v;
+					var v = tkd.TransformKey.TKey[i];
+					v.Translation.z = curve.keys[i].value * ScnToolData.Instance.scale;
+					tkd.TransformKey.TKey[i] = v;
 				}
 			}
 		}
-		static void AddCurveRotX(S4Animation anim, AnimationCurve curve)
+		static void AddCurveRotX(TransformKeyData tkd, AnimationCurve curve)
 		{
+			if(curve.keys.Length == 1){
+				tkd.TransformKey.Rotation.x = curve.keys[0].value;
+				return;
+			}
+			else if(curve.keys.Length > 1){
+				tkd.TransformKey.Rotation.x = curve.keys[0].value;
+			}
 
 			for (int i = 0; i < curve.keys.Length; i++)
 			{
-				if (anim.TransformKeyData.TransformKey.RKey.Count < curve.keys.Length)
+				if (tkd.TransformKey.RKey.Count < curve.keys.Length)
 				{
 					RKey key = new RKey();
 					key.frame = (int)(curve.keys[i].time * 1000f);
 					key.Rotation.x = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.RKey.Add(key);
+					tkd.TransformKey.RKey.Add(key);
 				}
 				else
 				{
-					var v = anim.TransformKeyData.TransformKey.RKey[i];
+					var v = tkd.TransformKey.RKey[i];
 					v.Rotation.x = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.RKey[i] = v;
+					tkd.TransformKey.RKey[i] = v;
 				}
 			}
 		}
-		static void AddCurveRotY(S4Animation anim, AnimationCurve curve)
+		static void AddCurveRotY(TransformKeyData tkd, AnimationCurve curve)
 		{
-
+			if(curve.keys.Length == 1){
+				tkd.TransformKey.Rotation.y = curve.keys[0].value;
+				return;
+			}
+			else if(curve.keys.Length > 1){
+				tkd.TransformKey.Rotation.y = curve.keys[0].value;
+			}
 			for (int i = 0; i < curve.keys.Length; i++)
 			{
-				if (anim.TransformKeyData.TransformKey.RKey.Count < curve.keys.Length)
+				if (tkd.TransformKey.RKey.Count < curve.keys.Length)
 				{
 					RKey key = new RKey();
 					key.frame = (int)(curve.keys[i].time * 1000f);
 					key.Rotation.y = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.RKey.Add(key);
+					tkd.TransformKey.RKey.Add(key);
 				}
 				else
 				{
-					var v = anim.TransformKeyData.TransformKey.RKey[i];
+					var v = tkd.TransformKey.RKey[i];
 					v.Rotation.y = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.RKey[i] = v;
+					tkd.TransformKey.RKey[i] = v;
 				}
 			}
 		}
-		static void AddCurveRotZ(S4Animation anim, AnimationCurve curve)
+		static void AddCurveRotZ(TransformKeyData tkd, AnimationCurve curve)
 		{
+			if(curve.keys.Length == 1){
+				tkd.TransformKey.Rotation.z = curve.keys[0].value;
+				return;
+			}
+			else if(curve.keys.Length > 1){
+				tkd.TransformKey.Rotation.z = curve.keys[0].value;
+			}
 
 			for (int i = 0; i < curve.keys.Length; i++)
 			{
-				if (anim.TransformKeyData.TransformKey.RKey.Count < curve.keys.Length)
+				if (tkd.TransformKey.RKey.Count < curve.keys.Length)
 				{
 					RKey key = new RKey();
 					key.frame = (int)(curve.keys[i].time * 1000f);
 					key.Rotation.z = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.RKey.Add(key);
+					tkd.TransformKey.RKey.Add(key);
 				}
 				else
 				{
-					var v = anim.TransformKeyData.TransformKey.RKey[i];
+					var v = tkd.TransformKey.RKey[i];
 					v.Rotation.z = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.RKey[i] = v;
+					tkd.TransformKey.RKey[i] = v;
 				}
 			}
 		}
-		static void AddCurveRotW(S4Animation anim, AnimationCurve curve)
+		static void AddCurveRotW(TransformKeyData tkd, AnimationCurve curve)
 		{
+			if(curve.keys.Length == 1){
+				tkd.TransformKey.Rotation.w = curve.keys[0].value;
+				return;
+			}
+			else if(curve.keys.Length > 1){
+				tkd.TransformKey.Rotation.w = curve.keys[0].value;
+			}
 
 			for (int i = 0; i < curve.keys.Length; i++)
 			{
-				if (anim.TransformKeyData.TransformKey.RKey.Count < curve.keys.Length)
+				if (tkd.TransformKey.RKey.Count < curve.keys.Length)
 				{
 					RKey key = new RKey();
 					key.frame = (int)(curve.keys[i].time * 1000f);
 					key.Rotation.w = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.RKey.Add(key);
+					tkd.TransformKey.RKey.Add(key);
 				}
 				else
 				{
-					var v = anim.TransformKeyData.TransformKey.RKey[i];
+					var v = tkd.TransformKey.RKey[i];
 					v.Rotation.w = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.RKey[i] = v;
+					tkd.TransformKey.RKey[i] = v;
 				}
 			}
 		}
-		static void AddCurveScaX(S4Animation anim, AnimationCurve curve)
+		static void AddCurveScaX(TransformKeyData tkd, AnimationCurve curve)
 		{
+			if(curve.keys.Length == 1){
+				tkd.TransformKey.Scale.x = curve.keys[0].value;
+				return;
+			}
+			else if(curve.keys.Length > 1){
+				tkd.TransformKey.Scale.x = curve.keys[0].value;
+			}
 
 			for (int i = 0; i < curve.keys.Length; i++)
 			{
-				if (anim.TransformKeyData.TransformKey.SKey.Count < curve.keys.Length)
+				if (tkd.TransformKey.SKey.Count < curve.keys.Length)
 				{
 					SKey key = new SKey();
 					key.frame = (int)(curve.keys[i].time * 1000f);
 					key.Scale.x = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.SKey.Add(key);
+					tkd.TransformKey.SKey.Add(key);
 				}
 				else
 				{
-					var v = anim.TransformKeyData.TransformKey.SKey[i];
+					var v = tkd.TransformKey.SKey[i];
 					v.Scale.x = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.SKey[i] = v;
+					tkd.TransformKey.SKey[i] = v;
 				}
 			}
 		}
-		static void AddCurveScaY(S4Animation anim, AnimationCurve curve)
+		static void AddCurveScaY(TransformKeyData tkd, AnimationCurve curve)
 		{
+			if(curve.keys.Length == 1){
+				tkd.TransformKey.Scale.y = curve.keys[0].value;
+				return;
+			}
+			else if(curve.keys.Length > 1){
+				tkd.TransformKey.Scale.y = curve.keys[0].value;
+			}
 
 			for (int i = 0; i < curve.keys.Length; i++)
 			{
-				if (anim.TransformKeyData.TransformKey.SKey.Count < curve.keys.Length)
+				if (tkd.TransformKey.SKey.Count < curve.keys.Length)
 				{
 					SKey key = new SKey();
 					key.frame = (int)(curve.keys[i].time * 1000f);
 					key.Scale.y = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.SKey.Add(key);
+					tkd.TransformKey.SKey.Add(key);
 				}
 				else
 				{
-					var v = anim.TransformKeyData.TransformKey.SKey[i];
+					var v = tkd.TransformKey.SKey[i];
 					v.Scale.y = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.SKey[i] = v;
+					tkd.TransformKey.SKey[i] = v;
 				}
 			}
 		}
-		static void AddCurveScaZ(S4Animation anim, AnimationCurve curve)
+		static void AddCurveScaZ(TransformKeyData tkd, AnimationCurve curve)
 		{
+			if(curve.keys.Length == 1){
+				tkd.TransformKey.Scale.z = curve.keys[0].value;
+				return;
+			}
+			else if(curve.keys.Length > 1){
+				tkd.TransformKey.Scale.z = curve.keys[0].value;
+			}
 
 			for (int i = 0; i < curve.keys.Length; i++)
 			{
-				if (anim.TransformKeyData.TransformKey.SKey.Count < curve.keys.Length)
+				if (tkd.TransformKey.SKey.Count < curve.keys.Length)
 				{
 					SKey key = new SKey();
 					key.frame = (int)(curve.keys[i].time * 1000f);
 					key.Scale.z = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.SKey.Add(key);
+					tkd.TransformKey.SKey.Add(key);
 				}
 				else
 				{
-					var v = anim.TransformKeyData.TransformKey.SKey[i];
+					var v = tkd.TransformKey.SKey[i];
 					v.Scale.z = curve.keys[i].value;
-					anim.TransformKeyData.TransformKey.SKey[i] = v;
+					tkd.TransformKey.SKey[i] = v;
 				}
 			}
 		}
-		static void AddCurveVis(S4Animation anim, AnimationCurve curve)
+		static void AddCurveVis(TransformKeyData tkd, AnimationCurve curve)
 		{
 			for (int i = 0; i < curve.keys.Length; i++)
 			{
 				FloatKey key = new FloatKey();
 				key.frame = (int)(curve.keys[i].time * 1000f);
 				key.Alpha = curve.keys[i].value;
-				anim.TransformKeyData.AlphaKeys.Add(key);
+				tkd.AlphaKeys.Add(key);
 			}
 		}
 	}

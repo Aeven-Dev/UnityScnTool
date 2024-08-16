@@ -170,6 +170,13 @@ namespace AevenScnTool.IO
 
 				//go.AddComponent<S4Animations>().FromModelAnimation(model.Animation);
 			}
+			else if(isAnim == 3){
+				go.transform.localPosition = model.Animation[0].transformKeyData2.TransformKey.Translation / ScnToolData.Instance.scale;
+				go.transform.localRotation = model.Animation[0].transformKeyData2.TransformKey.Rotation;
+				go.transform.localScale = model.Animation[0].transformKeyData2.TransformKey.Scale;
+
+				go.AddComponent<S4Animations>().FromModelAnimation(model.Animation);
+			}
 			else if (isAnim == -1)
 			{
 				//We do Nothing!!
@@ -190,7 +197,7 @@ namespace AevenScnTool.IO
 			go.transform.localRotation = box.Matrix.rotation;
 			go.transform.localScale = box.Matrix.lossyScale;
 			
-			go.AddComponent<BoxCollider>().size = box.Size / ScnToolData.Instance.scale;
+			go.AddComponent<BoxCollider>().size = box.Size / ScnToolData.Instance.scale * 2;
 			if (go.name.Contains("jump_dir") || go.name.Contains("jump_char"))
 			{
 				go.AddComponent<Jumppad>();
@@ -634,7 +641,16 @@ namespace AevenScnTool.IO
 					{
 						mainTex = di.FullName + "\\" + texEntry.main_texture.Replace(".tga", ".dds");
 
-						mat_x.mainTexture = LoadTexture(mainTex);
+						if (File.Exists(mainTex))
+						{
+							mat_x.mainTexture = LoadTexture(mainTex);
+						}
+						else{
+							string localMainTex = Application.dataPath + Path.DirectorySeparatorChar + "S4 Map Textures" + Path.DirectorySeparatorChar + texEntry.main_texture.Replace(".tga", ".dds");
+							if(File.Exists(localMainTex)){
+								mat_x.mainTexture = LoadTexture(localMainTex);
+							}	
+						} 
 					}
 
 					string sideTex = string.Empty;
@@ -838,6 +854,10 @@ namespace AevenScnTool.IO
 						return 2;
 					}
 				}
+				if (anim.transformKeyData2.AlphaKeys.Count != 0)
+				{
+					return 3;
+				}
 				return 1;
 			}
 			return 0;
@@ -853,6 +873,9 @@ namespace AevenScnTool.IO
 			{
 				Material mat = ScnToolData.GetMatFromShader(shader);
 				mainMat = new Material(mat);
+				mainMat.name = mainMatName;
+				string localMainTexture = Application.dataPath + "S4 Map Textures" + Path.DirectorySeparatorChar + mainMatName;
+				Debug.Log(localMainTexture);
 				if (File.Exists(mainTexturePath))
 				{
 					mainMat.mainTexture = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(mainTexturePath));
@@ -860,9 +883,15 @@ namespace AevenScnTool.IO
 
 					MainMaterials.Add(mainMatName, mainMat);
 				}
+				else if(File.Exists(localMainTexture)){
+					mainMat.mainTexture = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(localMainTexture));
+					mainMat.mainTexture.name = new FileInfo(localMainTexture).Name.Replace("tga", "dds");
+
+					MainMaterials.Add(mainMatName, mainMat);
+				}
 				else
 				{
-					Debug.Log("Gosh! there's no texture at " + mainTexturePath);
+					Debug.Log("Gosh! there's no texture at " + mainTexturePath + " or " + localMainTexture);
 				}
 			}
 
@@ -871,10 +900,28 @@ namespace AevenScnTool.IO
 			{
 				Material mat = ScnToolData.GetMatFromShader(shader);
 				sideMat = new Material(mat);
+				string localSideTexture = Application.dataPath + "S4 Map Textures" + Path.DirectorySeparatorChar + sideMatName;
+
 				if (File.Exists(sideTexturePath))
 				{
 					Texture2D st = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(sideTexturePath));
 					st.name = new FileInfo(sideTexturePath).Name.Replace(".tga", ".dds");
+					if (isNormal)
+					{
+						sideMat.SetTexture("_DetailAlbedoMap", st);
+						sideMat.EnableKeyword("_DETAIL_MULX2");
+					}
+					else
+					{
+						sideMat.SetTexture("_BumpMap", st);
+						sideMat.EnableKeyword("_NORMALMAP");
+					}
+					SideMaterials.Add(sideMatName, sideMat);
+				}
+				else if (File.Exists(localSideTexture))
+				{
+					Texture2D st = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(localSideTexture));
+					st.name = new FileInfo(localSideTexture).Name.Replace(".tga", ".dds");
 					if (isNormal)
 					{
 						sideMat.SetTexture("_DetailAlbedoMap", st);
@@ -953,7 +1000,7 @@ namespace AevenScnTool.IO
 	{
 		static List<string> usedNames = new List<string>();
 
-		public static List<(string name,Texture2D tex)> lightmaps = new List<(string name, Texture2D tex)>();
+		public static Dictionary<int,(string name,Texture2D tex)> lightmaps = new Dictionary<int,(string name, Texture2D tex)>();
 
 		public static SceneContainer CreateContainerFromScenes(string name, ScnData[] scenes)
 		{
@@ -964,6 +1011,10 @@ namespace AevenScnTool.IO
 			foreach (var scene in scenes)
 			{
 				CreateChunksFromChildren(scene.transform,scene.transform, container, null);
+				S4Armature armature = scene.GetComponent<S4Armature>();
+				if(armature != null){
+					armature.WriteAnimationsToSceneContainer(container);
+				}
 			}
 
 			return container;
@@ -971,30 +1022,39 @@ namespace AevenScnTool.IO
 
 		public static void CreateChunksFromChildren(Transform parent, Transform relativeParent, SceneContainer container, SceneChunk parentChunk)
 		{
-			for (int i = 0; i < parent.childCount; i++)
-			{
-				Transform child = parent.GetChild(i);
-				if (!child.gameObject.activeInHierarchy)
+			try{
+				for (int i = 0; i < parent.childCount; i++)
 				{
-					continue;
+					Transform child = parent.GetChild(i);
+					if (!child.gameObject.activeInHierarchy)
+					{
+						continue;
+					}
+	
+					SceneChunk childChunk = CreateChunk(child, container, parentChunk, relativeParent);
+	
+					Transform relative;
+	
+					if (childChunk != null)
+					{
+						relative = child;
+					}
+					else
+					{
+						relative = relativeParent;
+						childChunk = parentChunk;
+					}
+	
+					CreateChunksFromChildren(child, relative, container, childChunk);
+					EditorUtility.DisplayProgressBar($"Parsing unity scene! OwO", $"{child.name}", 0.2f);
 				}
-
-				SceneChunk childChunk = CreateChunk(child, container, parentChunk, relativeParent);
-
-				Transform relative;
-
-				if (childChunk != null)
-				{
-					relative = child;
-				}
-				else
-				{
-					relative = relativeParent;
-					childChunk = parentChunk;
-				}
-
-				CreateChunksFromChildren(child, relative, container, childChunk);
+            	EditorUtility.ClearProgressBar();
 			}
+			catch(Exception e){
+				EditorUtility.ClearProgressBar();
+				throw e;
+			}
+
 		}
 
 		static SceneChunk CreateChunk(Transform child, SceneContainer container, SceneChunk parentChunk, Transform relativeParent)
@@ -1395,7 +1455,7 @@ namespace AevenScnTool.IO
 #endif
 			if (mf)
 			{
-				mesh = mr.GetComponent<MeshFilter>().sharedMesh;
+				mesh = mf.sharedMesh;
 			}
 			else
 			{
@@ -1455,7 +1515,13 @@ namespace AevenScnTool.IO
 			S4Animations s4a = mr.GetComponent<S4Animations>();
 			if (s4a)
 			{
-				model.Animation = s4a.ToModelAnimation();
+				if (s4a is ParametricAnim s4ap)
+				{
+					model.Animation = s4ap.ToModelAnimation();					
+				}
+				else{
+					model.Animation = s4a.ToModelAnimation();
+				}
 			}
 			else
 			{
@@ -1492,9 +1558,15 @@ namespace AevenScnTool.IO
 
 
 			TextureReference tr = smr.GetComponent<TextureReference>();
-
-			model.Shader = tr.renderFlags;
-			SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal, smr.gameObject);
+			if (tr)
+			{
+				model.Shader = tr.renderFlags;
+				SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal, smr.gameObject);
+			}
+			else{
+				model.Shader = RenderFlag.None;
+				SetMesh(model.Mesh, mesh, false, false, smr.gameObject);
+			}
 
 			SetTextureData(model.TextureData, mesh, tr);
 
@@ -1574,6 +1646,7 @@ namespace AevenScnTool.IO
 			meshData.Normals = new List<Vector3>(mesh.normals);
 			meshData.UV = new List<Vector2>(mesh.uv);
 
+			
 			if (uv2)
 			{
 				meshData.UV2 = new List<Vector2>(mesh.uv2);
@@ -1609,7 +1682,17 @@ namespace AevenScnTool.IO
 				textureData.ExtraUV = 2;
 			}
 			else if (textures.hasLightmap)
-				textureData.ExtraUV = (mesh.uv2.Length != 0) ? (uint)1 : (uint)0;
+			{
+				if (mesh.uv2.Length == 0)
+				{
+					textureData.ExtraUV = 0;
+					Debug.LogWarning($"Oh gosh! {textures.gameObject.name} is set to have lightmaps, however the UV2 array is empty!" +
+					"Either define those in your modeling program or enable 'Generate Lightmap UVs' in the import settings!!");
+				}
+				else{
+					textureData.ExtraUV = 1;
+				}
+			}	
 
 			if (textures.textures.Count > mesh.subMeshCount)
 			{
@@ -1676,10 +1759,10 @@ namespace AevenScnTool.IO
 									string textureName = lm.name;
 									if (lightmapName != string.Empty)
 									{
-										textureName = lightmapName + "_" + (ScnFileExporter.lightmaps.Count);
+										textureName = lightmapName + "_" + mr.lightmapIndex;
 									}
 
-									ScnFileExporter.lightmaps.Add((textureName, lm));
+									ScnFileExporter.lightmaps[mr.lightmapIndex] = (textureName, lm);
 
 									te.side_texture = textureName + ".tga";
 								}

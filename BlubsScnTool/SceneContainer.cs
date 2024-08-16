@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEditor;
 
 namespace NetsphereScnTool.Scene
 {
@@ -68,6 +69,13 @@ namespace NetsphereScnTool.Scene
             container.Header = Header;
 
             return container;
+        }
+
+        public SceneChunk FindByName(string name){
+            foreach(var chunk in this){
+                if(chunk.Name == name) return chunk;
+            }
+            return null;
         }
 
         #region ReadFrom
@@ -197,14 +205,25 @@ namespace NetsphereScnTool.Scene
                 if (Header.Version2 >= 1045220557)
                     w.Write((byte)0);
 
-                foreach (var chunk in this)
-                {
-                    w.WriteEnum(chunk.ChunkType);
-                    w.WriteCString(chunk.Name);
-                    w.WriteCString(chunk.SubName);
+                try{
+                    int i = 0;
+                    foreach (var chunk in this)
+                    {
+                        EditorUtility.DisplayProgressBar($"Searializing Scene container! UwU", $"{chunk.Name}", i/this.Count);
+                        w.WriteEnum(chunk.ChunkType);
+                        w.WriteCString(chunk.Name);
+                        w.WriteCString(chunk.SubName);
 
-                    w.Serialize(chunk);
+                        w.Serialize(chunk);
+                        i++;
+                    }
+                    EditorUtility.ClearProgressBar();
                 }
+                catch(Exception e){
+                    EditorUtility.ClearProgressBar();
+                    throw e;
+                }
+                
             }
         }
 

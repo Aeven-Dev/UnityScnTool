@@ -67,6 +67,7 @@ namespace AevenScnTool.Menus
 
             if (GUILayout.Button("Export! <3"))
             {
+                Close();
                 Export();
             }
         }
@@ -148,7 +149,7 @@ namespace AevenScnTool.Menus
 			if (saveLightmaps)
 			{
 
-                foreach (var tex in ScnFileExporter.lightmaps)
+                foreach (var tex in ScnFileExporter.lightmaps.Values)
                 {
 					if (tex.tex.isReadable)
 					{
@@ -168,14 +169,12 @@ namespace AevenScnTool.Menus
                 }
 
                 AssetDatabase.Refresh();
-                Directory.CreateDirectory(fileInfo.Directory.FullName + Path.DirectorySeparatorChar + lightmapFolder);
-				for (int i = 0; i < ScnFileExporter.lightmaps.Count; i++)
-				{
-                    var tex = ScnFileExporter.lightmaps[i];
+                foreach (var tex in ScnFileExporter.lightmaps.Values)
+                {
                     try
                     {
                         var bytes = tex.tex.EncodeToTGA();
-                        var path = fileInfo.Directory.FullName + Path.DirectorySeparatorChar + lightmapFolder + Path.DirectorySeparatorChar + tex.name + ".tga";
+                        var path = fileInfo.Directory.FullName + Path.DirectorySeparatorChar + tex.name + ".tga";
                         File.WriteAllBytes(path, bytes);
                     }
                     catch (System.Exception e)
@@ -184,8 +183,6 @@ namespace AevenScnTool.Menus
                     }
                 }
             }
-
-            Close();
         }
     }
 

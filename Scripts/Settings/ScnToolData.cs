@@ -23,7 +23,7 @@ namespace AevenScnTool
 		public string s4_folder_path = "";
 		public string s4_startup_file = "";
 		public float scale = 100;
-		public string main_animation_name = "DANCE_(>w<)";
+		public string main_animation_name = "DANCE";
 
 		public bool uv_flipVertical = false;
 		public bool uv_flipHorizontal = false;
