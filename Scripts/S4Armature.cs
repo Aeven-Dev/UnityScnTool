@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEditor;
 using NetsphereScnTool.Scene;
 using NetsphereScnTool.Scene.Chunks;
+using System.IO;
 
 
 
@@ -18,11 +19,13 @@ namespace AevenScnTool
         public new Animation animation;
 
         [Button("Compile Animations! \\o/")] public ButtonAction CompileAnimations;
+        [Button("Save Animations! [º]")] public ButtonAction SAveAnimations;
 
         private void OnEnable()
         {
             animation = GetComponent<Animation>();
             CompileAnimations = new ButtonAction(ReadAnimationFromHierarchy);
+            SAveAnimations = new ButtonAction(SaveAnimationsToFolder);
         }
         public void ReadAnimationFromHierarchy(){
             try{
@@ -32,6 +35,7 @@ namespace AevenScnTool
             }
             catch(Exception e){
                 EditorUtility.ClearProgressBar();
+                Debug.LogError(e.StackTrace);
                 throw e;
             }
 
@@ -83,6 +87,10 @@ namespace AevenScnTool
         void SetKeyFrames(Transform item, S4Animation anim, AnimationClip clip){
             string pathToObj = AnimationUtility.CalculateTransformPath(item, transform);
 	    	TransformKeyData tkd = anim.TransformKeyData;
+            if(tkd == null){
+                return;
+                
+            }
             float transparency = 1;
             TextureReference tr = item.GetComponent<TextureReference>();
             if(tr){
@@ -93,6 +101,10 @@ namespace AevenScnTool
 
         void RemoveS4KeyFrames(S4Animation anim){
             //Remove Tkeys, Rkeys, Skeys and AlphaKeys
+            if (anim.TransformKeyData == null)
+            {
+                return;
+            }
             anim.TransformKeyData.TransformKey.TKey.Clear();
             anim.TransformKeyData.TransformKey.RKey.Clear();
             anim.TransformKeyData.TransformKey.SKey.Clear();
@@ -121,6 +133,7 @@ namespace AevenScnTool
             foreach(AnimationClip clip in anims){
                 //For each clip go through each curve
                 EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(clip);
+
                 foreach (var item in curveBindings)
 			    {
                     string[] words = item.path.Split("/");
@@ -190,6 +203,23 @@ namespace AevenScnTool
                 i++;
             }
             EditorUtility.ClearProgressBar();
+        }
+
+
+        void SaveAnimationsToFolder(){
+            string path = EditorUtility.SaveFolderPanel("Save Animations!", "","");
+
+            if (path == string.Empty)
+            {
+                return;
+            }
+            AnimationClip[] anims = AnimationUtility.GetAnimationClips(gameObject);
+            foreach (AnimationClip clip in anims)
+            {
+                path = path.Remove(0,path.IndexOf("Asset"));
+                AssetDatabase.CreateAsset(clip, path + Path.DirectorySeparatorChar + clip.name + ".anim");
+                AssetDatabase.SaveAssets();
+            }
         }
     }
 }

@@ -490,10 +490,10 @@ namespace AevenScnTool
 		}
 
 		static float S4FrameToUnity(int frame){
-			return (float)frame / 4000f;
+			return (float)frame / 1000f;
 		}
 		static int UnityFrameToS4(float frame){
-			return (int)(frame * 4000f);
+			return (int)(frame * 1000f);
 		}
 	}
 }

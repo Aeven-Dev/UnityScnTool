@@ -1360,7 +1360,7 @@ namespace AevenScnTool.IO
 			{
 				model.Shader = tr.renderFlags;
 				bool uv2 = tr.hasLightmap;
-				Debug.Log("Has lightmap: " + uv2);
+				//Debug.Log("Has lightmap: " + uv2);
 				SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal, mr.gameObject, uv2: uv2);
 			}
 			else
