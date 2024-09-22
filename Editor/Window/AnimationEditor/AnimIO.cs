@@ -16,7 +16,7 @@ namespace AevenScnTool
 			}
 
 			AnimationClip clip = new AnimationClip();
-			clip.frameRate = 30f;
+			clip.frameRate = 60f;
 			clip.legacy = false;
 			var parts = anim.GetParts(animName);
 			foreach (var item in parts.Keys)
@@ -46,7 +46,7 @@ namespace AevenScnTool
 
 			foreach (var key in tKeys)
 			{
-				float time = (float)key.frame / 1000f;
+				float time = S4FrameToUnity(key.frame);
 				curveX.AddKey(new Keyframe(time, key.Translation.x, 0f, 0f, 0f, 0f));
 				curveY.AddKey(new Keyframe(time, key.Translation.y, 0f, 0f, 0f, 0f));
 				curveZ.AddKey(new Keyframe(time, key.Translation.z, 0f, 0f, 0f, 0f));
@@ -66,7 +66,7 @@ namespace AevenScnTool
 			Quaternion prev = initial;
 			foreach (var key in rKeys)
 			{
-				float time = (float)key.frame / 1000f;
+				float time = S4FrameToUnity(key.frame);
 				Quaternion current = key.Rotation;
 				curveX.AddKey(new Keyframe(time, current.x, 0f, 0f, 0f, 0f));
 				curveY.AddKey(new Keyframe(time, current.y, 0f, 0f, 0f, 0f));
@@ -90,7 +90,7 @@ namespace AevenScnTool
 
 			foreach (var key in rKeys)
 			{
-				float time = (float)key.frame / 1000f;
+				float time = S4FrameToUnity(key.frame);
 				Vector3 eulerKey = key.Rotation.eulerAngles;
 				curveX.AddKey(new Keyframe(time, eulerKey.x, 0f, 0f, 0f, 0f));
 				curveY.AddKey(new Keyframe(time, eulerKey.y, 0f, 0f, 0f, 0f));
@@ -108,7 +108,7 @@ namespace AevenScnTool
 
 			foreach (var key in sKeys)
 			{
-				float time = (float)key.frame / 1000f;
+				float time = S4FrameToUnity(key.frame);
 				curveX.AddKey(new Keyframe(time, key.Scale.x, 0f, 0f, 0f, 0f));
 				curveY.AddKey(new Keyframe(time, key.Scale.y, 0f, 0f, 0f, 0f));
 				curveZ.AddKey(new Keyframe(time, key.Scale.z, 0f, 0f, 0f, 0f));
@@ -226,7 +226,7 @@ namespace AevenScnTool
 				if (tkd.TransformKey.TKey.Count < curve.keys.Length)
 				{
 					TKey key = new TKey();
-					key.frame = (int)(curve.keys[i].time * 1000f);
+					key.frame = UnityFrameToS4(curve.keys[i].time);
 					key.Translation.x = curve.keys[i].value * ScnToolData.Instance.scale;
 					tkd.TransformKey.TKey.Add(key);
 				}
@@ -252,7 +252,7 @@ namespace AevenScnTool
 				if (tkd.TransformKey.TKey.Count < curve.keys.Length)
 				{
 					TKey key = new TKey();
-					key.frame = (int)(curve.keys[i].time * 1000f);
+					key.frame = UnityFrameToS4(curve.keys[i].time);
 					key.Translation.y = curve.keys[i].value * ScnToolData.Instance.scale;
 					tkd.TransformKey.TKey.Add(key);
 				}
@@ -278,7 +278,7 @@ namespace AevenScnTool
 				if (tkd.TransformKey.TKey.Count < curve.keys.Length)
 				{
 					TKey key = new TKey();
-					key.frame = (int)(curve.keys[i].time * 1000f);
+					key.frame = UnityFrameToS4(curve.keys[i].time);
 					key.Translation.z = curve.keys[i].value * ScnToolData.Instance.scale;
 					tkd.TransformKey.TKey.Add(key);
 				}
@@ -305,7 +305,7 @@ namespace AevenScnTool
 				if (tkd.TransformKey.RKey.Count < curve.keys.Length)
 				{
 					RKey key = new RKey();
-					key.frame = (int)(curve.keys[i].time * 1000f);
+					key.frame = UnityFrameToS4(curve.keys[i].time);
 					key.Rotation.x = curve.keys[i].value;
 					tkd.TransformKey.RKey.Add(key);
 				}
@@ -331,7 +331,7 @@ namespace AevenScnTool
 				if (tkd.TransformKey.RKey.Count < curve.keys.Length)
 				{
 					RKey key = new RKey();
-					key.frame = (int)(curve.keys[i].time * 1000f);
+					key.frame = UnityFrameToS4(curve.keys[i].time);
 					key.Rotation.y = curve.keys[i].value;
 					tkd.TransformKey.RKey.Add(key);
 				}
@@ -358,7 +358,7 @@ namespace AevenScnTool
 				if (tkd.TransformKey.RKey.Count < curve.keys.Length)
 				{
 					RKey key = new RKey();
-					key.frame = (int)(curve.keys[i].time * 1000f);
+					key.frame = UnityFrameToS4(curve.keys[i].time);
 					key.Rotation.z = curve.keys[i].value;
 					tkd.TransformKey.RKey.Add(key);
 				}
@@ -385,7 +385,7 @@ namespace AevenScnTool
 				if (tkd.TransformKey.RKey.Count < curve.keys.Length)
 				{
 					RKey key = new RKey();
-					key.frame = (int)(curve.keys[i].time * 1000f);
+					key.frame = UnityFrameToS4(curve.keys[i].time);
 					key.Rotation.w = curve.keys[i].value;
 					tkd.TransformKey.RKey.Add(key);
 				}
@@ -412,7 +412,7 @@ namespace AevenScnTool
 				if (tkd.TransformKey.SKey.Count < curve.keys.Length)
 				{
 					SKey key = new SKey();
-					key.frame = (int)(curve.keys[i].time * 1000f);
+					key.frame = UnityFrameToS4(curve.keys[i].time);
 					key.Scale.x = curve.keys[i].value;
 					tkd.TransformKey.SKey.Add(key);
 				}
@@ -439,7 +439,7 @@ namespace AevenScnTool
 				if (tkd.TransformKey.SKey.Count < curve.keys.Length)
 				{
 					SKey key = new SKey();
-					key.frame = (int)(curve.keys[i].time * 1000f);
+					key.frame = UnityFrameToS4(curve.keys[i].time);
 					key.Scale.y = curve.keys[i].value;
 					tkd.TransformKey.SKey.Add(key);
 				}
@@ -466,7 +466,7 @@ namespace AevenScnTool
 				if (tkd.TransformKey.SKey.Count < curve.keys.Length)
 				{
 					SKey key = new SKey();
-					key.frame = (int)(curve.keys[i].time * 1000f);
+					key.frame = UnityFrameToS4(curve.keys[i].time);
 					key.Scale.z = curve.keys[i].value;
 					tkd.TransformKey.SKey.Add(key);
 				}
@@ -483,10 +483,17 @@ namespace AevenScnTool
 			for (int i = 0; i < curve.keys.Length; i++)
 			{
 				FloatKey key = new FloatKey();
-				key.frame = (int)(curve.keys[i].time * 1000f);
+				key.frame = UnityFrameToS4(curve.keys[i].time);
 				key.Alpha = curve.keys[i].value;
 				tkd.AlphaKeys.Add(key);
 			}
+		}
+
+		static float S4FrameToUnity(int frame){
+			return (float)frame / 4000f;
+		}
+		static int UnityFrameToS4(float frame){
+			return (int)(frame * 4000f);
 		}
 	}
 }

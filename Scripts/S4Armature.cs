@@ -74,7 +74,7 @@ namespace AevenScnTool
         }
         AnimationClip CreateNewClip(string name){
             AnimationClip clip = new AnimationClip();
-	    	clip.frameRate = 30f;
+	    	clip.frameRate = 60f;
 	    	clip.legacy = true;
             clip.name = name;
             return clip;

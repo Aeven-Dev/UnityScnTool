@@ -48,63 +48,6 @@ namespace AevenScnTool
             removeLightmaps = new ButtonAction(RemoveLightmap);
         }
 
-		private void OnValidate()
-		{
-			if (renderFlags != RenderFlags)
-			{
-                renderFlags = RenderFlags;
-
-                //Update material
-                Material[] mats;
-                var mr = GetComponent<MeshRenderer>();
-                if (mr)
-                {
-                    mats = mr.sharedMaterials;
-                    foreach (var mat in mats)
-                    {
-                        SetMaterialFlags(mat);
-                    }
-                    mr.materials = mats;
-                }
-				else
-				{
-                    var smr = GetComponent<SkinnedMeshRenderer>();
-                    if (smr)
-                    {
-                        mats = smr.sharedMaterials;
-                        foreach (var mat in mats)
-                        {
-                            SetMaterialFlags(mat);
-                        }
-                        smr.materials = mats;
-                    }
-					else
-                    {
-                        Debug.Log("Nyo");
-                        return;
-					}
-                }
-				
-            }
-		}
-
-        void SetMaterialFlags(Material mat)
-		{
-            mat.SetOverrideTag("RenderType", renderFlags.HasFlag(RenderFlag.Transparent) ? "Transparent" : "Opaque");
-            mat.SetFloat("_BUILTIN_AlphaClip", renderFlags.HasFlag(RenderFlag.Cutout) ? 1 : 0);
-            mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
-            mat.SetFloat("_BUILTIN_ZWriteControl", renderFlags.HasFlag(RenderFlag.ZWriteOff) ? 2 : 1);
-            if (renderFlags.HasFlag(RenderFlag.Flare))
-            {
-                mat.SetOverrideTag("RenderType", "Transparent");
-
-            }
-            mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.Glow) ? 0 : 2);
-            mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
-            mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
-            mat.SetFloat("_BUILTIN_CullMode", renderFlags.HasFlag(RenderFlag.NoCulling) ? 0 : 2);
-        }
-
 		[ContextMenu("Load from materials! <3")]
         public void LoadFromMaterial()
         {
@@ -467,40 +410,7 @@ namespace AevenScnTool
                 item.sideTexturePath = string.Empty;
             }
         }
-/*
-        public static Texture2D LoadTextureDXT(byte[] ddsBytes)
-        {
-            byte a = ddsBytes[84];
-            byte b = ddsBytes[85];
-            byte c = ddsBytes[86];
-            byte d = ddsBytes[87];
-
-            string format = System.Text.Encoding.ASCII.GetString(new byte[] { a, b, c, d });
-            //Debug.Log(format);
-            TextureFormat textureFormat = TextureFormat.DXT1;
-
-            if (format == "DXT3" || format == "DXT5")
-            {
-                textureFormat = TextureFormat.DXT5;
-            }
-            byte ddsSizeCheck = ddsBytes[4];
-            if (ddsSizeCheck != 124)
-                throw new Exception("Invalid DDS DXTn texture. Unable to read. Oh no, looks like the file wasnt a dds, or maybe it's corrupted, check it out!");  //this header byte should be 124 for DDS image files
-
-            int height = ddsBytes[13] * 256 + ddsBytes[12];
-            int width = ddsBytes[17] * 256 + ddsBytes[16];
-
-            int DDS_HEADER_SIZE = 128;
-            byte[] dxtBytes = new byte[ddsBytes.Length - DDS_HEADER_SIZE];
-            Buffer.BlockCopy(ddsBytes, DDS_HEADER_SIZE, dxtBytes, 0, ddsBytes.Length - DDS_HEADER_SIZE);
-
-            Texture2D texture = new Texture2D(width, height, textureFormat, false);
-            texture.LoadRawTextureData(dxtBytes);
-            texture.Apply();
-
-            return (texture);
-        }
-*/
+        
         bool HasLightmap()
         {
             if(isNormal){
@@ -513,7 +423,12 @@ namespace AevenScnTool
             var mr = GetComponent<MeshRenderer>();
 			if (mr)
 			{
-                return mr.lightmapIndex != -1;
+                if( mr.lightmapIndex == -1){
+                    foreach (var tex in textures)
+                    {
+                        return tex.sideTexturePath != string.Empty;
+                    }
+                }
             }
             return false;
         }
