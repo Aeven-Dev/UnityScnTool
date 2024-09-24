@@ -142,7 +142,7 @@ namespace NetsphereScnTool.Scene.Chunks
                 foreach (var uv in UV)
                 {
                     w.Write(uv.x);
-                    w.Write(uv.y);
+                    w.Write(1-uv.y);
                 }              
 
                 if (ModelChunk.TextureData.ExtraUV == 1)
@@ -150,7 +150,7 @@ namespace NetsphereScnTool.Scene.Chunks
                     foreach (var uv in UV2)
                     {
                         w.Write(uv.x);
-                        w.Write(uv.y);
+                        w.Write(1-uv.y);
                     }              
                 }
 
@@ -187,13 +187,13 @@ namespace NetsphereScnTool.Scene.Chunks
 
                 count = r.ReadInt32();
                 for (int i = 0; i < count; i++)
-                    UV.Add(new Vector2(r.ReadSingle(), r.ReadSingle()));
+                    UV.Add(new Vector2(r.ReadSingle(), 1-r.ReadSingle()));
 
                 //Debug.Log("UV2 position " + r.BaseStream.Position);
                 if (ModelChunk.TextureData.ExtraUV == 1)
                 {
                     for (int i = 0; i < count; i++)
-                        UV2.Add(new Vector2(r.ReadSingle(), r.ReadSingle()));
+                        UV2.Add(new Vector2(r.ReadSingle(), 1-r.ReadSingle()));
                 }
 
                 //Debug.Log("Tangent count position " + r.BaseStream.Position);

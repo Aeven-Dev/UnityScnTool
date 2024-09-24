@@ -25,14 +25,12 @@ public abstract class UVAnimBase : ParametricAnim
         for (int j = 0; j < uvs.Length; j++)
         {
             MorphKey.UVMorph uv_morph = GetUV(j, factor, uvs);
-            if (ScnToolData.Instance.uv_flipVertical_lm ^ tr.flipUvVertical_lm)
-				{
-                    uv_morph.position = new Vector2(uv_morph.position.x, -uv_morph.position.y);
-				}
-				if (ScnToolData.Instance.uv_flipHorizontal_lm ^ tr.flipUvHorizontal_lm)
-				{
-                    uv_morph.position = new Vector2(-uv_morph.position.x, uv_morph.position.y);
-				}
+            
+            uv_morph.position = new Vector2(uv_morph.position.x, uv_morph.position.y);
+			if (ScnToolData.Instance.uv_flipHorizontal_lm ^ tr.flipUvHorizontal_lm)
+			{
+                uv_morph.position = new Vector2(-uv_morph.position.x, uv_morph.position.y);
+			}
             key.UVs.Add(uv_morph);
 
         }

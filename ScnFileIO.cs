@@ -379,15 +379,39 @@ namespace AevenScnTool.IO
 				byte[] dxtBytes = new byte[ddsBytes.Length - DDS_HEADER_SIZE];
 				Buffer.BlockCopy(ddsBytes, DDS_HEADER_SIZE, dxtBytes, 0, ddsBytes.Length - DDS_HEADER_SIZE);
 
+
 				Texture2D texture = new Texture2D(width, height, textureFormat, false);
 				texture.LoadRawTextureData(dxtBytes);
 				texture.Apply();
 
-				return texture;
+				Color[] pixels = texture.GetPixels(0);
+
+				for (int i = 0; i < height / 2; i++)
+				{
+					for (int j = 0; j < width; j++)
+					{
+						int alpha = i * width + j;
+						int beta = (height - 1 - i) * width + j;
+						if(beta >= pixels.Length || beta < 0){
+							Debug.Log("Beta was " + beta + " from heigh: " + height + " minus 1 minus: " + i + " times: " + width + " plus: " + j + " and length is " + dxtBytes.Length);
+						}
+						Color buffer = pixels[alpha];
+						pixels[alpha] = pixels[beta];
+						pixels[beta] = buffer;
+					}
+				}
+
+				Texture2D finalTexture = new Texture2D(width, height);
+
+				finalTexture.SetPixels(pixels);
+				finalTexture.Apply();
+
+				return finalTexture;
 			}
 			catch (Exception e)
 			{
 				Debug.LogError("Oopsie daisy! Something went wrong!\n\n" + e.Message);
+				Debug.LogError(e.StackTrace);
 				return Texture2D.whiteTexture;
 			}
 		}
@@ -1361,12 +1385,12 @@ namespace AevenScnTool.IO
 				model.Shader = tr.renderFlags;
 				bool uv2 = tr.hasLightmap;
 				//Debug.Log("Has lightmap: " + uv2);
-				SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal, mr.gameObject, uv2: uv2);
+				SetMesh(model.Mesh, mesh, tr.flipUvHorizontal, mr.gameObject, uv2: uv2);
 			}
 			else
 			{
 				model.Shader = RenderFlag.None;
-				SetMesh(model.Mesh, mesh, false, false, mr.gameObject, uv2: false);
+				SetMesh(model.Mesh, mesh, false, mr.gameObject, uv2: false);
 
 
 
@@ -1383,18 +1407,11 @@ namespace AevenScnTool.IO
 
 			if (tr)
 			{
-				if (ScnToolData.Instance.uv_flipVertical_lm ^ tr.flipUvVertical_lm)
-				{
-					for (int i = 0; i < model.Mesh.UV2.Count; i++)
-					{
-						model.Mesh.UV2[i] = new Vector2(model.Mesh.UV2[i].x, -model.Mesh.UV2[i].y);
-					}
-				}
 				if (ScnToolData.Instance.uv_flipHorizontal_lm ^ tr.flipUvHorizontal_lm)
 				{
 					for (int i = 0; i < model.Mesh.UV2.Count; i++)
 					{
-						model.Mesh.UV2[i] = new Vector2(-model.Mesh.UV2[i].x, model.Mesh.UV2[i].y);
+						model.Mesh.UV2[i] = new Vector2(1-model.Mesh.UV2[i].x, model.Mesh.UV2[i].y);
 					}
 				}
 
@@ -1452,11 +1469,11 @@ namespace AevenScnTool.IO
 			if (tr)
 			{
 				model.Shader = tr.renderFlags;
-				SetMesh(model.Mesh, mesh, tr.flipUvVertical, tr.flipUvHorizontal, smr.gameObject);
+				SetMesh(model.Mesh, mesh, tr.flipUvHorizontal, smr.gameObject);
 			}
 			else{
 				model.Shader = RenderFlag.None;
-				SetMesh(model.Mesh, mesh, false, false, smr.gameObject);
+				SetMesh(model.Mesh, mesh, false, smr.gameObject);
 			}
 
 			SetTextureData(model.TextureData, mesh, tr);
@@ -1515,7 +1532,7 @@ namespace AevenScnTool.IO
 			return model;
 		}
 
-		static void SetMesh(MeshData meshData, Mesh mesh, bool flipUvVertical = false, bool flipUvHorizontal = false, UnityEngine.Object obj = null, bool uv2 = false)
+		static void SetMesh(MeshData meshData, Mesh mesh, bool flipUvHorizontal = false, UnityEngine.Object obj = null, bool uv2 = false)
 		{
 			if (mesh == null)
 			{
@@ -1543,13 +1560,6 @@ namespace AevenScnTool.IO
 				meshData.UV2 = new List<Vector2>(mesh.uv2);
 			}
 
-			if (ScnToolData.Instance.uv_flipVertical ^ flipUvVertical)
-			{
-				for (int i = 0; i < meshData.UV.Count; i++)
-				{
-					meshData.UV[i] = new Vector2(meshData.UV[i].x, -meshData.UV[i].y);
-				}
-			}
 			if (ScnToolData.Instance.uv_flipHorizontal ^ flipUvHorizontal)
 			{
 				for (int i = 0; i < meshData.UV.Count; i++)

@@ -35,11 +35,8 @@ namespace AevenScnTool.Menus
 				SlimGUI();
 
 			var lay = GUILayout.Width(position.width - 22);
-			ScnToolData.Instance.uv_flipVertical = EditorGUILayout.Toggle("Flip UVs Vertically .-.", ScnToolData.Instance.uv_flipVertical, lay);
 			ScnToolData.Instance.uv_flipHorizontal = EditorGUILayout.Toggle("Flip UVs Horizontally q:", ScnToolData.Instance.uv_flipHorizontal, lay);
 
-
-			ScnToolData.Instance.uv_flipVertical_lm = EditorGUILayout.Toggle("Flip UVs Vertically for lightmaps", ScnToolData.Instance.uv_flipVertical_lm, lay);
 			ScnToolData.Instance.uv_flipHorizontal_lm = EditorGUILayout.Toggle("Flip UVs Horizontally for lightmaps", ScnToolData.Instance.uv_flipHorizontal_lm, lay);
 			GUILayout.Space(10f);
 			ScnToolData.Instance.ignoreLightmapsGlobally = EditorGUILayout.Toggle("Ignore all lightmaps!", ScnToolData.Instance.ignoreLightmapsGlobally, lay);
@@ -48,13 +45,6 @@ namespace AevenScnTool.Menus
 			ScnToolData.Instance.importCollisionAsVisual = EditorGUILayout.Toggle("Import Collision as MeshRenderers", ScnToolData.Instance.importCollisionAsVisual, lay);
 
 			GUILayout.Space(40);
-			if (GUILayout.Button(new GUIContent("Ultimate Modding Power!!",
-				"A powerful mode where every little change is saved to the file, dangerous but useful!"),
-				GUILayout.Height(35), lay))
-			{
-				Set_UMP();
-			}
-			GUILayout.Space(5);
 			if (GUILayout.Button(new GUIContent("Generate MapInfo text! [].[]",
 				"Opens a window to generate a text that you can paste inside the mapinfo ini to configure your DOTs, Warps, Blasts and such!"), lay))
 			{
@@ -99,7 +89,7 @@ namespace AevenScnTool.Menus
 			GUILayout.Space(20);
 			EditorGUILayout.BeginHorizontal();
 			float width = (position.width / 2f) - 11;
-			if (GUILayout.Button(new GUIContent("Open... :¬)", "Opens a scn file into a new SceneData root object of the same name!"), GUILayout.Width(width)))
+			if (GUILayout.Button(new GUIContent("Open... :ï¿½)", "Opens a scn file into a new SceneData root object of the same name!"), GUILayout.Width(width)))
 			{
 				Open();
 			}
@@ -147,7 +137,7 @@ namespace AevenScnTool.Menus
 		{
 			float width = (position.width / 2f) - 11;
 			GUILayout.Space(20);
-			if (GUILayout.Button(new GUIContent("Open... :¬)",
+			if (GUILayout.Button(new GUIContent("Open... :ï¿½)",
 				"Opens a scn file into a new SceneData root object of the same name!"), GUILayout.Width(width)))
 			{
 				Open();
@@ -158,7 +148,18 @@ namespace AevenScnTool.Menus
 				Append();
 			}
 
-
+			
+			var old = EditorGUIUtility.labelWidth;
+			EditorGUIUtility.labelWidth = 200;
+			if (EditorGUILayout.Toggle("Click me if you open official files!", !identityMatrix))
+			{
+				identityMatrix = false;
+			}
+			if (EditorGUILayout.Toggle("Click me if you open custom files!", identityMatrix))
+			{
+				identityMatrix = true;
+			}
+			EditorGUIUtility.labelWidth = old;
 
 			if (GUILayout.Button(new GUIContent("Save... :3",
 				"Saves the SceneData root objects to a the specified file!"), GUILayout.Width(width)))

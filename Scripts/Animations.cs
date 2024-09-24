@@ -454,7 +454,7 @@ public class MorphKey : IManualSerializer
             {
                 w.Write(uvMorph.index);
                 w.Write(uvMorph.position.x);
-                w.Write(uvMorph.position.y);
+                w.Write(1-uvMorph.position.y);
             }
         }
     }
@@ -471,7 +471,7 @@ public class MorphKey : IManualSerializer
 
             count = r.ReadInt32();
             for (int j = 0; j < count; j++)
-                UVs.Add(new UVMorph(r.ReadUInt32(),new Vector2(r.ReadSingle(), r.ReadSingle()) ));
+                UVs.Add(new UVMorph(r.ReadUInt32(),new Vector2(r.ReadSingle(), 1-r.ReadSingle()) ));
         }
     }
     [System.Serializable]

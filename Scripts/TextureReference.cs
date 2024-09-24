@@ -15,10 +15,8 @@ namespace AevenScnTool
         [HideInInspector]public RenderFlag renderFlags;
         [SerializeField]private RenderFlag RenderFlags;
 
-        public bool flipUvVertical = false;
         public bool flipUvHorizontal = false;
 
-        public bool flipUvVertical_lm = false;
         public bool flipUvHorizontal_lm = false;
 
         public bool ignoreLightmaps = false;
