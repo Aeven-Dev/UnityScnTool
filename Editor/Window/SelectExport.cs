@@ -17,7 +17,6 @@ namespace AevenScnTool.Menus
 
         bool saveLightmaps = false;
         public static string lightmapName = "";
-        public static string lightmapFolder = "";
         void OnGUI()
         {
 			if (scenesInHierarchy == null)
@@ -130,57 +129,59 @@ namespace AevenScnTool.Menus
 
             FileInfo fileInfo = new FileInfo(fileName);
 
-            List<ScnData> scnData = new List<ScnData>();
+            List<ScnData> scnDataList = new List<ScnData>();
             foreach (var item in scenesInHierarchy)
             {
                 if (item.selected == false) continue;
                 foreach (var scn in item.childs)
                 {
                     if (scn.selected == false) continue;
-                    scnData.Add(scn.element as ScnData);
+                    ScnData sd = scn.element as ScnData;
+                    scnDataList.Add(sd);
+                    sd.lightmapName = lightmapName;
                 }
             }
-            lightmapFolder = fileInfo.Name.Replace(".scn", "") + "_lm";
 
-            SceneContainer container = ScnFileExporter.CreateContainerFromScenes(fileInfo.Name, scnData.ToArray());
+            SceneContainer container = ScnFileExporter.CreateContainerFromScenes(fileInfo.Name, scnDataList.ToArray());
 
             container.Write(fileInfo.FullName);
 
 			if (saveLightmaps)
 			{
+                ExportLightmaps(fileInfo.Directory.FullName);
+                
+            }
+        }
 
-                foreach (var tex in ScnFileExporter.lightmaps.Values)
+        public static void ExportLightmaps(string locationPath){
+            foreach (var tex in ScnFileExporter.lightmaps.Values)
+            {
+				if (tex.tex.isReadable) //If is readable, continue, otherwise, import to make readable
+				{
+                    continue;
+				}
+                string assetPath = AssetDatabase.GetAssetPath(tex.tex);
+                var tImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+                if (tImporter != null)
                 {
-					if (tex.tex.isReadable)
-					{
-                        continue;
-					}
-                    string assetPath = AssetDatabase.GetAssetPath(tex.tex);
-                    var tImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
-                    if (tImporter != null)
-                    {
-                        tImporter.textureType = TextureImporterType.Lightmap;
-
-                        tImporter.isReadable = true;
-                        tImporter.textureCompression = TextureImporterCompression.Uncompressed;
-
-                        AssetDatabase.ImportAsset(assetPath);
-                    }
+                    tImporter.textureType = TextureImporterType.Lightmap;
+                    tImporter.isReadable = true;
+                    tImporter.textureCompression = TextureImporterCompression.Uncompressed;
+                    AssetDatabase.ImportAsset(assetPath);
                 }
-
-                AssetDatabase.Refresh();
-                foreach (var tex in ScnFileExporter.lightmaps.Values)
+            }
+            AssetDatabase.Refresh();
+            foreach (var tex in ScnFileExporter.lightmaps.Values)
+            {
+                try
                 {
-                    try
-                    {
-                        var bytes = tex.tex.EncodeToTGA();
-                        var path = fileInfo.Directory.FullName + Path.DirectorySeparatorChar + tex.name + ".tga";
-                        File.WriteAllBytes(path, bytes);
-                    }
-                    catch (System.Exception e)
-                    {
-                        Debug.LogError(e.Message);
-                    }
+                    var bytes = tex.tex.EncodeToTGA();
+                    var path = locationPath + Path.DirectorySeparatorChar + tex.name + ".tga";
+                    File.WriteAllBytes(path, bytes);
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError(e.Message);
                 }
             }
         }

@@ -918,6 +918,8 @@ namespace AevenScnTool.IO
 
 		public static Dictionary<int,(string name,Texture2D tex)> lightmaps = new Dictionary<int,(string name, Texture2D tex)>();
 
+		public static string lightmapName = "";
+
 		public static SceneContainer CreateContainerFromScenes(string name, ScnData[] scenes)
 		{
 			usedNames.Clear();
@@ -926,12 +928,14 @@ namespace AevenScnTool.IO
 			container.Header.Name = name;
 			foreach (var scene in scenes)
 			{
+				lightmapName = scene.lightmapName;
 				CreateChunksFromChildren(scene.transform,scene.transform, container, null);
 				S4Armature armature = scene.GetComponent<S4Armature>();
 				if(armature != null){
 					armature.WriteAnimationsToSceneContainer(container);
 				}
 			}
+			lightmapName = "";
 
 			return container;
 		}
@@ -1604,8 +1608,6 @@ namespace AevenScnTool.IO
 				Debug.Log($"Oh no! {textures.gameObject.name} has more submeshes in it's mesh than textures intexture reference!", textures.gameObject);
 			}
 
-			string lightmapName = Menus.SelectExport.lightmapName;
-			string lightmapFolder = Menus.SelectExport.lightmapFolder;
 			for (int i = 0; i < mesh.subMeshCount; i++)
 			{
 				TextureEntry te = new TextureEntry();
@@ -1658,9 +1660,9 @@ namespace AevenScnTool.IO
 
 
 									string textureName = lm.name;
-									if (lightmapName != string.Empty)
+									if (ScnFileExporter.lightmapName != string.Empty)
 									{
-										textureName = lightmapName + "_" + mr.lightmapIndex;
+										textureName = ScnFileExporter.lightmapName + "_" + mr.lightmapIndex;
 									}
 
 									ScnFileExporter.lightmaps[mr.lightmapIndex] = (textureName, lm);
