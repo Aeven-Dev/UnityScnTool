@@ -6,6 +6,7 @@ using UnityEngine;
 
 public abstract class ParametricAnim : S4Animations
 {
+    public string AnimName = "";
     public enum Easing { Linear, EaseIn, EaseOut, EaseInOut, Step }
     public int stepDuration = 0;
     public int repetitions = 0;
@@ -14,18 +15,24 @@ public abstract class ParametricAnim : S4Animations
     public new List<ModelAnimation> ToModelAnimation()
     {
         Setup();
+        ModelAnimation anim = null;
         var anims = base.ToModelAnimation();
-        ModelAnimation anim = new ModelAnimation();
-        anim.Name = ScnToolData.Instance.main_animation_name;
-        anim.transformKeyData2 = new TransformKeyData2();
-        anim.transformKeyData2.duration = stepDuration * repetitions;
-        anim.transformKeyData2.AlphaKeys = new List<FloatKey>();
-
-        anim.transformKeyData2.TransformKey = new TransformKey();
-        anim.transformKeyData2.TransformKey.Translation = transform.position * ScnToolData.Instance.scale;
-        anim.transformKeyData2.TransformKey.Rotation = transform.rotation;
-        anim.transformKeyData2.TransformKey.Scale = transform.lossyScale;
-        anim.transformKeyData2.MorphKeys = new List<MorphKey>();
+        if (AnimName == string.Empty)
+        {
+            anim = GetBaseModelAnim(ScnToolData.Instance.main_animation_name);
+        }
+        else{
+            foreach (var a in anims)
+            {
+                if (a.Name == AnimName)
+                {
+                    anim = a;
+                }
+            }
+        }
+        if(anim == null){
+            anim = GetBaseModelAnim(ScnToolData.Instance.main_animation_name);
+        }
 
         for (int i = 0; i < repetitions; i++)
         {
@@ -35,13 +42,56 @@ public abstract class ParametricAnim : S4Animations
         return anims;
     }
 
+    ModelAnimation GetBaseModelAnim(string name){
+        ModelAnimation anim = new ModelAnimation();
+        anim.Name = name;
+        anim.transformKeyData2 = new TransformKeyData2();
+        anim.transformKeyData2.duration = stepDuration * repetitions;
+        anim.transformKeyData2.AlphaKeys = new List<FloatKey>();
+
+        anim.transformKeyData2.TransformKey = new TransformKey();
+        anim.transformKeyData2.TransformKey.Translation = transform.position * ScnToolData.Instance.scale;
+        anim.transformKeyData2.TransformKey.Rotation = transform.rotation;
+        anim.transformKeyData2.TransformKey.Scale = transform.lossyScale;
+        anim.transformKeyData2.MorphKeys = new List<MorphKey>();
+        return anim;
+    }
+
     public virtual void Setup() { }
 
     public new List<BoneAnimation> ToBoneAnimation()
     {
         Setup();
 
+        BoneAnimation anim = null;
         var anims = base.ToBoneAnimation();
+
+        if (AnimName == string.Empty)
+        {
+            anim = GetBaseBoneAnim(ScnToolData.Instance.main_animation_name);
+        }
+        else{
+            foreach (var a in anims)
+            {
+                if (a.Name == AnimName)
+                {
+                    anim = a;
+                }
+            }
+        }
+        if(anim == null){
+            anim = GetBaseBoneAnim(ScnToolData.Instance.main_animation_name);
+        }
+
+        for (int i = 0; i < repetitions; i++)
+        {
+            ProcessRepetition(i, anim.TransformKeyData, KeyBoneAt);
+        }
+        anims.Add(anim);
+        return anims;
+    }
+
+    BoneAnimation GetBaseBoneAnim(string name){
         BoneAnimation anim = new BoneAnimation();
         anim.Name = ScnToolData.Instance.main_animation_name;
         anim.TransformKeyData = new TransformKeyData();
@@ -52,14 +102,9 @@ public abstract class ParametricAnim : S4Animations
         anim.TransformKeyData.TransformKey.Translation = transform.position * ScnToolData.Instance.scale;
         anim.TransformKeyData.TransformKey.Rotation = transform.rotation;
         anim.TransformKeyData.TransformKey.Scale = transform.lossyScale;
-
-        for (int i = 0; i < repetitions; i++)
-        {
-            ProcessRepetition(i, anim.TransformKeyData, KeyBoneAt);
-        }
-        anims.Add(anim);
-        return anims;
+        return anim;
     }
+
     public new S4Animation GetAnimation(string name)
     {
         foreach (var item in animations)
