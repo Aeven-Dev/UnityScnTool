@@ -91,7 +91,7 @@ public class TransformKeyData : IManualSerializer
         using (var w = stream.ToBinaryWriter(true))
         {
             w.Write((uint)duration);
-            NetsphereScnTool.Scene.SceneContainer.Log("duration: " + (uint)duration);
+            NetsphereScnTool.Scene.SceneContainer.Log("duration: " + (uint)duration + " - " + duration);
 
             w.Write(TransformKey != null);
             NetsphereScnTool.Scene.SceneContainer.Log("TransformKey: " + TransformKey);

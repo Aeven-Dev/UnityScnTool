@@ -134,6 +134,9 @@ namespace AevenScnTool
                 //For each clip go through each curve
                 EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(clip);
 
+                int dur = AnimIO.UnityFrameToS4(clip.length);;
+                Debug.Log("Clip: '" + clip.name + "' is "+ clip.length + "s and becomes " + dur + " frames");
+
                 foreach (var item in curveBindings)
 			    {
                     string[] words = item.path.Split("/");
@@ -164,7 +167,7 @@ namespace AevenScnTool
 			    		    ma.Name = clip.name;
 			    		    ma.transformKeyData2 = new TransformKeyData2();
 			    		    ma.transformKeyData2.TransformKey = new TransformKey();
-			    		    ma.transformKeyData2.duration = (int)(clip.length * 1000f);
+			    		    ma.transformKeyData2.duration = dur;
                             modelPart.Animation.Add(ma);
                         }
                         AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, item);
@@ -189,7 +192,7 @@ namespace AevenScnTool
 			    		    ba.Name = clip.name;
 			    		    ba.TransformKeyData = new TransformKeyData();
 			    		    ba.TransformKeyData.TransformKey = new TransformKey();
-			    		    ba.TransformKeyData.duration = (int)(clip.length * 1000f);
+			    		    ba.TransformKeyData.duration = dur;
                             bonePart.Animation.Add(ba);
                         }
                         AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, item);

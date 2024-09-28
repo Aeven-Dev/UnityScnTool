@@ -299,7 +299,7 @@ namespace AevenScnTool
 			else if(curve.keys.Length > 1){
 				tkd.TransformKey.Rotation.x = curve.keys[0].value;
 			}
-
+			
 			for (int i = 0; i < curve.keys.Length; i++)
 			{
 				if (tkd.TransformKey.RKey.Count < curve.keys.Length)
@@ -489,11 +489,11 @@ namespace AevenScnTool
 			}
 		}
 
-		static float S4FrameToUnity(int frame){
-			return (float)frame / 1000f;
+		public static float S4FrameToUnity(int frame){
+			return (float)frame / 2000f;
 		}
-		static int UnityFrameToS4(float frame){
-			return (int)(frame * 1000f);
+		public static int UnityFrameToS4(float frame){
+			return (int)(frame * 2000f);
 		}
 	}
 }

@@ -14,7 +14,7 @@ public abstract class ParametricAnim : S4Animations
     public new List<ModelAnimation> ToModelAnimation()
     {
         Setup();
-        var anims = new List<ModelAnimation>();
+        var anims = base.ToModelAnimation();
         ModelAnimation anim = new ModelAnimation();
         anim.Name = ScnToolData.Instance.main_animation_name;
         anim.transformKeyData2 = new TransformKeyData2();
@@ -41,7 +41,7 @@ public abstract class ParametricAnim : S4Animations
     {
         Setup();
 
-        var anims = new List<BoneAnimation>();
+        var anims = base.ToBoneAnimation();
         BoneAnimation anim = new BoneAnimation();
         anim.Name = ScnToolData.Instance.main_animation_name;
         anim.TransformKeyData = new TransformKeyData();
