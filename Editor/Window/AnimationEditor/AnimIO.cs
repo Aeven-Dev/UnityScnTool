@@ -120,14 +120,21 @@ namespace AevenScnTool
 		}
 		static void SetVisibilityCurves(AnimationClip clip, string pathToObj, List<FloatKey> fKeys, float transparency)
 		{
-			AnimationCurve curve = new AnimationCurve(new Keyframe[] { new Keyframe(0f, transparency) });
+			
+			AnimationCurve curve = new AnimationCurve();
+			if(transparency != 1){
+				curve.AddKey(0f, transparency);
+			}
 
 			foreach (var key in fKeys)
 			{
-				curve.AddKey(key.frame, key.Alpha);
+				float time = S4FrameToUnity(key.frame);
+				curve.AddKey(time, key.Alpha);
 			}
 
-			clip.SetCurve(pathToObj , typeof(TextureReference), "transparency", curve);
+			if(curve.length > 0){
+				clip.SetCurve(pathToObj , typeof(TextureReference), "transparency", curve);
+			}
 		}
 
 		public static void Import(AnimationWrapper anim)

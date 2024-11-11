@@ -213,7 +213,7 @@ namespace AevenScnTool.Menus
             Parent(go);
         }
 
-        [MenuItem("GameObject/S4 Scn/Siege/Create Siege Point! _º_")]
+        [MenuItem("GameObject/S4 Scn/Siege/Create Siege Point! _ï¿½_")]
         static void CreateSiegePoint()
         {
             GameObject go = new GameObject("Point holder!");
@@ -321,6 +321,59 @@ namespace AevenScnTool.Menus
 				{
                     Object.DestroyImmediate(mf);
 				}
+            }
+        }
+
+        [MenuItem("GameObject/S4 Scn/Collider to Mesh! :0 => :D")]
+        static void ColliderToMesh()
+		{
+            for (int i = 0; i < Selection.gameObjects.Length; i++)
+            {
+                if (Selection.activeTransform == null)
+                {
+                    Debug.Log("You need to have an object selected, silly! :P");
+                    return;
+                }
+                var go = Selection.gameObjects[i];
+
+                var mc = go.GetComponent<MeshCollider>();
+				if (!mc)
+				{
+                    continue;
+				}
+                var tr = go.GetComponent<TextureReference>();
+                if (tr == null)
+                {
+                    tr = go.AddComponent<TextureReference>();
+                }
+                var mf = go.AddComponent<MeshFilter>();
+                var mr = go.AddComponent<MeshRenderer>();
+                mr.material = ScnToolData.GetMatFromShader(RenderFlag.None);
+                var cd = go.GetComponent<CollisionData>();
+                mc.cookingOptions = MeshColliderCookingOptions.None;
+                mf.sharedMesh = mc.sharedMesh;
+                if(go.name.StartsWith("oct_") == false){
+                    if(cd.ground == GroundFlag.blast){
+                        go.name = "oct_" + go.name;
+                    }
+                    else if(cd.ground == GroundFlag.NONE){
+                        if(cd.weapon != WeaponFlag.NONE){
+                            go.name = "oct_" + nameof(cd.weapon).Replace("wire","@");
+                        }
+                    }
+                    else{
+                        go.name = "oct_" + nameof(cd.ground).Replace("wire","@").Replace("hash","#");
+                    }
+                    go.name = "oct_" + go.name;
+                }
+				if (cd)
+				{
+                    Object.DestroyImmediate(cd);
+				}
+                if (mc)
+                {
+					Object.DestroyImmediate(mc);
+                }
             }
         }
 
