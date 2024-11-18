@@ -12,8 +12,8 @@ namespace AevenScnTool
     public class TextureReference : MonoBehaviour
     {
         [Range(0f,1f)]public float transparency = 1f;
-        [HideInInspector]public RenderFlag renderFlags;
-        [SerializeField]private RenderFlag RenderFlags;
+        public RenderFlag renderFlags;
+        //[SerializeField]private RenderFlag RenderFlags;
 
         public bool flipUvHorizontal = false;
 
