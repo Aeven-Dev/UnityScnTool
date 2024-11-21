@@ -86,7 +86,7 @@ namespace AevenScnTool
 
                 Texture lightmap = mats[i].GetTexture("_DetailAlbedoMap");
                 Texture normal = mats[i].GetTexture("_BumpMap");
-                string sideTex; bool nor = false;
+                string sideTex;
 
                 if (lightmap)
                 {
@@ -103,14 +103,13 @@ namespace AevenScnTool
                     {
                         sideTex = normal.name;
                     }
-                    nor = true;
                 }
                 else
                 {
                     sideTex = string.Empty;
                 }
                 string n = (mainTexture != null) ? mainTexture.name : "EmptyTexture";
-                textures.Add(new ( n, mainTex, sideTex, nor ));
+                textures.Add(new ( n, mainTex, sideTex));
             }
 
             if (mesh != null)
@@ -183,7 +182,7 @@ namespace AevenScnTool
                 }
 
                 mat.mainTexture = mainTexture;
-                if (item.sideTextureIsNormal)
+                if (isNormal)
                 {
                     mat.SetTexture("_BumpMap", sideTexture);
                     mat.EnableKeyword("_NORMALMAP");
@@ -441,17 +440,17 @@ namespace AevenScnTool
         public string mainTexturePath;
         //[Path]
         public string sideTexturePath;
-        public bool sideTextureIsNormal;
+        //public bool sideTextureIsNormal;
 
         //[Button("Select Main Tex O.O")] public ButtonAction selectMainTex;
         //[Button("Select Side Tex 0.0")] public ButtonAction selectSideTex;
 
-        public TextureItem(string name, string _mainTexturePath, string _sideTexturePath, bool _sideTextureIsNormal)
+        public TextureItem(string name, string _mainTexturePath, string _sideTexturePath)
         { 
             this.name = name;
             this.mainTexturePath = _mainTexturePath;
             this.sideTexturePath = _sideTexturePath;
-            this.sideTextureIsNormal = _sideTextureIsNormal;
+            //this.sideTextureIsNormal = _sideTextureIsNormal;
             //selectMainTex = new ButtonAction(SelectMainTex);
             //selectSideTex = new ButtonAction(SelectSideTex);
         }

@@ -675,7 +675,6 @@ namespace AevenScnTool.IO
 					}
 
 					string sideTex = string.Empty;
-					bool normal = false;
 
 					if (texEntry.side_texture != string.Empty)
 					{
@@ -706,11 +705,10 @@ namespace AevenScnTool.IO
 						{
 							mat_x.SetTexture("_BumpMap", st);
 							mat_x.EnableKeyword("_NORMALMAP");
-							normal = true;
 						}
 					}
 
-					tr.textures.Add(new TextureItem(texEntry.main_texture, mainTex, sideTex, normal));
+					tr.textures.Add(new TextureItem(texEntry.main_texture, mainTex, sideTex));
 					mats[i] = mat_x;
 				}
 			}
@@ -1636,7 +1634,7 @@ namespace AevenScnTool.IO
 					}
 
 					//Side Texture
-					if (ti.sideTextureIsNormal)
+					if (textures.isNormal)
 					{
 						if (ti.sideTexturePath != string.Empty)
 						{
