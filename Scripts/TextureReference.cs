@@ -426,6 +426,9 @@ namespace AevenScnTool
                         return tex.sideTexturePath != string.Empty;
                     }
                 }
+                else{
+                    return true;
+                }
             }
             return false;
         }
