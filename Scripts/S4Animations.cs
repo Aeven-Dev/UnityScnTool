@@ -2,6 +2,7 @@ using AevenScnTool;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 [ExecuteInEditMode]
 [AddComponentMenu("S4 scn/S4 Animations")]
@@ -16,6 +17,45 @@ public class S4Animations : MonoBehaviour
         {
             anims.Add(animations[i].ToModelAnim());
         }
+
+        if(GetComponent<Animation>()){
+            AnimationClip[] animationClips = AnimationUtility.GetAnimationClips(gameObject);
+            foreach (var clip in animationClips)
+            {
+                //For each clip go through each curve
+                EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(clip);
+
+                int dur = AnimIO.UnityFrameToS4(clip.length);
+                foreach (var binding in curveBindings)
+                {
+                    //Checking for property paths
+                    if(binding.path != string.Empty){
+                        Debug.LogWarning("Clip: '" + clip.name + "' has a property for "+ binding.path + " and that is not good");
+                        continue;
+                    }
+                    //##############################
+
+                    //Checking for overlaps
+                    bool exit = false;
+                    foreach (var item in animations)
+                    {
+                        if(item.Name == clip.name){
+                            Debug.LogWarning("Clip: '" + clip.name + "' has the same name as another S4 Animation");
+                            exit = true;
+                        }
+                    }
+                    if(exit) continue;
+                    //##############################
+
+                    ModelAnimation s4anim = CreateModelAnim(clip.name, dur);//Create empty animation to work with
+
+                    AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);//Get Curve to read
+                    AnimIO.AddPropertyToKeyData(s4anim.transformKeyData2, curve, binding);//Fill the animation with the curve data
+
+                    anims.Add(s4anim);//Lasty add the animation
+                }
+            }
+        }
         return anims;
     }
     public List<BoneAnimation> ToBoneAnimation()
@@ -25,7 +65,67 @@ public class S4Animations : MonoBehaviour
         {
             anims.Add(animations[i].ToBoneAnim());
         }
+
+
+        if(GetComponent<Animation>()){
+            AnimationClip[] animationClips = AnimationUtility.GetAnimationClips(gameObject);
+            foreach (var clip in animationClips)
+            {
+                //For each clip go through each curve
+                EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(clip);
+
+                int dur = AnimIO.UnityFrameToS4(clip.length);
+                foreach (var binding in curveBindings)
+                {
+                    //Checking for property paths
+                    if(binding.path != string.Empty){
+                        Debug.LogWarning("Clip: '" + clip.name + "' has a property for "+ binding.path + " and that is not good");
+                        continue;
+                    }
+                    //##############################
+
+                    //Checking for overlaps
+                    bool exit = false;
+                    foreach (var item in animations)
+                    {
+                        if(item.Name == clip.name){
+                            Debug.LogWarning("Clip: '" + clip.name + "' has the same name as another S4 Animation");
+                            exit = true;
+                        }
+                    }
+                    if(exit) continue;
+                    //##############################
+
+                    BoneAnimation s4anim = CreateBoneAnim(clip.name, dur);//Create empty animation to work with
+
+                    AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);//Get Curve to read
+                    AnimIO.AddPropertyToKeyData(s4anim.transformKeyData, curve, binding);//Fill the animation with the curve data
+
+                    anims.Add(s4anim);//Lasty add the animation
+                }
+            }
+        }
+
+
         return anims;
+    }
+
+    ModelAnimation CreateModelAnim(string name, int dur){
+        ModelAnimation ma = new ModelAnimation();
+		ma.Name = name;
+		ma.transformKeyData2 = new TransformKeyData2();
+		ma.transformKeyData2.TransformKey = new TransformKey();
+		ma.transformKeyData2.duration = dur;
+        return ma;
+    }
+
+    BoneAnimation CreateBoneAnim(string name, int dur){
+        BoneAnimation ba = new BoneAnimation();
+		ba.Name = name;
+		ba.TransformKeyData = new TransformKeyData2();
+		ba.TransformKeyData.TransformKey = new TransformKey();
+		ba.TransformKeyData.duration = dur;
+        return ba;
     }
 
     public void FromModelAnimation(List<ModelAnimation> anims)
