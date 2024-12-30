@@ -99,7 +99,7 @@ public class S4Animations : MonoBehaviour
                     BoneAnimation s4anim = CreateBoneAnim(clip.name, dur);//Create empty animation to work with
 
                     AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);//Get Curve to read
-                    AnimIO.AddPropertyToKeyData(s4anim.transformKeyData, curve, binding);//Fill the animation with the curve data
+                    AnimIO.AddPropertyToKeyData(s4anim.TransformKeyData, curve, binding);//Fill the animation with the curve data
 
                     anims.Add(s4anim);//Lasty add the animation
                 }
