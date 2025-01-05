@@ -19,6 +19,7 @@ public class S4Animations : MonoBehaviour
         }
 
         if(GetComponent<Animation>()){
+            Debug.Log("Saving animations");
             AnimationClip[] animationClips = AnimationUtility.GetAnimationClips(gameObject);
             foreach (var clip in animationClips)
             {
@@ -26,6 +27,9 @@ public class S4Animations : MonoBehaviour
                 EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(clip);
 
                 int dur = AnimIO.UnityFrameToS4(clip.length);
+                
+                ModelAnimation s4anim = CreateModelAnim(clip.name, dur);//Create empty animation to work with
+
                 foreach (var binding in curveBindings)
                 {
                     //Checking for property paths
@@ -42,18 +46,17 @@ public class S4Animations : MonoBehaviour
                         if(item.Name == clip.name){
                             Debug.LogWarning("Clip: '" + clip.name + "' has the same name as another S4 Animation");
                             exit = true;
+                            break;
                         }
                     }
                     if(exit) continue;
                     //##############################
 
-                    ModelAnimation s4anim = CreateModelAnim(clip.name, dur);//Create empty animation to work with
-
                     AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);//Get Curve to read
                     AnimIO.AddPropertyToKeyData(s4anim.transformKeyData2, curve, binding);//Fill the animation with the curve data
 
-                    anims.Add(s4anim);//Lasty add the animation
                 }
+                anims.Add(s4anim);//Lasty add the animation
             }
         }
         return anims;
@@ -75,6 +78,9 @@ public class S4Animations : MonoBehaviour
                 EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(clip);
 
                 int dur = AnimIO.UnityFrameToS4(clip.length);
+
+                BoneAnimation s4anim = CreateBoneAnim(clip.name, dur);//Create empty animation to work with
+
                 foreach (var binding in curveBindings)
                 {
                     //Checking for property paths
@@ -96,13 +102,12 @@ public class S4Animations : MonoBehaviour
                     if(exit) continue;
                     //##############################
 
-                    BoneAnimation s4anim = CreateBoneAnim(clip.name, dur);//Create empty animation to work with
-
                     AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);//Get Curve to read
                     AnimIO.AddPropertyToKeyData(s4anim.TransformKeyData, curve, binding);//Fill the animation with the curve data
 
-                    anims.Add(s4anim);//Lasty add the animation
                 }
+                
+                anims.Add(s4anim);//Lasty add the animation
             }
         }
 
