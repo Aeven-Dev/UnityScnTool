@@ -664,6 +664,7 @@ namespace AevenScnTool.IO
 						if (File.Exists(mainTex))
 						{
 							mat_x.mainTexture = LoadTexture(mainTex);
+							mat_x.name = Path.GetFileNameWithoutExtension(texEntry.main_texture.Replace(".tga", ".dds"));
 						}
 						else{
 							string localMainTex = Application.dataPath + Path.DirectorySeparatorChar + "S4 Map Textures" + Path.DirectorySeparatorChar + texEntry.main_texture.Replace(".tga", ".dds");
@@ -1386,7 +1387,7 @@ namespace AevenScnTool.IO
 			{
 				model.Shader = tr.renderFlags;
 				bool uv2 = tr.hasLightmap;
-				//Debug.Log("Has lightmap: " + uv2);
+				//Debug.Log(mr.gameObject.name + "Has lightmap: " + uv2);
 				SetMesh(model.Mesh, mesh, tr.flipUvHorizontal, mr.gameObject, uv2: uv2);
 			}
 			else
