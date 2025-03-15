@@ -474,7 +474,6 @@ namespace AevenScnTool.IO
 						Debug.Log("TGA texture had non 32/24 bit depth.");
 						return Texture2D.whiteTexture;
 					}
-
 					tex.SetPixels32(pulledColors);
 					tex.Apply();
 					return tex;
@@ -723,11 +722,12 @@ namespace AevenScnTool.IO
 
 		static Texture2D LoadTexture(string path )
 		{
+			Texture2D tex = Texture2D.whiteTexture;
 			if (path.EndsWith(".tga"))
 			{
 				if (File.Exists(path))
 				{
-					return ScnFileImporter.LoadTGA(path);
+					tex = ScnFileImporter.LoadTGA(path);
 				}
 				else
 				{
@@ -735,7 +735,7 @@ namespace AevenScnTool.IO
 
 					if (File.Exists(path))
 					{
-						return ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(path));
+						tex = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(path));
 					}
 				}
 			}
@@ -743,7 +743,7 @@ namespace AevenScnTool.IO
 			{
 				if (File.Exists(path))
 				{
-					return ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(path));
+					tex = ScnFileImporter.ParseTextureDXT(File.ReadAllBytes(path));
 				}
 				else
 				{
@@ -751,11 +751,12 @@ namespace AevenScnTool.IO
 
 					if (File.Exists(path))
 					{
-						return ScnFileImporter.LoadTGA(path);
+						tex = ScnFileImporter.LoadTGA(path);
 					}
 				}
 			}
-			return Texture2D.whiteTexture;
+			tex.name = Path.GetFileName(path.Replace(".tga", ".dds"));
+			return tex;
 		}
 
 		public static int GetBoneIndexFromBoneName(string name, List<Transform> bones)
