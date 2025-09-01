@@ -33,6 +33,9 @@ namespace AevenScnTool.Menus
 				WideGUI();
 			else
 				SlimGUI();
+			string[] names = new string[] {"1.0", "2.0"};
+			int[] sizes = {(int)VERSION.ONE, (int)VERSION.TWO};
+			ScnToolData.Instance.version = (VERSION)EditorGUILayout.IntPopup("Version ^^: ", (int)ScnToolData.Instance.version, names , sizes);
 
 			var lay = GUILayout.Width(position.width - 22);
 			ScnToolData.Instance.uv_flipHorizontal = EditorGUILayout.Toggle("Flip UVs Horizontally q:", ScnToolData.Instance.uv_flipHorizontal, lay);

@@ -15,20 +15,13 @@ namespace NetsphereScnTool.Scene.Chunks
         {
             base.Serialize(stream);
 
-            using (var w = stream.ToBinaryWriter(true))
-            {
-                w.Write(Version);
-            }
+           
         }
 
         public override void Deserialize(Stream stream)
         {
             base.Deserialize(stream);
 
-            using (var r = stream.ToBinaryReader(true))
-            {
-                Version = r.ReadSingle();
-            }
         }
     }
 }

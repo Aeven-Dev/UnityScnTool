@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEditor;
+using AevenScnTool;
 
 namespace NetsphereScnTool.Scene
 {
@@ -101,7 +102,7 @@ namespace NetsphereScnTool.Scene
             {
                 container.Header.Deserialize(stream);
 
-                for (int i = 0; i < container.Header.Chunk_Counk; i++)
+                for (int i = 0; i < container.Header.Chunk_Count; i++)
                 {
                     var type = r.ReadEnum<ChunkType>();
                     string name = r.ReadCString();
@@ -199,12 +200,10 @@ namespace NetsphereScnTool.Scene
         {
             using (var w = new BinaryWriter(stream))
             {
+                Header.Chunk_Count = Count;
                 w.Serialize(Header);
 
-                w.Write(Count);
-                if (Header.Version2 >= 1045220557)
-                    w.Write((byte)0);
-
+                
                 try{
                     int i = 0;
                     foreach (var chunk in this)
@@ -243,20 +242,18 @@ namespace NetsphereScnTool.Scene
 
         public string Name { get; set; }
         public string SubName { get; set; }
-        public int Version { get; set; }
-        public int Version2 { get; set; }
+        public VERSION Version { get; set; }
+        public VERSION Version2 { get; set; }
         public Matrix4x4 Matrix { get; set; }
-        public uint Chunk_Counk { get => chunk_count; }
+        public int Chunk_Count { get; set; }
         public string Anim_Copy { get; set; }
-
-        private uint chunk_count = 0;
 
         internal SceneHeader()
         {
             Name = "";
             SubName = "";
-            Version = 1036831949;
-            Version2 = 1045220557;
+            Version = VERSION.ONE;
+            Version2 = VERSION.TWO;
             Matrix = Matrix4x4.identity;
             Anim_Copy = "";
         }
@@ -271,9 +268,14 @@ namespace NetsphereScnTool.Scene
                 w.WriteCString(Name);
                 w.WriteCString(SubName);
 
-                w.Write(Version);
+                w.Write((int)Version);
                 w.Write(Matrix);
-                w.Write(Version2);
+                w.Write((int)Version2);
+
+                w.Write(Chunk_Count);
+                if (Version2 >= VERSION.TWO)
+                    w.WriteCString(Anim_Copy);
+
             }
         }
 
@@ -291,12 +293,12 @@ namespace NetsphereScnTool.Scene
 
                 Name = r.ReadCString();
                 SubName = r.ReadCString();
-                Version = r.ReadInt32();
+                Version = (VERSION)r.ReadInt32();
                 Matrix = r.ReadMatrix();
-                Version2 = r.ReadInt32();
-                chunk_count = r.ReadUInt32();
+                Version2 = (VERSION)r.ReadInt32();
+                Chunk_Count = (int)r.ReadUInt32();
 
-                if (Version2 >= 1045220557)
+                if (Version2 == VERSION.TWO)
                 {
                     Anim_Copy = r.ReadCString(); // ToDo ReadString
                 }

@@ -15,7 +15,6 @@ namespace NetsphereScnTool.Scene.Chunks
         public Color color5;
         public Color color6;
         public Color color7;
-        public int int1;
         public short short1;
 
         public SkyDirect1Chunk(SceneContainer container)
@@ -45,7 +44,6 @@ namespace NetsphereScnTool.Scene.Chunks
             w.Write(color5);
             w.Write(color6);
             w.Write(color7);
-            w.Write(int1);
             w.Write(short1);
         }
 
@@ -61,7 +59,6 @@ namespace NetsphereScnTool.Scene.Chunks
             color5 = new Color(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
             color6 = new Color(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
             color7 = new Color(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
-            int1 = r.ReadInt32();
             r.ReadInt32();
             r.ReadInt32();
         }

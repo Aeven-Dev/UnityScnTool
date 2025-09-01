@@ -134,8 +134,8 @@ namespace AevenScnTool
                 //For each clip go through each curve
                 EditorCurveBinding[] curveBindings = AnimationUtility.GetCurveBindings(clip);
 
-                int dur = AnimIO.UnityFrameToS4(clip.length);;
-                Debug.Log("Clip: '" + clip.name + "' is "+ clip.length + "s and becomes " + dur + " frames");
+                int dur = AnimIO.UnityFrameToS4(clip.length);
+                //Debug.Log("Clip: '" + clip.name + "' is "+ clip.length + "s and becomes " + dur + " frames");
 
                 foreach (var item in curveBindings)
 			    {
