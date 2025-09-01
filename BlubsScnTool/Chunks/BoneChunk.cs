@@ -1,6 +1,7 @@
 ﻿using BlubLib.IO;
 using System.Collections.Generic;
 using System.IO;
+using AevenScnTool;
 
 namespace NetsphereScnTool.Scene.Chunks
 {
@@ -23,12 +24,10 @@ namespace NetsphereScnTool.Scene.Chunks
             SceneContainer.Log("Animation.Count: " + Animation.Count);
             using (var w = stream.ToBinaryWriter(true))
             {
-                w.Write(Version);
-
                 w.Write(Animation.Count);
                 foreach (var anim in Animation)
                 {
-                    if (Version >= 0.2000000029802322f)
+                    if (Version2 == VERSION.TWO)
                     {
                         SceneContainer.Log("anim.Name: " + anim.Name);
                         SceneContainer.Log("anim.Copy: " + anim.Copy);
@@ -54,12 +53,11 @@ namespace NetsphereScnTool.Scene.Chunks
 
             using (var r = stream.ToBinaryReader(true))
             {
-                Version = r.ReadSingle();
-
                 uint count = r.ReadUInt32();
                 for (int i = 0; i < count; i++)
                 {
-                    if (Version >= 0.2000000029802322f)
+                    SceneContainer.Log("Version: " + Version);
+                    if (Version2 == VERSION.TWO)
                     {
                         string name1 = r.ReadCString();
                         string subName = r.ReadCString();

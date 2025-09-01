@@ -142,7 +142,7 @@ namespace AevenScnTool.Menus
                 }
             }
 
-            SceneContainer container = ScnFileExporter.CreateContainerFromScenes(fileInfo.Name, scnDataList.ToArray());
+            SceneContainer container = ScnFileExporter.CreateContainerFromScenes(fileInfo.Name, scnDataList.ToArray(), ScnToolData.Instance.version);
 
             container.Write(fileInfo.FullName);
 

@@ -916,16 +916,20 @@ namespace AevenScnTool.IO
 	{
 		static List<string> usedNames = new List<string>();
 
+		static VERSION version = VERSION.TWO;
+
 		public static Dictionary<int,(string name,Texture2D tex)> lightmaps = new Dictionary<int,(string name, Texture2D tex)>();
 
 		public static string lightmapName = "";
 
-		public static SceneContainer CreateContainerFromScenes(string name, ScnData[] scenes)
+		public static SceneContainer CreateContainerFromScenes(string name, ScnData[] scenes, VERSION _version)
 		{
 			usedNames.Clear();
 			lightmaps.Clear();
+			version = _version;
 			SceneContainer container = new SceneContainer();
 			container.Header.Name = name;
+			container.Header.Version2 = version;
 			foreach (var scene in scenes)
 			{
 				lightmapName = scene.lightmapName;
@@ -952,7 +956,7 @@ namespace AevenScnTool.IO
 					}
 	
 					SceneChunk childChunk = CreateChunk(child, container, parentChunk, relativeParent);
-	
+					childChunk.Version = container.Header.Version2;
 					Transform relative;
 	
 					if (childChunk != null)

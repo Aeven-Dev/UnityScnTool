@@ -6,6 +6,11 @@ using UnityEngine;
 
 namespace AevenScnTool
 {
+	public enum VERSION{
+		ONE = 1036831949,
+		TWO = 1045220557
+	}
+
 	public class ScnToolData : ScriptableObject
 	{
 		static string rootPath = null;
@@ -24,6 +29,8 @@ namespace AevenScnTool
 		public string s4_startup_file = "";
 		public float scale = 100;
 		public string main_animation_name = "DANCE";
+
+		public VERSION version = VERSION.TWO;
 
 		public bool uv_flipVertical = false;
 		public bool uv_flipHorizontal = false;

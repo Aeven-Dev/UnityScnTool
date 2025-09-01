@@ -33,8 +33,6 @@ namespace NetsphereScnTool.Scene.Chunks
 
             using (var w = stream.ToBinaryWriter(true))
             {
-                w.Write(Version);
-
                 w.WriteEnum(Shader);
                 SceneContainer.Log("Shader: " + Shader);
                 SceneContainer.Log("WeightBone.Count: " + WeightBone.Count);
@@ -62,8 +60,6 @@ namespace NetsphereScnTool.Scene.Chunks
 
             using (var r = stream.ToBinaryReader(true))
             {
-                // ## CoreLib::Scene::CRenderable
-                Version = r.ReadSingle();
                 Shader = r.ReadEnum<RenderFlag>();
                 // ## CoreLib::Scene::CRenderable
 

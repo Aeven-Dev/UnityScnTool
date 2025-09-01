@@ -1,4 +1,5 @@
 using AevenScnTool.IO;
+using AevenScnTool;
 using AevenScnTool.Menus;
 using NetsphereScnTool.Scene;
 using System.Collections;
@@ -13,7 +14,7 @@ public class ScnData : MonoBehaviour
     public string filePath = "";
 	public string subName = "";
 	public string animationCopy = "";
-	public int version = 1045220557;
+	public VERSION version = VERSION.TWO;
 
 	public Vector3 octTreeBox = Vector3.one * 30;
 	public Rect minimapCoverage = new Rect(Vector2.zero, Vector2.one * 30);
@@ -55,7 +56,7 @@ public class ScnData : MonoBehaviour
 
 	void SaveFile(){
 		FileInfo fileInfo = new FileInfo(filePath);
-		SceneContainer container = ScnFileExporter.CreateContainerFromScenes(fileInfo.Name, new ScnData[] { this });
+		SceneContainer container = ScnFileExporter.CreateContainerFromScenes(fileInfo.Name, new ScnData[] { this }, version);
 		container.Write(filePath);
 
 		if (saveLightmapTexture)

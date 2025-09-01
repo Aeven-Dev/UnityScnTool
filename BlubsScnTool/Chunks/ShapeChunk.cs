@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using AevenScnTool;
 
 namespace NetsphereScnTool.Scene.Chunks
 {
@@ -24,8 +25,7 @@ namespace NetsphereScnTool.Scene.Chunks
 
             using (var w = stream.ToBinaryWriter(true))
             {
-                w.Write(Version);
-                if (Version >= 0.1000000014901161f)
+                if (Version2 == VERSION.ONE || Version2 == VERSION.TWO)
                 {
                     w.Write(Unk.Count);
                     foreach (var unk in Unk)
@@ -48,9 +48,7 @@ namespace NetsphereScnTool.Scene.Chunks
 
             using (var r = stream.ToBinaryReader(true))
             {
-                Version = r.ReadSingle();
-
-                if (Version >= 0.1000000014901161f)
+                if (Version2 == VERSION.ONE || Version2 == VERSION.TWO)
                 {
                     uint count = r.ReadUInt32();
                     for (int i = 0; i < count; i++)

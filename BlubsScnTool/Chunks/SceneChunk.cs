@@ -2,6 +2,7 @@ using BlubLib.IO;
 using System.Drawing;
 using System.IO;
 using UnityEngine;
+using AevenScnTool;
 
 namespace NetsphereScnTool.Scene.Chunks
 {
@@ -13,16 +14,18 @@ namespace NetsphereScnTool.Scene.Chunks
         public string Name { get; set; }
         public string SubName { get; set; }
 
-        public float Version { get; set; }
+        public VERSION Version { get; set; }
         public Matrix4x4 Matrix { get; set; }
+        public VERSION Version2 { get; set; }
 
 
         protected SceneChunk(SceneContainer container)
         {
             Name = "";
             SubName = "";
-            Version = 0.200000002980232f;
+            Version = VERSION.TWO;
             Matrix = Matrix4x4.identity;
+            Version2 = VERSION.TWO;
             Container = container;
         }
 
@@ -30,8 +33,9 @@ namespace NetsphereScnTool.Scene.Chunks
         {
             using (var w = stream.ToBinaryWriter(true))
             {
-                w.Write(Version);
+                w.Write((int)Version);
                 w.Write(Matrix);
+                w.Write((int)Version2);
             }
         }
 
@@ -39,8 +43,9 @@ namespace NetsphereScnTool.Scene.Chunks
         {
             using (var r = stream.ToBinaryReader(true))
             {
-                Version = r.ReadSingle();
+                Version = (VERSION)r.ReadInt32();
                 Matrix = r.ReadMatrix();
+                Version2 = (VERSION)r.ReadInt32();
             }
         }
 
