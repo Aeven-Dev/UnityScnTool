@@ -19,13 +19,16 @@ namespace AevenScnTool
         public new Animation animation;
 
         [Button("Compile Animations! \\o/")] public ButtonAction CompileAnimations;
-        [Button("Save Animations! [º]")] public ButtonAction SAveAnimations;
+        [Button("Save Animations! [º]")] public ButtonAction SaveAnimations;
+        public string AnimationNameToCompile;
+        [Button("Compile Named Animation! ^^")] public ButtonAction CompileAnimationFromName;
 
         private void OnEnable()
         {
             animation = GetComponent<Animation>();
             CompileAnimations = new ButtonAction(ReadAnimationFromHierarchy);
-            SAveAnimations = new ButtonAction(SaveAnimationsToFolder);
+            SaveAnimations = new ButtonAction(SaveAnimationsToFolder);
+            CompileAnimationFromName = new ButtonAction(ReadNamedAnimFromHierarchy);
         }
         public void ReadAnimationFromHierarchy(){
             try{
@@ -39,6 +42,19 @@ namespace AevenScnTool
                 throw e;
             }
 
+        }
+
+        public void ReadNamedAnimFromHierarchy(){
+            try{
+                //Iterate over the tree of objects
+                RecursivelyReadNamedAnimation(transform,AnimationNameToCompile);
+                EditorUtility.ClearProgressBar();
+            }
+            catch(Exception e){
+                EditorUtility.ClearProgressBar();
+                Debug.LogError(e.StackTrace);
+                throw e;
+            }
         }
 
         void RecursivelyReadAnimations(Transform item){
@@ -76,6 +92,46 @@ namespace AevenScnTool
                 RecursivelyReadAnimations(child);
             }
         }
+
+        void RecursivelyReadNamedAnimation(Transform item, string name){
+            S4Animations s4anims = item.GetComponent<S4Animations>();
+            if (s4anims != null)//Does the object have an S4 animation?
+            {
+                for(int i = 0; i < s4anims.animations.Count; i++)
+                {
+                    S4Animation anim = s4anims.animations[i];
+                    if(anim.Name != name) continue;
+                        
+                    
+                    EditorUtility.DisplayProgressBar($"Compiling animations! <3", $"{item.name}/{anim.Name}", 0.5f);
+                    
+                    //For each animation an object has key the corresponding animation clip
+                    AnimationState animState = animation[anim.Name];//Get animation state
+                    if(animState == null){//If animation state is null then create new animation clip
+                        var clip = CreateNewClip(anim.Name);
+                        animation.AddClip(clip, anim.Name);
+                        animState = animation[anim.Name];
+                    }
+                    SetKeyFrames(item, anim, animState.clip);
+                    animState.clip.EnsureQuaternionContinuity();
+
+                    RemoveS4KeyFrames(anim);
+                }
+                for(int i = s4anims.animations.Count-1; i >= 0; i--)
+                {
+                    var anim = s4anims.animations[i];
+                    if(anim.Name != name) continue;
+                    //Remove the animation from the s4 object if it doesnt have morphkeys
+                    RemoveAnimIfEmpty(s4anims,anim);
+                }
+                RemoveComponentIfEmpty(s4anims);
+            }
+            foreach (Transform child in item)
+            {
+                RecursivelyReadNamedAnimation(child,name);
+            }
+        }
+
         AnimationClip CreateNewClip(string name){
             AnimationClip clip = new AnimationClip();
 	    	clip.frameRate = 60f;
