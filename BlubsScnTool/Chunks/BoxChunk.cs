@@ -40,7 +40,7 @@ namespace NetsphereScnTool.Scene.Chunks
             using (var w = stream.ToBinaryWriter(true))
             {
                 w.Write((int)Version);
-                w.Write((int)Version);
+                //w.Write((int)Version);
                 w.Write(Unk);
                 w.Write(Unk2);
                 w.Write(Unk3);
@@ -65,7 +65,7 @@ namespace NetsphereScnTool.Scene.Chunks
             using (var r = stream.ToBinaryReader(true))
             {
                 r.ReadInt32();
-                r.ReadInt32();
+                //r.ReadInt32();
                 Unk = r.ReadInt32();
                 Unk2 = r.ReadSingle();
                 Unk3 = r.ReadInt32();
