@@ -351,7 +351,7 @@ public class CharacterLoader : EditorWindow
 
         item.style.width = size;
         item.style.height = size;
-        item.style.scale = new StyleScale(new Scale(new Vector3(-1, -1, 1)));
+        item.style.scale = new StyleScale(new Scale(new Vector3(1, 1, 1)));
 
         item.clicked += action;
         return item;
